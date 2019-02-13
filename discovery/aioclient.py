@@ -7,6 +7,13 @@ import socket
 import asyncio
 import aiohttp
 
+from discovery.filter import Filter
+
+import logging
+from logging import NullHandler
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
+
 
 class Consul:
     """ Async Consul Service Registry """
@@ -38,7 +45,16 @@ class Consul:
         Consul API: /health/status/<service>
         docs: https://www.consul.io/api/health.html#list-nodes-for-service
         """
-        return id[1][0]['Node']['ID']
+        return id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
+
+    def __format_catalog_service(self, services):
+        servicesfmt = [{"node": svc['Node'],
+                        "address": svc['Address'],
+                        "service_id": svc['ServiceID'],
+                        "service_name": svc['ServiceName'],
+                        "service_port": svc['ServicePort']}
+                       for svc in services[Filter.PAYLOAD.value]]
+        return servicesfmt
 
     async def _reconnect(self):
         await self.__discovery.agent.service.deregister(self.__service['id'])
@@ -67,14 +83,6 @@ class Consul:
             except aiohttp.ClientConnectorError:
                 logging.error(f"failed to connect to discovery service...")
                 logging.info('reconnect will occur in 5 seconds.')
-
-    def __format_catalog_service(self, service):
-        service_content = service[1][0]
-        response = {
-            'host': service_content[['ServicePort']],
-            'port': service_content['ServiceAddress']
-        }
-        return response
 
     async def find_service(self, service_name):
         """List nodes for a service"""

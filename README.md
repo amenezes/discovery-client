@@ -28,6 +28,7 @@ from discovery.client import Consul
 
 discovery_client = Consul('localhost', 8500)
 discovery_client.register('myapp', 5000)
+discovery_client.find_service('consul')
 ````
 
 Integration with Flask + threading.
