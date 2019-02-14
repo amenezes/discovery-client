@@ -1,3 +1,5 @@
+[![Maintainability](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/maintainability)](https://codeclimate.com/github/amenezes/discovery-client/maintainability)
+
 # discovery-client
 
 discovery-client package sync/async for [consul](https://consul.io).
