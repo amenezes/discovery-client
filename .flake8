@@ -1,0 +1,10 @@
+[flake8]
+exclude = venv
+          __pycache__
+          *.pyc
+verbose = 2
+doctests = True
+format = [%(code)s] %(path)s [%(row)d,%(col)d] %(text)s
+show_source = True
+statistics = True
+count = True

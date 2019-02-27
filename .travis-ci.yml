@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+  - "3.5"
+install:
+  - pip install -r requirements-dev.txt
+script:
+  - echo '--- code style checking ---'
+  - flake8 discovery/*.py
+  - echo '--- unittest ---'
+  - python -m pytest -v

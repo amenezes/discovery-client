@@ -1,22 +1,23 @@
-"""Async consul discovery client module"""
+"""Async consul discovery client module."""
 
-import consul.aio
-import logging
-import uuid
-import socket
 import asyncio
+import logging
+import socket
+import uuid
+
 import aiohttp
 
-from discovery.filter import Filter
+import consul.aio
 
-import logging
-from logging import NullHandler
+from discovery.filter import Filter
+from discovery.utils import select_one_randomly, select_one_rr
+
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 class Consul:
-    """ Async Consul Service Registry """
+    """Async Consul Service Registry."""
 
     __id = ''
     __service = {}
@@ -25,7 +26,7 @@ class Consul:
         self.__discovery = consul.aio.Consul(host, port, loop=app)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
-        """Adjusts the data of the service to be managed"""
+        """Adjust the data of the service to be managed."""
         self.__service.update({'name': service_name})
         self.__service.update({'port': int(service_port)})
         self.__service.update({'id': f"{service_name}-{uuid.uuid4().hex}"})
@@ -41,8 +42,7 @@ class Consul:
         logging.debug('Service data: %s' % self.__service)
 
     def __format_id(self, id):
-        """Retrieve consul ID from
-        Consul API: /health/status/<service>
+        """Retrieve consul ID from Consul API: /health/status/<service>.
         docs: https://www.consul.io/api/health.html#list-nodes-for-service
         """
         return id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
@@ -57,6 +57,7 @@ class Consul:
         return servicesfmt
 
     async def _reconnect(self):
+        """Service re-registration steps."""
         await self.__discovery.agent.service.deregister(self.__service['id'])
         await self.__discovery.agent.service.register(name=self.__service['name'],
                                                       service_id=self.__service['id'],
@@ -70,8 +71,9 @@ class Consul:
         logging.info('Service successfully re-registered')
 
     async def _consul_is_healthy(self):
-        """Start a loop to monitor consul healthy
-        re-registering service in case of consul fail"""
+        """Start a loop to monitor consul healthy.
+        Necessary to re-register service in case of consul fail.
+        """
         while True:
             try:
                 await asyncio.sleep(5)
@@ -84,20 +86,43 @@ class Consul:
                 logging.error(f"failed to connect to discovery service...")
                 logging.info('reconnect will occur in 5 seconds.')
 
-    async def find_service(self, service_name):
-        """List nodes for a service"""
+    async def find_service(self, service_name, method='rr'):
+        """Search for a service in the consul's catalog.
+
+        Return a specific service using: round robin (default) or random.
+        """
+        services = await self.find_services(service_name)
+
+        if method == 'rr':
+            service = select_one_rr(services)
+        else:
+            service = select_one_randomly(services)
+
+        return service
+
+    async def find_services(self, service_name):
+        """
+        Search for a service in the consul's catalog.
+
+        Return a list of services registered on consul catalog.
+        """
         services = await self.__discovery.catalog.service(service_name)
         return self.__format_catalog_service(services)
 
     async def deregister(self):
-        """Deregister a service registered"""
+        """Deregister a service registered."""
         await self.__discovery.agent.service.deregister(self.__service['id'])
 
         logging.info('successfully unregistered application!')
 
     async def register(self, service_name, service_port, healthcheck_path="/manage/health"):
-        """Register a new service, with health check.
-        Default health check path: /mange/health
+        """Register a new service.
+
+        Default values are:
+        healthcheck path: /mange/health
+        DeregisterCriticalServiceAfter: 1m,
+        interval: 10s,
+        timeout: 5s
         """
         try:
             self.__create_service(service_name,
