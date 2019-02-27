@@ -2,6 +2,8 @@
 exclude = venv
           __pycache__
           *.pyc
+          __init__.py
+ignore = E501 # line too long
 verbose = 2
 doctests = True
 format = [%(code)s] %(path)s [%(row)d,%(col)d] %(text)s

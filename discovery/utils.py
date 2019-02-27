@@ -9,7 +9,7 @@ __rr_services = collections.deque()
 
 def select_one_randomly(services):
     """Select one service randomly."""
-    service_selected = random.randint(0, (len(services)-1))
+    service_selected = random.randint(0, (len(services) - 1))
     return services[service_selected]
 
 

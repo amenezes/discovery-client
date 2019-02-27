@@ -23,6 +23,7 @@ class Consul:
     __service = {}
 
     def __init__(self, host, port, app):
+        """Create a instance for async consul client."""
         self.__discovery = consul.aio.Consul(host, port, loop=app)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
@@ -43,6 +44,7 @@ class Consul:
 
     def __format_id(self, id):
         """Retrieve consul ID from Consul API: /health/status/<service>.
+
         docs: https://www.consul.io/api/health.html#list-nodes-for-service
         """
         return id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
@@ -72,6 +74,7 @@ class Consul:
 
     async def _consul_is_healthy(self):
         """Start a loop to monitor consul healthy.
+
         Necessary to re-register service in case of consul fail.
         """
         while True:
