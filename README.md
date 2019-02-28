@@ -17,7 +17,7 @@ pip install -U discovery-client
 
 - [python-consul](https://python-consul.readthedocs.io/en/latest)
 
-### Async client only 
+### Async client only
   - [asyncio](https://docs.python.org/3.6/library/asyncio.html)
   - [aiohttp](https://aiohttp.readthedocs.io/en/stable)
 
@@ -29,9 +29,8 @@ pip install -U discovery-client
 from discovery.client import Consul
 
 
-discovery_client = Consul('localhost', 8500)
-discovery_client.register('myapp', 5000)
-discovery_client.find_service('consul')
+dc = Consul('localhost', 8500)
+dc.find_service('consul')
 ````
 
 Integration with Flask + threading.
@@ -41,18 +40,20 @@ import threading
 import time
 
 from discovery.client import Consul
+
 from flask import Flask
 
 
 app = Flask(__name__)
-discovery_client = Consul('localhost', 8500)
-discovery_client.register('myapp', 5000)
+
+dc = Consul('localhost', 8500)
+dc.register('myapp', 5000)
 
 @app.before_first_request
 def enable_service_registry():
     def probe_discovery_connection():
         while True:
-            discovery_client.consul_is_healthy()
+            dc.consul_is_healthy()
             time.sleep(10)
     thread = threading.Thread(target=probe_discovery_connection)
     thread.start()
@@ -64,16 +65,17 @@ client using asyncio
 
 ````python
 import asyncio
-from discovery.aioclient import Consul
+
+from discovery import aioclient
 
 
 loop = asyncio.get_event_loop()
+dc = aioclient.Consul('localhost', 8500, loop)
 
-async def service_discovery():
-    await discovery_client.register('myapp', 5000)
-
-discovery_client = Consul('localhost', 8500, loop)
-loop.run_until_complete(service_discovery)
+search_one_task = loop.create_task(dc.find_service('consul'))
+search_all_task = loop.create_task(dc.find_services('consul'))
+loop.run_until_complete(search_one_task)
+loop.run_until_complete(search_all_task)
 ````
 
 ### using aiohttp
@@ -81,25 +83,32 @@ loop.run_until_complete(service_discovery)
 server using iohttp + asyncio
 
 ````python
-from discovery.aioclient import Consul
-from aiohttp import web
-
 import asyncio
 
+from aiohttp import web
 
-async def service_discovery():
-    await discovery_client.register('myapp', 5000)
+from discovery.aioclient import Consul
 
-async def handle(request):
-    name = request.match_info.get('name', 'Anonymous')
-    text = "Hello, " + name
-    return web.Response(text=text)
+
+async def service_discovery(app):
+    app.loop.create_task(dc.register('myapp', 5000))
+
+
+async def handle_info(request):
+    return web.json_response({'app': 'myapp'})
+
+
+async def handle_status(request):
+    return web.json_response({'status': 'UP'})
+
 
 app = web.Application()
-app.on_startup(service_discovery)
-app.add_routes([web.get('/', handle),
-                web.get('/{name}', handle)])
-web.run_app(app)
+dc = Consul('localhost', 8500, app.loop)
+
+app.on_startup.append(service_discovery)
+app.add_routes([web.get('/manage/health', handle_info),
+                web.get('/manage/info', handle_status)])
+web.run_app(app, host='0.0.0.0', port=5000)
 ````
 
 ## Links
