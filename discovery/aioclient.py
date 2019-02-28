@@ -97,7 +97,7 @@ class Consul:
         services = await self.find_services(service_name)
 
         if method == 'rr':
-            service = select_one_rr(services)
+            service = select_one_rr(service_name, services)
         else:
             service = select_one_randomly(services)
 
