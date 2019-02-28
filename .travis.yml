@@ -10,4 +10,4 @@ script:
   - flake8 discovery/*.py
   - flake8 tests/*.py
   - echo '--- unittest ---'
-  - python -m pytest -v tests/
+  - python -m pytest -v --cov=tests
