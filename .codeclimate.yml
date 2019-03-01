@@ -11,6 +11,11 @@ plugins:
     enabled: true
   pep8:
     enabled: true
+  sonar-python:
+    enabled: true
+    config:
+      tests_patterns:
+        - tests/**
 exclude_patterns:
 - "app/docker"
 - "venv"
