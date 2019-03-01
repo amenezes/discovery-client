@@ -40,7 +40,7 @@ class Consul:
             "timeout": "5s"
         }})
 
-        logging.debug('Service data: %s' % self.__service)
+        logging.debug(f'Service data: {self.__service}')
 
     def __format_id(self, id):
         """Retrieve consul ID from Consul API: /health/status/<service>.
@@ -69,10 +69,10 @@ class Consul:
         current_id = await self.__discovery.health.service('consul')
         self.__id = self.__format_id(current_id)
 
-        logging.debug('Consul ID: %s' % self.__format_id(current_id))
+        logging.debug(f"Consul ID: {self.__format_id(current_id)}")
         logging.info('Service successfully re-registered')
 
-    async def _consul_is_healthy(self):
+    async def consul_is_healthy(self):
         """Start a loop to monitor consul healthy.
 
         Necessary to re-register service in case of consul fail.
@@ -82,12 +82,21 @@ class Consul:
                 await asyncio.sleep(5)
                 current_id = await self.__discovery.health.service('consul')
 
+                logging.debug('Checking consul health status')
+                logging.debug(f"Consul ID: {self.__format_id(current_id)}")
+
                 if self.__format_id(current_id) != self.__id:
                     await self._reconnect()
 
             except aiohttp.ClientConnectorError:
-                logging.error(f"failed to connect to discovery service...")
-                logging.info('reconnect will occur in 5 seconds.')
+                logging.error('failed to connect to discovery service...')
+                logging.error('reconnect will occur in 5 seconds.')
+                await self.consul_is_healthy()
+
+            except aiohttp.ServerDisconnectedError:
+                logging.error('temporary loss of communication with the discovery server.')
+                asyncio.sleep(5)
+                await self.consul_is_healthy()
 
     async def find_service(self, service_name, method='rr'):
         """Search for a service in the consul's catalog.
@@ -140,9 +149,7 @@ class Consul:
             self.__id = self.__format_id(current_id)
 
             logging.info('service successfully registered!')
-            logging.debug('Consul ID: %s' % self.__format_id(current_id))
+            logging.debug(f"Consul ID: {self.__format_id(current_id)}")
 
-            await self._consul_is_healthy()
         except aiohttp.ClientConnectorError:
-            logging.error(f"failed to connect to discovery...")
-            await self._consul_is_healthy()
+            logging.error("failed to connect to discovery...")

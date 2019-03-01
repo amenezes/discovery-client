@@ -1,5 +1,6 @@
-[![Maintainability](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/maintainability)](https://codeclimate.com/github/amenezes/discovery-client/maintainability)
 [![Build Status](https://travis-ci.org/amenezes/discovery-client.svg?branch=master)](https://travis-ci.org/amenezes/discovery-client)
+[![Maintainability](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/maintainability)](https://codeclimate.com/github/amenezes/discovery-client/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/test_coverage)](https://codeclimate.com/github/amenezes/discovery-client/test_coverage)
 
 # discovery-client
 
@@ -36,8 +37,8 @@ dc.find_service('consul')
 Integration with Flask + threading.
 
 ````python
+import json
 import threading
-import time
 
 from discovery.client import Consul
 
@@ -45,16 +46,24 @@ from flask import Flask
 
 
 app = Flask(__name__)
-
 dc = Consul('localhost', 8500)
 dc.register('myapp', 5000)
+
+
+@app.route('/manage/health')
+def health():
+    return json.dumps({'status': 'UP'})
+
+
+@app.route('/manage/info')
+def info():
+    return json.dumps({'app': 'myapp'})
+
 
 @app.before_first_request
 def enable_service_registry():
     def probe_discovery_connection():
-        while True:
-            dc.consul_is_healthy()
-            time.sleep(10)
+        dc.consul_is_healthy()
     thread = threading.Thread(target=probe_discovery_connection)
     thread.start()
 ````
@@ -74,13 +83,14 @@ dc = aioclient.Consul('localhost', 8500, loop)
 
 search_one_task = loop.create_task(dc.find_service('consul'))
 search_all_task = loop.create_task(dc.find_services('consul'))
+
 loop.run_until_complete(search_one_task)
 loop.run_until_complete(search_all_task)
 ````
 
 ### using aiohttp
 
-server using iohttp + asyncio
+server using aiohttp + asyncio
 
 ````python
 import asyncio
@@ -92,6 +102,8 @@ from discovery.aioclient import Consul
 
 async def service_discovery(app):
     app.loop.create_task(dc.register('myapp', 5000))
+    asyncio.sleep(15)
+    app.loop.create_task(dc.consul_is_healthy())
 
 
 async def handle_info(request):

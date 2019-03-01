@@ -2,6 +2,7 @@
 
 import logging
 import socket
+import time
 import uuid
 
 import consul
@@ -36,7 +37,7 @@ class Consul:
             "interval": "10s",
             "timeout": "5s"}})
 
-        logging.debug('Service data: %s' % self.__service)
+        logging.debug(f'Service data: {self.__service}')
 
     def __format_id(self, id):
         """Retrieve consul ID from Consul API: /health/status/<service>.
@@ -74,17 +75,20 @@ class Consul:
 
         Necessary to re-register service in case of consul fail.
         """
-        try:
-            current_id = self.__discovery.health.service('consul')
-            logging.debug('Checking consul health status')
-            logging.debug('Consul ID: %s' % self.__format_id(current_id))
+        while True:
+            try:
+                time.sleep(5)
+                current_id = self.__discovery.health.service('consul')
 
-            if self.__format_id(current_id) != self.__id:
-                self.__reconnect()
+                logging.debug('Checking consul health status')
+                logging.debug(f"Consul ID: {self.__format_id(current_id)}")
 
-        except requests.exceptions.ConnectionError:
-            logging.error(f"Failed to connect to discovery service...")
-            logging.info('Reconnect will occur in 5 seconds.')
+                if self.__format_id(current_id) != self.__id:
+                    self.__reconnect()
+
+            except requests.exceptions.ConnectionError:
+                logging.error("Failed to connect to discovery service...")
+                logging.error('Reconnect will occur in 5 seconds.')
 
     def find_service(self, service_name, method='rr'):
         """Search for a service in the consul's catalog.
@@ -111,7 +115,7 @@ class Consul:
 
     def deregister(self):
         """Deregister a service registered."""
-        logging.debug('Unregistering service id: %s' % self.__service['id'])
+        logging.debug(f"Unregistering service id: {self.__service['id']}")
         logging.info('Successfully unregistered application!')
 
         self.__discovery.agent.service.deregister(self.__service['id'])
@@ -138,7 +142,7 @@ class Consul:
             self.__id = self.__format_id(current_id)
 
             logging.info('Service successfully registered!')
-            logging.debug('Consul ID: %s' % self.__id)
+            logging.debug(f'Consul ID: {self.__id}')
 
         except requests.exceptions.ConnectionError:
-            logging.error(f"Failed to connect to discovery...")
+            logging.error("Failed to connect to discovery...")
