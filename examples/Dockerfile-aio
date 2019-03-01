@@ -1,0 +1,9 @@
+FROM python:3.6.8-alpine
+
+COPY . .
+
+RUN pip install -r requirements-example.txt
+
+EXPOSE 5000
+
+ENTRYPOINT ["python", "test_aio.py"]
