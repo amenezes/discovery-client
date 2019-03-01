@@ -12,6 +12,8 @@ class TestUtils(unittest.TestCase):
         services = ['a', 'b', 'c']
 
         self.assertIn(select_one_randomly(services), services)
+        self.assertIn(select_one_randomly(services), services)
+        self.assertIn(select_one_randomly(services), services)
 
     def test_select_one_rr(self):
         """Tests the round robin return of instances present in a list."""
@@ -19,10 +21,10 @@ class TestUtils(unittest.TestCase):
         serviceA = 'serviceA'
         servicesA = ['a', 'b', 'c']
 
-        self.assertEqual(select_one_rr(serviceA, servicesA), 'a')
-        self.assertEqual(select_one_rr(serviceA, servicesA), 'b')
-        self.assertEqual(select_one_rr(serviceA, servicesA), 'c')
-        self.assertEqual(select_one_rr(serviceA, servicesA), 'a')
+        self.assertEqual('a', select_one_rr(serviceA, servicesA))
+        self.assertEqual('b', select_one_rr(serviceA, servicesA))
+        self.assertEqual('c', select_one_rr(serviceA, servicesA))
+        self.assertEqual('a', select_one_rr(serviceA, servicesA))
 
         # group 2: select alternate services
         serviceB = 'serviceB'
@@ -31,11 +33,19 @@ class TestUtils(unittest.TestCase):
         serviceC = 'serviceC'
         servicesC = ['f', 'g', 'h']
 
-        self.assertEqual(select_one_rr(serviceB, servicesB), 'd')
-        self.assertEqual(select_one_rr(serviceC, servicesC), 'f')
-        self.assertEqual(select_one_rr(serviceC, servicesC), 'g')
-        self.assertEqual(select_one_rr(serviceB, servicesB), 'e')
-        self.assertEqual(select_one_rr(serviceB, servicesB), 'd')
+        self.assertEqual('d', select_one_rr(serviceB, servicesB))
+        self.assertEqual('f', select_one_rr(serviceC, servicesC))
+        self.assertEqual('g', select_one_rr(serviceC, servicesC))
+        self.assertEqual('e', select_one_rr(serviceB, servicesB))
+        self.assertEqual('d', select_one_rr(serviceB, servicesB))
+
+    def test_select_one_rr_exception(self):
+        service = 'service_name'
+        instances = ['a', 'b']
+
+        self.assertEqual('a', select_one_rr(service, instances))
+        with self.assertRaises(IndexError):
+            select_one_rr(service, [])
 
 
 if __name__ == '__main__':
