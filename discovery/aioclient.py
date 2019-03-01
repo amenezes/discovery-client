@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 import socket
 import uuid
 
@@ -21,6 +22,7 @@ class Consul:
 
     __id = ''
     __service = {}
+    DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT')) or int(10)
 
     def __init__(self, host, port, app):
         """Create a instance for async consul client."""
@@ -79,7 +81,7 @@ class Consul:
         """
         while True:
             try:
-                await asyncio.sleep(5)
+                await asyncio.sleep(self.DEFAULT_TIMEOUT)
                 current_id = await self.__discovery.health.service('consul')
 
                 logging.debug('Checking consul health status')
@@ -90,12 +92,12 @@ class Consul:
 
             except aiohttp.ClientConnectorError:
                 logging.error('failed to connect to discovery service...')
-                logging.error('reconnect will occur in 5 seconds.')
+                logging.error(f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.")
                 await self.consul_is_healthy()
 
             except aiohttp.ServerDisconnectedError:
                 logging.error('temporary loss of communication with the discovery server.')
-                asyncio.sleep(5)
+                asyncio.sleep(self.DEFAULT_TIMEOUT)
                 await self.consul_is_healthy()
 
     async def find_service(self, service_name, method='rr'):

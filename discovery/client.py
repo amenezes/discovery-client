@@ -1,6 +1,7 @@
 """Consul discovery client module."""
 
 import logging
+import os
 import socket
 import time
 import uuid
@@ -21,6 +22,7 @@ class Consul:
 
     __id = ''
     __service = {'application_ip': socket.gethostbyname(socket.gethostname())}
+    DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT')) or int(10)
 
     def __init__(self, host, port):
         """Create a instance for standard consul client."""
@@ -77,7 +79,7 @@ class Consul:
         """
         while True:
             try:
-                time.sleep(5)
+                time.sleep(self.DEFAULT_TIMEOUT)
                 current_id = self.__discovery.health.service('consul')
 
                 logging.debug('Checking consul health status')
@@ -88,7 +90,7 @@ class Consul:
 
             except requests.exceptions.ConnectionError:
                 logging.error("Failed to connect to discovery service...")
-                logging.error('Reconnect will occur in 5 seconds.')
+                logging.error(f'Reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.')
 
     def find_service(self, service_name, method='rr'):
         """Search for a service in the consul's catalog.

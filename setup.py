@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="discovery-client",
-    version="0.2.0",
+    version="0.2.1",
     author="alexandre menezes",
     author_email="alexandre.fmenezes@gmail.com",
     description="discovery service client",
@@ -25,7 +25,6 @@ setuptools.setup(
         'consul': ['python-consul']
     },
     classifiers=[
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Framework :: AsyncIO",
