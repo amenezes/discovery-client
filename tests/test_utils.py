@@ -40,6 +40,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual('d', select_one_rr(serviceB, servicesB))
 
     def test_select_one_rr_exception(self):
+        """Test raise IndexError for empty instances present on consul's catalog."""
         service = 'service_name'
         instances = ['a', 'b']
 
