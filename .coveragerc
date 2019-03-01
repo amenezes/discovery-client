@@ -1,0 +1,17 @@
+[run]
+branch = True
+omit = **__init__.py**
+
+[report]
+show_missing = True
+sort = Cover
+precision = 2
+
+[paths]
+source = discovery/
+
+[html]
+directory = .
+
+[xml]
+output = coverage.xml
