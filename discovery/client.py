@@ -22,11 +22,13 @@ class Consul:
 
     __id = ''
     __service = {'application_ip': socket.gethostbyname(socket.gethostname())}
-    DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT')) or int(10)
+    DEFAULT_TIMEOUT = int(Filter.DEFAULT_TIMEOUT.value)
 
     def __init__(self, host, port):
         """Create a instance for standard consul client."""
         self.__discovery = consul.Consul(host, port)
+        if os.getenv('DEFAULT_TIMEOUT'):
+            self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""

@@ -22,11 +22,13 @@ class Consul:
 
     __id = ''
     __service = {}
-    DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT')) or int(10)
+    DEFAULT_TIMEOUT = int(Filter.DEFAULT_TIMEOUT.value)
 
     def __init__(self, host, port, app):
         """Create a instance for async consul client."""
         self.__discovery = consul.aio.Consul(host, port, loop=app)
+        if os.getenv('DEFAULT_TIMEOUT'):
+            self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""
