@@ -46,8 +46,8 @@ from flask import Flask
 
 
 app = Flask(__name__)
-dc = Consul('localhost', 8500)
-dc.register('myapp', 5000)
+dc = Consul('discovery', 8500)
+dc.register('standard-client', 5000)
 
 
 @app.route('/manage/health')
@@ -57,7 +57,7 @@ def health():
 
 @app.route('/manage/info')
 def info():
-    return json.dumps({'app': 'myapp'})
+    return json.dumps({'app': 'standard-client'})
 
 
 @app.before_first_request
@@ -101,13 +101,13 @@ from discovery.aioclient import Consul
 
 
 async def service_discovery(app):
-    app.loop.create_task(dc.register('myapp', 5000))
+    app.loop.create_task(dc.register('aio-client', 5000))
     asyncio.sleep(15)
     app.loop.create_task(dc.consul_is_healthy())
 
 
 async def handle_info(request):
-    return web.json_response({'app': 'myapp'})
+    return web.json_response({'app': 'aio-client'})
 
 
 async def handle_status(request):
@@ -115,11 +115,11 @@ async def handle_status(request):
 
 
 app = web.Application()
-dc = Consul('localhost', 8500, app.loop)
+dc = Consul('discovery', 8500, app.loop)
 
 app.on_startup.append(service_discovery)
-app.add_routes([web.get('/manage/health', handle_info),
-                web.get('/manage/info', handle_status)])
+app.add_routes([web.get('/manage/health', handle_status),
+                web.get('/manage/info', handle_info)])
 web.run_app(app, host='0.0.0.0', port=5000)
 ````
 

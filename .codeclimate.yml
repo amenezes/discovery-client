@@ -17,5 +17,5 @@ plugins:
       tests_patterns:
         - tests/**
 exclude_patterns:
-- "app/docker"
 - "venv"
+- "examples/"
