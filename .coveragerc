@@ -6,6 +6,10 @@ omit = **__init__.py**
 show_missing = True
 sort = Cover
 precision = 2
+exclude_lines = logging.info
+                logging.debug
+                logging.warn
+                logging.error
 
 [paths]
 source = discovery/

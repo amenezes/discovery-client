@@ -43,12 +43,12 @@ class Consul:
 
         logging.debug(f'Service data: {self.__service}')
 
-    def __format_id(self, id):
+    def __format_id(self, service_id):
         """Retrieve consul ID from Consul API: /health/status/<service>.
 
         docs: https://www.consul.io/api/health.html#list-nodes-for-service
         """
-        return id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
+        return service_id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
 
     def __format_catalog_service(self, services):
         servicesfmt = [{"node": svc['Node'],
@@ -105,7 +105,6 @@ class Consul:
             service = select_one_rr(service_name, services)
         else:
             service = select_one_randomly(services)
-
         return service
 
     def find_services(self, service_name):

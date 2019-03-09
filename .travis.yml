@@ -11,7 +11,7 @@ before_script:
 script:
   - echo '--- code style checking ---'
   - flake8 discovery/*.py
-  - flake8 tests/*.py
+  - flake8 tests/unit/*.py
   - echo '--- unittest ---'
   - python -m pytest -v --cov-report xml --cov-report term --cov=discovery tests
   - echo '--- report upload ---'
