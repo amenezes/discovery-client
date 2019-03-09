@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/amenezes/discovery-client.svg?branch=master)](https://travis-ci.org/amenezes/discovery-client)
 [![Maintainability](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/maintainability)](https://codeclimate.com/github/amenezes/discovery-client/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/test_coverage)](https://codeclimate.com/github/amenezes/discovery-client/test_coverage)
+<!-- [![Test Coverage](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/test_coverage)](https://codeclimate.com/github/amenezes/discovery-client/test_coverage) -->
+[![codecov](https://codecov.io/gh/amenezes/discovery-client/branch/master/graph/badge.svg)](https://codecov.io/gh/amenezes/discovery-client)
 
 # discovery-client
 
