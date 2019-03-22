@@ -1,5 +1,4 @@
 """Test Consul standard client module."""
-
 import logging
 import os
 import unittest
@@ -68,7 +67,9 @@ class TestClient(unittest.TestCase):
         Return a list of instances present in the consul's catalog.
         """
         consul_client = MockConsul(consul.Consul)
-        consul_client.catalog.service = MagicMock(return_value=self.consul_raw_response)
+        consul_client.catalog.service = MagicMock(
+            return_value=self.consul_raw_response
+        )
 
         dc = client.Consul('localhost', 8500)
         consul_service = dc.find_services('consul')
@@ -112,7 +113,9 @@ class TestClient(unittest.TestCase):
         one registered.
         """
         consul_client = MockConsul(consul.Consul)
-        consul_client.catalog.service = MagicMock(return_value=self.consul_raw_response)
+        consul_client.catalog.service = MagicMock(
+            return_value=self.consul_raw_response
+        )
 
         dc = client.Consul('localhost', 8500)
         consul_service = dc.find_service('consul')
@@ -127,7 +130,9 @@ class TestClient(unittest.TestCase):
         Return random instances, when there is more than one registered.
         """
         consul_client = MockConsul(consul.Consul)
-        consul_client.catalog.service = MagicMock(return_value=self.consul_raw_response)
+        consul_client.catalog.service = MagicMock(
+            return_value=self.consul_raw_response
+        )
 
         dc = client.Consul('localhost', 8500)
         consul_service = dc.find_service('consul', method='random')
@@ -140,8 +145,12 @@ class TestClient(unittest.TestCase):
         """Test registration of a service in the  consul's catalog."""
         consul_client = MockConsul(consul.Consul)
         consul_client.agent.service.register = MagicMock()
-        consul_client.catalog.service = MagicMock(return_value=self.myapp_raw_response)
-        consul_client.health.service = MagicMock(return_value=self.consul_health_response)
+        consul_client.catalog.service = MagicMock(
+            return_value=self.myapp_raw_response
+        )
+        consul_client.health.service = MagicMock(
+            return_value=self.consul_health_response
+        )
 
         dc = client.Consul('localhost', 8500)
         dc.register('myapp', 5000)
@@ -154,13 +163,19 @@ class TestClient(unittest.TestCase):
     def test_register_connection_error(self, MockConsul):
         """Failure test to register a service when there is no instance of consul available."""
         consul_client = MockConsul(consul.Consul)
-        consul_client.agent.service.register = MagicMock(side_effect=requests.exceptions.ConnectionError)
-        consul_client.health.service = MagicMock(side_effect=requests.exceptions.ConnectionError)
+        consul_client.agent.service.register = MagicMock(
+            side_effect=requests.exceptions.ConnectionError
+        )
+        consul_client.health.service = MagicMock(
+            side_effect=requests.exceptions.ConnectionError
+        )
 
         dc = client.Consul('localhost', 8500)
         with self.assertLogs() as cm:
             logging.getLogger(dc.register('myapp', 5000))
-        self.assertEqual(cm.output, ['ERROR:root:Failed to connect to discovery...'])
+        self.assertEqual(
+            cm.output, ['ERROR:root:Failed to connect to discovery...']
+        )
 
     @patch('discovery.client.consul.Consul')
     def test_deregister(self, MockConsul):
@@ -168,8 +183,12 @@ class TestClient(unittest.TestCase):
         consul_client = MockConsul(consul.Consul)
         consul_client.agent.service.register = MagicMock()
         consul_client.agent.service.deregister = MagicMock()
-        consul_client.catalog.service = MagicMock(return_value=self.myapp_raw_response)
-        consul_client.health.service = MagicMock(return_value=self.consul_health_response)
+        consul_client.catalog.service = MagicMock(
+            return_value=self.myapp_raw_response
+        )
+        consul_client.health.service = MagicMock(
+            return_value=self.consul_health_response
+        )
 
         dc = client.Consul('localhost', 8500)
         dc.register('myapp', 5000)
