@@ -64,15 +64,27 @@ class Consul:
         logging.debug('Service reconnect fallback')
 
         self.__discovery.agent.service.deregister(self.__service['id'])
-        self.__discovery.agent.service.register(name=self.__service['name'],
-                                                service_id=self.__service['id'],
-                                                check=self.__service['healthcheck'],
-                                                address=self.__service['application_ip'],
-                                                port=self.__service['port'])
-        current_id = self.__discovery.health.service('consul')
-        self.__id = self.__format_id(current_id)
+        self.__discovery.agent.service.register(
+            name=self.__service['name'],
+            service_id=self.__service['id'],
+            check=self.__service['healthcheck'],
+            address=self.__service['application_ip'],
+            port=self.__service['port']
+        )
+
+        self.__id = self.get_leader_current_id()
 
         logging.info('Service successfully re-registered')
+
+    def get_leader_current_id(self):
+        """Retrieve current ID from consul leader."""
+        consul_leader = self.__discovery.status.leader()
+        consul_instances = self.__discovery.health.service('consul')[Filter.PAYLOAD.value]
+        current_id = [instance['Node']['ID']
+                      for instance in consul_instances
+                      if instance['Node']['Address'] == consul_leader.split(':')[0]]
+
+        return current_id[Filter.FIRST_ITEM.value]
 
     def consul_is_healthy(self):
         """Start a loop to monitor consul healthy.
@@ -82,17 +94,18 @@ class Consul:
         while True:
             try:
                 time.sleep(self.DEFAULT_TIMEOUT)
-                current_id = self.__discovery.health.service('consul')
 
-                logging.debug('Checking consul health status')
+                current_id = self.get_leader_current_id()
                 logging.debug(f"Consul ID: {self.__format_id(current_id)}")
 
-                if self.__format_id(current_id) != self.__id:
+                if current_id != self.__id:
                     self.__reconnect()
 
             except requests.exceptions.ConnectionError:
                 logging.error("Failed to connect to discovery service...")
-                logging.error(f'Reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.')
+                logging.error(
+                    f'Reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.'
+                )
 
     def find_service(self, service_name, method='rr'):
         """Search for a service in the consul's catalog.
@@ -118,7 +131,9 @@ class Consul:
 
     def deregister(self):
         """Deregister a service registered."""
-        logging.debug(f"Unregistering service id: {self.__service['id']}")
+        logging.debug(
+            f"Unregistering service id: {self.__service['id']}"
+        )
         logging.info('Successfully unregistered application!')
 
         self.__discovery.agent.service.deregister(self.__service['id'])
@@ -136,13 +151,15 @@ class Consul:
             self.__create_service(service_name,
                                   service_port,
                                   healthcheck_path)
-            self.__discovery.agent.service.register(name=self.__service['name'],
-                                                    service_id=self.__service['id'],
-                                                    check=self.__service['healthcheck'],
-                                                    address=self.__service['application_ip'],
-                                                    port=self.__service['port'])
-            current_id = self.__discovery.health.service('consul')
-            self.__id = self.__format_id(current_id)
+            self.__discovery.agent.service.register(
+                name=self.__service['name'],
+                service_id=self.__service['id'],
+                check=self.__service['healthcheck'],
+                address=self.__service['application_ip'],
+                port=self.__service['port']
+            )
+
+            self.__id = self.get_leader_current_id()
 
             logging.info('Service successfully registered!')
             logging.debug(f'Consul ID: {self.__id}')

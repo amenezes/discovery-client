@@ -65,11 +65,13 @@ class Consul:
     async def _reconnect(self):
         """Service re-registration steps."""
         await self.__discovery.agent.service.deregister(self.__service['id'])
-        await self.__discovery.agent.service.register(name=self.__service['name'],
-                                                      service_id=self.__service['id'],
-                                                      check=self.__service['healthcheck'],
-                                                      address=self.__service['application_ip'],
-                                                      port=self.__service['port'])
+        await self.__discovery.agent.service.register(
+            name=self.__service['name'],
+            service_id=self.__service['id'],
+            check=self.__service['healthcheck'],
+            address=self.__service['application_ip'],
+            port=self.__service['port']
+        )
         current_id = await self.__discovery.health.service('consul')
         self.__id = self.__format_id(current_id)
 
@@ -94,11 +96,15 @@ class Consul:
 
             except aiohttp.ClientConnectorError:
                 logging.error('failed to connect to discovery service...')
-                logging.error(f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.")
+                logging.error(
+                    f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds."
+                )
                 await self.consul_is_healthy()
 
             except aiohttp.ServerDisconnectedError:
-                logging.error('temporary loss of communication with the discovery server.')
+                logging.error(
+                    'temporary loss of communication with the discovery server.'
+                )
                 asyncio.sleep(self.DEFAULT_TIMEOUT)
                 await self.consul_is_healthy()
 
@@ -131,7 +137,10 @@ class Consul:
 
         logging.info('successfully unregistered application!')
 
-    async def register(self, service_name, service_port, healthcheck_path="/manage/health"):
+    async def register(self,
+                       service_name,
+                       service_port,
+                       healthcheck_path="/manage/health"):
         """Register a new service.
 
         Default values are:
@@ -144,11 +153,13 @@ class Consul:
             self.__create_service(service_name,
                                   service_port,
                                   healthcheck_path)
-            await self.__discovery.agent.service.register(name=self.__service['name'],
-                                                          service_id=self.__service['id'],
-                                                          check=self.__service['healthcheck'],
-                                                          address=self.__service['application_ip'],
-                                                          port=self.__service['port'])
+            await self.__discovery.agent.service.register(
+                name=self.__service['name'],
+                service_id=self.__service['id'],
+                check=self.__service['healthcheck'],
+                address=self.__service['application_ip'],
+                port=self.__service['port']
+            )
             current_id = await self.__discovery.health.service('consul')
             self.__id = self.__format_id(current_id)
 
