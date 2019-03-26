@@ -43,13 +43,6 @@ class Consul:
 
         logging.debug(f'Service data: {self.__service}')
 
-    def __format_id(self, service_id):
-        """Retrieve consul ID from Consul API: /health/status/<service>.
-
-        docs: https://www.consul.io/api/health.html#list-nodes-for-service
-        """
-        return service_id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
-
     def __format_catalog_service(self, services):
         servicesfmt = [{"node": svc['Node'],
                         "address": svc['Address'],
@@ -84,7 +77,10 @@ class Consul:
                       for instance in consul_instances
                       if instance['Node']['Address'] == consul_leader.split(':')[0]]
 
-        return current_id[Filter.FIRST_ITEM.value]
+        if len(current_id) > 0:
+            current_id = current_id[Filter.FIRST_ITEM.value]
+
+        return current_id
 
     def consul_is_healthy(self):
         """Start a loop to monitor consul healthy.
@@ -96,7 +92,7 @@ class Consul:
                 time.sleep(self.DEFAULT_TIMEOUT)
 
                 current_id = self.get_leader_current_id()
-                logging.debug(f"Consul ID: {self.__format_id(current_id)}")
+                logging.debug(f"Consul ID: {current_id}")
 
                 if current_id != self.__id:
                     self.__reconnect()
@@ -138,7 +134,10 @@ class Consul:
 
         self.__discovery.agent.service.deregister(self.__service['id'])
 
-    def register(self, service_name, service_port, healthcheck_path="/manage/health"):
+    def register(self,
+                 service_name,
+                 service_port,
+                 healthcheck_path="/manage/health"):
         """Register a new service.
 
         Default values are:

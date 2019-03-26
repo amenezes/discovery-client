@@ -148,9 +148,6 @@ class TestClient(unittest.TestCase):
         consul_client.catalog.service = MagicMock(
             return_value=self.myapp_raw_response
         )
-        consul_client.health.service = MagicMock(
-            return_value=self.consul_health_response
-        )
 
         dc = client.Consul('localhost', 8500)
         dc.register('myapp', 5000)
@@ -185,9 +182,6 @@ class TestClient(unittest.TestCase):
         consul_client.agent.service.deregister = MagicMock()
         consul_client.catalog.service = MagicMock(
             return_value=self.myapp_raw_response
-        )
-        consul_client.health.service = MagicMock(
-            return_value=self.consul_health_response
         )
 
         dc = client.Consul('localhost', 8500)

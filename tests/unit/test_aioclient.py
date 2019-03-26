@@ -8,6 +8,8 @@ from asynctest import CoroutineMock, patch
 
 import consul.aio
 
+from aiohttp import ClientConnectorError
+
 from discovery import aioclient
 
 
@@ -22,7 +24,8 @@ class TestAioClient(asynctest.TestCase):
         self.loop = asyncio.get_event_loop()
         self.consul_health_response = (
             0, [{'Node': {
-                'ID': '123456'}}])
+                'ID': '123456',
+                'Address': '127.0.0.1'}}])
         self.consul_raw_response = (
             0, [{'Node': 'localhost',
                  'Address': '127.0.0.1',
@@ -131,16 +134,44 @@ class TestAioClient(asynctest.TestCase):
         )
 
     @patch('discovery.aioclient.consul.aio.Consul')
+    def test_get_leader_current_id(self, MockAioClient):
+        """Test retrieve the ID from Consul leader."""
+        async def async_test_get_leader_current_id(loop):
+            consul_client = MockAioClient(consul.aio.Consul)
+            consul_client.status.leader = CoroutineMock(
+                return_value='127.0.0.1:8300'
+            )
+            consul_client.health.service = CoroutineMock(
+                return_value=self.consul_health_response
+            )
+
+            dc = aioclient.Consul('localhost', 8500, app=loop)
+            current_id = await dc.get_leader_current_id()
+
+            self.assertIsNotNone(current_id)
+            self.assertEqual(
+                current_id,
+                self.consul_health_response[1][0]['Node']['ID']
+            )
+
+        self.loop.run_until_complete(
+            async_test_get_leader_current_id(self.loop)
+        )
+
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_register(self, MockAioConsul):
         """Test registration of a service in the  consul's catalog."""
         async def async_test_register(loop):
             consul_client = MockAioConsul(consul.aio.Consul)
             consul_client.agent.service.register = CoroutineMock()
-            consul_client.catalog.service = CoroutineMock(
-                return_value=self.myapp_raw_response
+            consul_client.status.leader = CoroutineMock(
+                return_value='127.0.0.1:8300'
             )
             consul_client.health.service = CoroutineMock(
                 return_value=self.consul_health_response
+            )
+            consul_client.catalog.service = CoroutineMock(
+                return_value=self.myapp_raw_response
             )
 
             dc = aioclient.Consul('localhost', 8500, app=loop)
@@ -164,6 +195,9 @@ class TestAioClient(asynctest.TestCase):
             consul_client.catalog.service = CoroutineMock(
                 return_value=self.myapp_raw_response
             )
+            consul_client.status.leader = CoroutineMock(
+                return_value='127.0.0.1:8300'
+            )
             consul_client.health.service = CoroutineMock(
                 return_value=self.consul_health_response
             )
@@ -177,7 +211,9 @@ class TestAioClient(asynctest.TestCase):
 
             await dc.deregister()
 
-            consul_client.catalog.service = CoroutineMock(return_value=(0, []))
+            consul_client.catalog.service = CoroutineMock(
+                return_value=(0, [])
+            )
 
             with self.assertRaises(IndexError):
                 await dc.find_service('myapp')
