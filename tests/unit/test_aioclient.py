@@ -3,12 +3,12 @@ import asyncio
 import os
 import unittest
 
+# from aiohttp import ClientConnectorError
+
 import asynctest
 from asynctest import CoroutineMock, patch
 
 import consul.aio
-
-from aiohttp import ClientConnectorError
 
 from discovery import aioclient
 
