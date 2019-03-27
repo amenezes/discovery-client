@@ -46,13 +46,6 @@ class Consul:
 
         logging.debug(f'Service data: {self.__service}')
 
-    def __format_id(self, id):
-        """Retrieve consul ID from Consul API: /health/status/<service>.
-
-        docs: https://www.consul.io/api/health.html#list-nodes-for-service
-        """
-        return id[Filter.PAYLOAD.value][Filter.FIRST_ITEM.value]['Node']['ID']
-
     def __format_catalog_service(self, services):
         servicesfmt = [{"node": svc['Node'],
                         "address": svc['Address'],
@@ -65,16 +58,33 @@ class Consul:
     async def _reconnect(self):
         """Service re-registration steps."""
         await self.__discovery.agent.service.deregister(self.__service['id'])
-        await self.__discovery.agent.service.register(name=self.__service['name'],
-                                                      service_id=self.__service['id'],
-                                                      check=self.__service['healthcheck'],
-                                                      address=self.__service['application_ip'],
-                                                      port=self.__service['port'])
-        current_id = await self.__discovery.health.service('consul')
-        self.__id = self.__format_id(current_id)
+        await self.__discovery.agent.service.register(
+            name=self.__service['name'],
+            service_id=self.__service['id'],
+            check=self.__service['healthcheck'],
+            address=self.__service['application_ip'],
+            port=self.__service['port']
+        )
 
-        logging.debug(f"Consul ID: {self.__format_id(current_id)}")
+        self.__id = await self.get_leader_current_id()
+
+        logging.debug(f"Consul ID: {self.__id}")
         logging.info('Service successfully re-registered')
+
+    async def get_leader_current_id(self):
+        """Retrieve current ID from consul leader."""
+        consul_leader = await self.__discovery.status.leader()
+        consul_instances = await self.__discovery.health.service('consul')
+        consul_instances = consul_instances[Filter.PAYLOAD.value]
+
+        current_id = [instance['Node']['ID']
+                      for instance in consul_instances
+                      if instance['Node']['Address'] == consul_leader.split(':')[0]]
+
+        # if len(current_id) > 0:
+        #     current_id = current_id[Filter.FIRST_ITEM.value]
+
+        return current_id[Filter.FIRST_ITEM.value]
 
     async def consul_is_healthy(self):
         """Start a loop to monitor consul healthy.
@@ -87,18 +97,22 @@ class Consul:
                 current_id = await self.__discovery.health.service('consul')
 
                 logging.debug('Checking consul health status')
-                logging.debug(f"Consul ID: {self.__format_id(current_id)}")
+                logging.debug(f"Consul ID: {current_id}")
 
-                if self.__format_id(current_id) != self.__id:
+                if current_id != self.__id:
                     await self._reconnect()
 
             except aiohttp.ClientConnectorError:
                 logging.error('failed to connect to discovery service...')
-                logging.error(f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.")
+                logging.error(
+                    f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds."
+                )
                 await self.consul_is_healthy()
 
             except aiohttp.ServerDisconnectedError:
-                logging.error('temporary loss of communication with the discovery server.')
+                logging.error(
+                    'temporary loss of communication with the discovery server.'
+                )
                 asyncio.sleep(self.DEFAULT_TIMEOUT)
                 await self.consul_is_healthy()
 
@@ -131,7 +145,10 @@ class Consul:
 
         logging.info('successfully unregistered application!')
 
-    async def register(self, service_name, service_port, healthcheck_path="/manage/health"):
+    async def register(self,
+                       service_name,
+                       service_port,
+                       healthcheck_path="/manage/health"):
         """Register a new service.
 
         Default values are:
@@ -141,19 +158,23 @@ class Consul:
         timeout: 5s
         """
         try:
-            self.__create_service(service_name,
-                                  service_port,
-                                  healthcheck_path)
-            await self.__discovery.agent.service.register(name=self.__service['name'],
-                                                          service_id=self.__service['id'],
-                                                          check=self.__service['healthcheck'],
-                                                          address=self.__service['application_ip'],
-                                                          port=self.__service['port'])
-            current_id = await self.__discovery.health.service('consul')
-            self.__id = self.__format_id(current_id)
+            self.__create_service(
+                service_name,
+                service_port,
+                healthcheck_path
+            )
+            await self.__discovery.agent.service.register(
+                name=self.__service['name'],
+                service_id=self.__service['id'],
+                check=self.__service['healthcheck'],
+                address=self.__service['application_ip'],
+                port=self.__service['port']
+            )
+
+            self.__id = await self.get_leader_current_id()
 
             logging.info('service successfully registered!')
-            logging.debug(f"Consul ID: {self.__format_id(current_id)}")
+            logging.debug(f"Consul ID: {self.__id}")
 
         except aiohttp.ClientConnectorError:
             logging.error("failed to connect to discovery...")
