@@ -7,7 +7,8 @@ from unittest.mock import patch
 
 import consul
 
-from discovery import client
+from discovery.consul import client
+from discovery.service import Service
 
 import requests
 
@@ -60,7 +61,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(dc.DEFAULT_TIMEOUT, 5)
         self.assertNotEqual(dc.DEFAULT_TIMEOUT, 30)
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_find_services(self, MockConsul):
         """Test for localization of a set of services present in the consul's catalog.
 
@@ -77,7 +78,7 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(consul_service, list)
         self.assertIn(self.fmt_response[0], consul_service)
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_find_services_not_on_catalog(self, MockConsul):
         """Test for localization of a set of services not present in the consul's catalog.
 
@@ -91,7 +92,7 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(response, [])
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_find_service_not_found(self, MockConsul):
         """Test for localization of a service not present in the consul's catalog.
 
@@ -105,7 +106,7 @@ class TestClient(unittest.TestCase):
         with self.assertRaises(IndexError):
             dc.find_service('myapp')
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_find_service_rr(self, MockConsul):
         """Test for localization of a service present in the consul's catalog.
 
@@ -123,7 +124,7 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(consul_service, dict)
         self.assertEqual(consul_service, self.fmt_response[0])
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_find_service_random(self, MockConsul):
         """Test for localization of a service present in the consul's catalog.
 
@@ -140,7 +141,7 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(consul_service, dict)
         self.assertEqual(consul_service, self.fmt_response[0])
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_register(self, MockConsul):
         """Test registration of a service in the  consul's catalog."""
         consul_client = MockConsul(consul.Consul)
@@ -149,14 +150,15 @@ class TestClient(unittest.TestCase):
             return_value=self.myapp_raw_response
         )
 
+        svc = Service('myapp', 5000)
         dc = client.Consul('localhost', 8500)
-        dc.register('myapp', 5000)
+        dc.register(svc)
         myapp_service = dc.find_service('myapp')
 
         self.assertIsInstance(myapp_service, dict)
         self.assertEqual(myapp_service, self.fmt_response[1])
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_register_connection_error(self, MockConsul):
         """Failure test to register a service when there is no instance of consul available."""
         consul_client = MockConsul(consul.Consul)
@@ -167,14 +169,15 @@ class TestClient(unittest.TestCase):
             side_effect=requests.exceptions.ConnectionError
         )
 
+        svc = Service('myapp', 5000)
         dc = client.Consul('localhost', 8500)
         with self.assertLogs() as cm:
-            logging.getLogger(dc.register('myapp', 5000))
+            logging.getLogger(dc.register(svc))
         self.assertEqual(
             cm.output, ['ERROR:root:Failed to connect to discovery...']
         )
 
-    @patch('discovery.client.consul.Consul')
+    @patch('discovery.consul.client.consul.Consul')
     def test_deregister(self, MockConsul):
         """Test the deregistration of a service present in the consul's catalog."""
         consul_client = MockConsul(consul.Consul)
@@ -184,14 +187,15 @@ class TestClient(unittest.TestCase):
             return_value=self.myapp_raw_response
         )
 
+        svc = Service('myapp', 5000)
         dc = client.Consul('localhost', 8500)
-        dc.register('myapp', 5000)
+        dc.register(svc)
         myapp_service = dc.find_service('myapp')
 
         self.assertIsInstance(myapp_service, dict)
         self.assertEqual(myapp_service, self.fmt_response[1])
 
-        dc.deregister()
+        dc.deregister(svc)
 
         consul_client.catalog.service = MagicMock(return_value=(0, []))
 

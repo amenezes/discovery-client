@@ -9,27 +9,17 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 class Service:
     """Consul service."""
 
-    def __init__(self, name, port):
+    __healthcheck = {}
+
+    def __init__(self, name, port, check=None):
         """Create a instance for consul's service."""
         self.__name = name
         self.__port = port
-        self.__healthcheck = {
-            'http': f"http://{name}:{port}/manage/health",
-            'DeregisterCriticalServiceAfter': "1m",
-            'interval': '10s',
-            'timeout': '5s'
-        }
         self.__id = f"{name}-{uuid.uuid4().hex}"
         self.__ip = socket.gethostbyname(socket.gethostname())
 
-    def __str__(self):
-        return str({
-            'name': self.name,
-            'port': self.port,
-            'id': self.id,
-            'ip': self.ip,
-            'healthcheck': self.healthcheck,
-        })
+        if check:
+            self.__healthcheck = check.value
 
     @property
     def name(self):
@@ -55,13 +45,3 @@ class Service:
     def healthcheck(self):
         """Getter from healthcheck property."""
         return self.__healthcheck
-
-    @healthcheck.setter
-    def healthcheck(self, value):
-        """Setter from name property."""
-        if type(value) not in [dict, list]:
-            logging.error('Healthcheck must be a dict or list.')
-            raise TypeError(
-                'Service healthcheck must be a dict or list.'
-            )
-        self.__healthcheck = value

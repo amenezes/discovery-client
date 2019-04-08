@@ -10,8 +10,8 @@ before_script:
   - chmod +x ./cc-test-reporter
 script:
   - echo '--- code style checking ---'
-  - flake8 discovery/*.py
-  - flake8 tests/unit/*.py
+  - flake8 discovery
+  - flake8 tests
   - echo '--- unittest ---'
   - python -m pytest -v --cov-report xml --cov-report term --cov=discovery tests
   - echo '--- report upload ---'

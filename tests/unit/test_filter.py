@@ -1,7 +1,7 @@
 """Test filter enum."""
 import unittest
 
-from discovery.filter import Filter
+from discovery.consul.filter import Filter
 
 
 class TestFilter(unittest.TestCase):

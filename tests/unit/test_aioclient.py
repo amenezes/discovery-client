@@ -3,14 +3,13 @@ import asyncio
 import os
 import unittest
 
-# from aiohttp import ClientConnectorError
-
 import asynctest
 from asynctest import CoroutineMock, patch
 
 import consul.aio
 
-from discovery import aioclient
+from discovery.consul import aioclient
+from discovery.service import Service
 
 
 class TestAioClient(asynctest.TestCase):
@@ -68,7 +67,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_changing_default_timeout(self.loop)
         )
 
-    @patch('discovery.aioclient.consul.aio.Consul')
+    @patch('discovery.consul.aioclient.consul.aio.Consul')
     def test_find_services(self, MockAioConsul):
         """Test for localization of a set of services present in the consul's catalog.
 
@@ -90,7 +89,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_find_services(self.loop)
         )
 
-    @patch('discovery.aioclient.consul.aio.Consul')
+    @patch('discovery.consul.aioclient.consul.aio.Consul')
     def test_find_services_not_on_catalog(self, MockAioConsul):
         """Test for localization of a set of services not present in the consul's catalog.
 
@@ -111,7 +110,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_find_services_not_on_catalog(self.loop)
         )
 
-    @patch('discovery.aioclient.consul.aio.Consul')
+    @patch('discovery.consul.aioclient.consul.aio.Consul')
     def test_test_find_service_random(self, MockAioConsul):
         """Test for localization of a service present in the consul's catalog.
 
@@ -133,7 +132,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_find_services(self.loop)
         )
 
-    @patch('discovery.aioclient.consul.aio.Consul')
+    @patch('discovery.consul.aioclient.consul.aio.Consul')
     def test_get_leader_current_id(self, MockAioClient):
         """Test retrieve the ID from Consul leader."""
         async def async_test_get_leader_current_id(loop):
@@ -158,7 +157,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_get_leader_current_id(self.loop)
         )
 
-    @patch('discovery.aioclient.consul.aio.Consul')
+    @patch('discovery.consul.aioclient.consul.aio.Consul')
     def test_register(self, MockAioConsul):
         """Test registration of a service in the  consul's catalog."""
         async def async_test_register(loop):
@@ -174,8 +173,9 @@ class TestAioClient(asynctest.TestCase):
                 return_value=self.myapp_raw_response
             )
 
+            svc = Service('myapp', 5000)
             dc = aioclient.Consul('localhost', 8500, app=loop)
-            await dc.register('myapp', 5000)
+            await dc.register(svc)
             myapp_service = await dc.find_service('myapp')
 
             self.assertIsInstance(myapp_service, dict)
@@ -185,7 +185,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_register(self.loop)
         )
 
-    @patch('discovery.aioclient.consul.aio.Consul')
+    @patch('discovery.consul.aioclient.consul.aio.Consul')
     def test_deregister(self, MockAioConsul):
         """Test the deregistration of a service present in the consul's catalog."""
         async def async_test_deregister(loop):
@@ -202,14 +202,15 @@ class TestAioClient(asynctest.TestCase):
                 return_value=self.consul_health_response
             )
 
+            svc = Service('myapp', 5000)
             dc = aioclient.Consul('localhost', 8500, app=loop)
-            await dc.register('myapp', 5000)
+            await dc.register(svc)
             myapp_service = await dc.find_service('myapp')
 
             self.assertIsInstance(myapp_service, dict)
             self.assertEqual(myapp_service, self.fmt_response[1])
 
-            await dc.deregister()
+            await dc.deregister(svc)
 
             consul_client.catalog.service = CoroutineMock(
                 return_value=(0, [])

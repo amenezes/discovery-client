@@ -4,7 +4,7 @@ import logging
 import os
 from abc import ABC
 
-from discovery.filter import Filter
+from discovery.consul.filter import Filter
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

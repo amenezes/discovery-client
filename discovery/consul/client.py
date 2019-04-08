@@ -5,9 +5,9 @@ import time
 
 import consul
 
-from discovery.base_client import BaseClient
-from discovery.filter import Filter
-from discovery.utils import select_one_randomly, select_one_rr
+from discovery.consul.base_client import BaseClient
+from discovery.consul.filter import Filter
+from discovery.consul.utils import select_one_randomly, select_one_rr
 
 import requests
 
@@ -18,7 +18,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 class Consul(BaseClient):
     """Consul Service Registry."""
 
-    def __init__(self, host, port):
+    def __init__(self, host='localhost', port=8500):
         """Create a instance for standard consul client."""
         super().__init__()
         self.__discovery = consul.Consul(host, port)
@@ -52,8 +52,8 @@ class Consul(BaseClient):
 
         return current_id
 
-    def monitor_connection(self, service):
-        """Start a loop to monitor consul healthy.
+    def check_consul_health(self, service):
+        """Start a loop that check consul health.
 
         Necessary to re-register service in case of consul fail.
         """
@@ -122,3 +122,21 @@ class Consul(BaseClient):
 
         except requests.exceptions.ConnectionError:
             logging.error("Failed to connect to discovery...")
+
+    # def filter_by_status(self, service, status):
+    #     response = []
+    #     raw_response = self.__discovery.health.service(service)
+    #     for service in raw_response[Filter.PAYLOAD.value]:
+    #         for status in service['Checks']:
+    #             if status['passing']:
+    #                 response.append(service)
+    #     return response
+
+    def register_service_dependency_healthcheck(self, service, check):
+        """Append a healthcheck to a service registered."""
+        self.__discovery.agent.check.register(
+            check.name, check.value, service_id=service.id)
+
+    def deregister_service_dependency_healthcheck(self, service, check):
+        """Remove a healthcheck to a service registered."""
+        self.__discovery.agent.check.deregister(check.id)

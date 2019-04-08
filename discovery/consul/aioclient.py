@@ -7,9 +7,9 @@ import aiohttp
 
 import consul.aio
 
-from discovery.base_client import BaseClient
-from discovery.filter import Filter
-from discovery.utils import select_one_randomly, select_one_rr
+from discovery.consul.base_client import BaseClient
+from discovery.consul.filter import Filter
+from discovery.consul.utils import select_one_randomly, select_one_rr
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -51,8 +51,8 @@ class Consul(BaseClient):
 
         return current_id[Filter.FIRST_ITEM.value]
 
-    async def monitor_connection(self, service):
-        """Start a loop to monitor consul healthy.
+    async def check_consul_health(self, service):
+        """Start a loop that check consul health.
 
         Necessary to re-register service in case of consul fail.
         """
@@ -70,14 +70,14 @@ class Consul(BaseClient):
                 logging.error(
                     f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds."
                 )
-                await self.monitor_connection(service)
+                await self.check_consul_health(service)
 
             except aiohttp.ServerDisconnectedError:
                 logging.error(
                     'temporary loss of communication with the discovery server.'
                 )
                 asyncio.sleep(self.DEFAULT_TIMEOUT)
-                await self.monitor_connection(service)
+                await self.check_consul_health(service)
 
     async def find_service(self, name, method='rr'):
         """Search for a service in the consul's catalog.
@@ -125,3 +125,12 @@ class Consul(BaseClient):
 
         except aiohttp.ClientConnectorError:
             logging.error("Failed to connect to discovery...")
+
+    async def register_service_dependency_healthcheck(self, service, check):
+        """Append a healthcheck to a service registered."""
+        await self.__discovery.agent.check.register(
+            check.name, check.value, service_id=service.id)
+
+    async def deregister_service_dependency_healthcheck(self, service, check):
+        """Remove a healthcheck to a service registered."""
+        await self.__discovery.agent.check.deregister(check.id)
