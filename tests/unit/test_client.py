@@ -54,6 +54,7 @@ class TestClient(unittest.TestCase):
             }]
 
     def test_default_timeout(self):
+        """Test default timeout used to check periodically health status of the Consul connection."""
         del os.environ['DEFAULT_TIMEOUT']
         dc = client.Consul('localhost', 8500)
 

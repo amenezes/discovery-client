@@ -55,6 +55,7 @@ class TestAioClient(asynctest.TestCase):
             }]
 
     def test_default_timeout(self):
+        """Test the default timeout used to check periodically health status of the Consul connection."""
         async def async_test_default_timeout(loop):
             del os.environ['DEFAULT_TIMEOUT']
             dc = aioclient.Consul('localhost', 8500, app=loop)
