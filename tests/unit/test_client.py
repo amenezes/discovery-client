@@ -53,6 +53,12 @@ class TestClient(unittest.TestCase):
                 'service_port': 5000
             }]
 
+    def test_default_timeout(self):
+        del os.environ['DEFAULT_TIMEOUT']
+        dc = client.Consul('localhost', 8500)
+
+        self.assertEqual(dc.DEFAULT_TIMEOUT, 30)
+
     def test_changing_default_timeout(self):
         """Test change the time used to check periodically health status of the Consul connection."""
         os.environ['DEFAULT_TIMEOUT'] = '5'

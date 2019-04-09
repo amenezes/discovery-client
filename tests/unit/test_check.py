@@ -57,6 +57,13 @@ class TestCheck(unittest.TestCase):
         self.assertRegex(check.id, self.regexp_id)
         self.assertRegex(str(check.value), self.regexp_alias)
 
+    def test_str_magic_method(self):
+        check = Check('str test')
+        check.alias('alias-test')
+
+        regex_str = r'(.id.{1,4}\w{32}.{1,4}alias_service.{1,4}alias-test.)'
+        self.assertRegex(check.__str__(), regex_str)
+
 
 if __name__ == '__main__':
     unittest.main()
