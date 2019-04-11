@@ -23,6 +23,7 @@ class BaseClient(ABC):
 
     def _format_catalog_service(self, services):
         return [{"node": svc['Node'],
+                 "node_id": svc['ID'],
                  "address": svc['Address'],
                  "service_id": svc['ServiceID'],
                  "service_name": svc['ServiceName'],
