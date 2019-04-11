@@ -94,7 +94,7 @@ class Consul:
         while True:
             try:
                 await asyncio.sleep(self.DEFAULT_TIMEOUT)
-                current_id = await self.__discovery.health.service('consul')
+                current_id = await self.get_leader_current_id()
 
                 logging.debug('Checking consul health status')
                 logging.debug(f"Consul ID: {current_id}")
