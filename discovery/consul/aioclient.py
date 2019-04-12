@@ -59,7 +59,7 @@ class Consul(BaseClient):
         while True:
             try:
                 await asyncio.sleep(self.DEFAULT_TIMEOUT)
-                current_id = await self.__discovery.health.service('consul')
+                current_id = await self.get_leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
 
                 if current_id != self.__id:
@@ -126,11 +126,11 @@ class Consul(BaseClient):
         except aiohttp.ClientConnectorError:
             logging.error("Failed to connect to discovery...")
 
-    async def register_service_dependency_healthcheck(self, service, check):
+    async def append_healthcheck(self, service, check):
         """Append a healthcheck to a service registered."""
         await self.__discovery.agent.check.register(
             check.name, check.value, service_id=service.id)
 
-    async def deregister_service_dependency_healthcheck(self, service, check):
+    async def remove_healthcheck(self, service, check):
         """Remove a healthcheck to a service registered."""
         await self.__discovery.agent.check.deregister(check.id)

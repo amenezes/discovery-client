@@ -9,6 +9,7 @@ from asynctest import CoroutineMock, patch
 import consul.aio
 
 from discovery.consul import aioclient
+from discovery.consul.check import Check
 from discovery.service import Service
 
 
@@ -27,13 +28,14 @@ class TestAioClient(asynctest.TestCase):
                 'Address': '127.0.0.1'}}])
         self.consul_raw_response = (
             0, [{'Node': 'localhost',
+                 'ID': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                  'Address': '127.0.0.1',
                  'ServiceID': '#123',
                  'ServiceName': 'consul',
                  'ServicePort': 8300}])
         self.myapp_raw_response = (
             0, [{'Node': 'localhost',
-                 'ID': '987654',
+                 'ID': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                  'Address': '127.0.0.1',
                  'ServiceID': '#987',
                  'ServiceName': 'myapp',
@@ -41,6 +43,7 @@ class TestAioClient(asynctest.TestCase):
         self.fmt_response = [
             {
                 'node': 'localhost',
+                'node_id': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                 'address': '127.0.0.1',
                 'service_id': '#123',
                 'service_name': 'consul',
@@ -48,6 +51,7 @@ class TestAioClient(asynctest.TestCase):
             },
             {
                 'node': 'localhost',
+                'node_id': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                 'address': '127.0.0.1',
                 'service_id': '#987',
                 'service_name': 'myapp',

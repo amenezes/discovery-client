@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import consul
 
+from discovery.consul.filter import Filter
 from discovery.consul import client
 from discovery.service import Service
 
@@ -23,16 +24,18 @@ class TestClient(unittest.TestCase):
         """
         self.consul_health_response = (
             0, [{'Node': {
-                'ID': '123456'}}])
+                'ID': '123456',
+                'Address': '127.0.0.1'}}])
         self.consul_raw_response = (
             0, [{'Node': 'localhost',
+                 'ID': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                  'Address': '127.0.0.1',
                  'ServiceID': '#123',
                  'ServiceName': 'consul',
                  'ServicePort': 8300}])
         self.myapp_raw_response = (
             0, [{'Node': 'localhost',
-                 'ID': '987654',
+                 'ID': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                  'Address': '127.0.0.1',
                  'ServiceID': '#987',
                  'ServiceName': 'myapp',
@@ -40,6 +43,7 @@ class TestClient(unittest.TestCase):
         self.fmt_response = [
             {
                 'node': 'localhost',
+                'node_id': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                 'address': '127.0.0.1',
                 'service_id': '#123',
                 'service_name': 'consul',
@@ -47,11 +51,18 @@ class TestClient(unittest.TestCase):
             },
             {
                 'node': 'localhost',
+                'node_id': '5d9f029a-ee3f-b8b6-61a9-4042ad43e968',
                 'address': '127.0.0.1',
                 'service_id': '#987',
                 'service_name': 'myapp',
                 'service_port': 5000
             }]
+    
+    def test_absent_of_default_timeout(self):
+        del os.environ['DEFAULT_TIMEOUT']
+        dc = client.Consul()
+
+        self.assertEqual(dc.DEFAULT_TIMEOUT, 30)
 
     def test_changing_default_timeout(self):
         """Test change the time used to check periodically health status of the Consul connection."""
@@ -149,6 +160,12 @@ class TestClient(unittest.TestCase):
         consul_client.catalog.service = MagicMock(
             return_value=self.myapp_raw_response
         )
+        consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
+        )
+        consul_client.health.service = MagicMock(
+            return_value=self.consul_health_response
+        )
 
         svc = Service('myapp', 5000)
         dc = client.Consul('localhost', 8500)
@@ -185,6 +202,12 @@ class TestClient(unittest.TestCase):
         consul_client.agent.service.deregister = MagicMock()
         consul_client.catalog.service = MagicMock(
             return_value=self.myapp_raw_response
+        )
+        consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
+        )
+        consul_client.health.service = MagicMock(
+            return_value=self.consul_health_response
         )
 
         svc = Service('myapp', 5000)
