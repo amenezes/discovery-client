@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import consul
 
-from discovery.consul.filter import Filter
 from discovery.consul import client
 from discovery.service import Service
 

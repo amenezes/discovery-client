@@ -56,12 +56,6 @@ class TestCheck(unittest.TestCase):
         self.assertEqual(check.name, 'alias-check')
         self.assertRegex(check.id, self.regexp_id)
         self.assertRegex(str(check.value), self.regexp_alias)
-    
-    def test_magic_method_str(self):
-        check = Check('magic method test')
-        check.alias('consul')
-
-        self.assertRegex(check.__str__(), self.regexp_alias)
 
     def test_str_magic_method(self):
         """Tests the overwriting of the __str__ magic method."""

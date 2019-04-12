@@ -9,7 +9,6 @@ from asynctest import CoroutineMock, patch
 import consul.aio
 
 from discovery.consul import aioclient
-from discovery.consul.check import Check
 from discovery.service import Service
 
 
