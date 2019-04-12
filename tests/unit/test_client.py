@@ -57,12 +57,6 @@ class TestClient(unittest.TestCase):
                 'service_name': 'myapp',
                 'service_port': 5000
             }]
-    
-    def test_absent_of_default_timeout(self):
-        del os.environ['DEFAULT_TIMEOUT']
-        dc = client.Consul()
-
-        self.assertEqual(dc.DEFAULT_TIMEOUT, 30)
 
     def test_default_timeout(self):
         """Test default timeout used to check periodically health status of the Consul connection."""
