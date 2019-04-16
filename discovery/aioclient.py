@@ -27,8 +27,15 @@ class Consul:
     def __init__(self, host, port, app):
         """Create a instance for async consul client."""
         self.__discovery = consul.aio.Consul(host, port, loop=app)
+        self.__ensure_leader_connection(port)
         if os.getenv('DEFAULT_TIMEOUT'):
             self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
+
+    def __ensure_leader_connection(self, port):
+        async def async_ensure_leader_connection():
+            current_leader = await self.__discovery.status.leader()
+            leader_ip = current_leader.split(':')
+            self.__discovery = consul.Consul(leader_ip[0], port)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""

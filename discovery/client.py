@@ -27,8 +27,15 @@ class Consul:
     def __init__(self, host, port):
         """Create a instance for standard consul client."""
         self.__discovery = consul.Consul(host, port)
+        self.__ensure_leader_connection(port)
         if os.getenv('DEFAULT_TIMEOUT'):
             self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
+        self.__get_leader(port)
+
+    def __ensure_leader_connection(self, port):
+        current_leader = self.__discovery.status.leader()
+        leader_ip = current_leader.split(':')
+        self.__discovery = consul.Consul(leader_ip[0], port)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""
