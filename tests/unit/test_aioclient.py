@@ -2,8 +2,7 @@
 import asyncio
 import os
 import unittest
-
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 # from aiohttp import ClientConnectorError
 

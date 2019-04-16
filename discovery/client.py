@@ -1,6 +1,5 @@
 """Consul discovery client module."""
 import logging
-import os
 import socket
 import time
 import uuid
