@@ -25,6 +25,7 @@ class TestClient(unittest.TestCase):
                 'ID': '123456'}}])
         self.consul_raw_response = (
             0, [{'Node': 'localhost',
+                 'ID': '987654',
                  'Address': '127.0.0.1',
                  'ServiceID': '#123',
                  'ServiceName': 'consul',
@@ -39,6 +40,7 @@ class TestClient(unittest.TestCase):
         self.fmt_response = [
             {
                 'node': 'localhost',
+                'node_id': '987654',
                 'address': '127.0.0.1',
                 'service_id': '#123',
                 'service_name': 'consul',
@@ -46,14 +48,21 @@ class TestClient(unittest.TestCase):
             },
             {
                 'node': 'localhost',
+                'node_id': '987654',
                 'address': '127.0.0.1',
                 'service_id': '#987',
                 'service_name': 'myapp',
                 'service_port': 5000
             }]
 
-    def test_changing_default_timeout(self):
+    @patch('discovery.client.consul.Consul')
+    def test_changing_default_timeout(self, MockConsul):
         """Test change the time used to check periodically health status of the Consul connection."""
+        consul_client = MockConsul(consul.Consul)
+        consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
+        )
+
         os.environ['DEFAULT_TIMEOUT'] = '5'
         dc = client.Consul('localhost', 8500)
 
@@ -133,6 +142,9 @@ class TestClient(unittest.TestCase):
         consul_client.catalog.service = MagicMock(
             return_value=self.consul_raw_response
         )
+        consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
+        )
 
         dc = client.Consul('localhost', 8500)
         consul_service = dc.find_service('consul', method='random')
@@ -147,6 +159,9 @@ class TestClient(unittest.TestCase):
         consul_client.agent.service.register = MagicMock()
         consul_client.catalog.service = MagicMock(
             return_value=self.myapp_raw_response
+        )
+        consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
         )
 
         dc = client.Consul('localhost', 8500)
@@ -182,6 +197,9 @@ class TestClient(unittest.TestCase):
         consul_client.agent.service.deregister = MagicMock()
         consul_client.catalog.service = MagicMock(
             return_value=self.myapp_raw_response
+        )
+        consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
         )
 
         dc = client.Consul('localhost', 8500)

@@ -1,13 +1,12 @@
 """Consul discovery client module."""
-
 import logging
-import os
 import socket
 import time
 import uuid
 
 import consul
 
+from discovery.base_client import BaseClient
 from discovery.filter import Filter
 from discovery.utils import select_one_randomly, select_one_rr
 
@@ -17,18 +16,21 @@ import requests
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-class Consul:
+class Consul(BaseClient):
     """Consul Service Registry."""
 
-    __id = ''
     __service = {'application_ip': socket.gethostbyname(socket.gethostname())}
-    DEFAULT_TIMEOUT = int(Filter.DEFAULT_TIMEOUT.value)
 
     def __init__(self, host, port):
         """Create a instance for standard consul client."""
+        super().__init__()
         self.__discovery = consul.Consul(host, port)
-        if os.getenv('DEFAULT_TIMEOUT'):
-            self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
+        self.__ensure_leader_connection(port)
+
+    def __ensure_leader_connection(self, port):
+        leader = self.__discovery.status.leader()
+        leader = leader.split(':')
+        self.__discovery = consul.Consul(f"{leader[0]}", port)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""
@@ -42,15 +44,6 @@ class Consul:
             "timeout": "5s"}})
 
         logging.debug(f'Service data: {self.__service}')
-
-    def __format_catalog_service(self, services):
-        servicesfmt = [{"node": svc['Node'],
-                        "address": svc['Address'],
-                        "service_id": svc['ServiceID'],
-                        "service_name": svc['ServiceName'],
-                        "service_port": svc['ServicePort']}
-                       for svc in services[Filter.PAYLOAD.value]]
-        return servicesfmt
 
     def __reconnect(self):
         """Service re-registration steps."""
@@ -123,7 +116,7 @@ class Consul:
         Return a list of services registered on consul catalog.
         """
         services = self.__discovery.catalog.service(service_name)
-        return self.__format_catalog_service(services)
+        return self._format_catalog_service(services)
 
     def deregister(self):
         """Deregister a service registered."""

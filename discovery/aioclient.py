@@ -2,14 +2,15 @@
 
 import asyncio
 import logging
-import os
 import socket
 import uuid
 
 import aiohttp
 
+import consul
 import consul.aio
 
+from discovery.base_client import BaseClient
 from discovery.filter import Filter
 from discovery.utils import select_one_randomly, select_one_rr
 
@@ -17,18 +18,21 @@ from discovery.utils import select_one_randomly, select_one_rr
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-class Consul:
+class Consul(BaseClient):
     """Async Consul Service Registry."""
 
-    __id = ''
     __service = {}
-    DEFAULT_TIMEOUT = int(Filter.DEFAULT_TIMEOUT.value)
 
     def __init__(self, host, port, app):
         """Create a instance for async consul client."""
-        self.__discovery = consul.aio.Consul(host, port, loop=app)
-        if os.getenv('DEFAULT_TIMEOUT'):
-            self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
+        super().__init__()
+        self.__discovery = consul.Consul(host, port)
+        self.__ensure_leader_connection(port, app)
+
+    def __ensure_leader_connection(self, port, loop):
+        leader = self.__discovery.status.leader()
+        leader = leader.split(':')
+        self.__discovery = consul.aio.Consul(f"{leader[0]}", port, loop)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""
@@ -45,15 +49,6 @@ class Consul:
         }})
 
         logging.debug(f'Service data: {self.__service}')
-
-    def __format_catalog_service(self, services):
-        servicesfmt = [{"node": svc['Node'],
-                        "address": svc['Address'],
-                        "service_id": svc['ServiceID'],
-                        "service_name": svc['ServiceName'],
-                        "service_port": svc['ServicePort']}
-                       for svc in services[Filter.PAYLOAD.value]]
-        return servicesfmt
 
     async def _reconnect(self):
         """Service re-registration steps."""
@@ -137,7 +132,7 @@ class Consul:
         Return a list of services registered on consul catalog.
         """
         services = await self.__discovery.catalog.service(service_name)
-        return self.__format_catalog_service(services)
+        return self._format_catalog_service(services)
 
     async def deregister(self):
         """Deregister a service registered."""
