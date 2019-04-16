@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="discovery-client",
-    version="0.2.3",
+    version="0.2.4",
     author="alexandre menezes",
     author_email="alexandre.fmenezes@gmail.com",
     description="discovery service client",
