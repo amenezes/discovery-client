@@ -8,7 +8,7 @@ from asynctest import CoroutineMock, patch
 
 import consul.aio
 
-from discovery.consul import aioclient
+from discovery import aioclient
 from discovery.service import Service
 
 
@@ -82,7 +82,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_changing_default_timeout(self.loop)
         )
 
-    @patch('discovery.consul.aioclient.consul.aio.Consul')
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_find_services(self, MockAioConsul):
         """Test for localization of a set of services present in the consul's catalog.
 
@@ -104,7 +104,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_find_services(self.loop)
         )
 
-    @patch('discovery.consul.aioclient.consul.aio.Consul')
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_find_services_not_on_catalog(self, MockAioConsul):
         """Test for localization of a set of services not present in the consul's catalog.
 
@@ -125,7 +125,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_find_services_not_on_catalog(self.loop)
         )
 
-    @patch('discovery.consul.aioclient.consul.aio.Consul')
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_test_find_service_random(self, MockAioConsul):
         """Test for localization of a service present in the consul's catalog.
 
@@ -147,7 +147,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_find_services(self.loop)
         )
 
-    @patch('discovery.consul.aioclient.consul.aio.Consul')
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_get_leader_current_id(self, MockAioClient):
         """Test retrieve the ID from Consul leader."""
         async def async_test_get_leader_current_id(loop):
@@ -172,7 +172,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_get_leader_current_id(self.loop)
         )
 
-    @patch('discovery.consul.aioclient.consul.aio.Consul')
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_register(self, MockAioConsul):
         """Test registration of a service in the  consul's catalog."""
         async def async_test_register(loop):
@@ -200,7 +200,7 @@ class TestAioClient(asynctest.TestCase):
             async_test_register(self.loop)
         )
 
-    @patch('discovery.consul.aioclient.consul.aio.Consul')
+    @patch('discovery.aioclient.consul.aio.Consul')
     def test_deregister(self, MockAioConsul):
         """Test the deregistration of a service present in the consul's catalog."""
         async def async_test_deregister(loop):

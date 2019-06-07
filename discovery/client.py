@@ -5,9 +5,9 @@ import time
 
 import consul
 
-from discovery.consul.base_client import BaseClient
-from discovery.consul.filter import Filter
-from discovery.consul.utils import select_one_randomly, select_one_rr
+from discovery.base_client import BaseClient
+from discovery.filter import Filter
+from discovery.utils import select_one_randomly, select_one_rr
 
 import requests
 

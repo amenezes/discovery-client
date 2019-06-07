@@ -1,4 +1,5 @@
 """Consul service module."""
+
 import logging
 import socket
 import uuid
@@ -19,7 +20,7 @@ class Service:
         self.__ip = socket.gethostbyname(socket.gethostname())
 
         if check:
-            self.__healthcheck = check.value
+            self.__healthcheck = str(check)
 
     @property
     def name(self):

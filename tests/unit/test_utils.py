@@ -1,7 +1,7 @@
 """Test utils module."""
 import unittest
 
-from discovery.consul.utils import select_one_randomly, select_one_rr
+from discovery.utils import select_one_randomly, select_one_rr
 
 
 class TestUtils(unittest.TestCase):

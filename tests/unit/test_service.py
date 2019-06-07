@@ -4,7 +4,7 @@ import unittest
 import uuid
 
 from discovery import service
-from discovery.consul.check import Check
+from discovery.check import Check
 
 
 class TestFilter(unittest.TestCase):

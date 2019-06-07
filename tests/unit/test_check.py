@@ -1,7 +1,7 @@
 """Test Check module."""
 import unittest
 
-from discovery.consul.check import Check
+from discovery.check import Check
 
 
 class TestCheck(unittest.TestCase):
@@ -55,7 +55,7 @@ class TestCheck(unittest.TestCase):
 
         self.assertEqual(check.name, 'alias-check')
         self.assertRegex(check.id, self.regexp_id)
-        self.assertRegex(str(check.value), self.regexp_alias)
+        self.assertRegex(str(check), self.regexp_alias)
 
     def test_str_magic_method(self):
         """Tests the overwriting of the __str__ magic method."""
