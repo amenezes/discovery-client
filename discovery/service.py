@@ -45,4 +45,4 @@ class Service:
     @property
     def healthcheck(self):
         """Getter from healthcheck property."""
-        return self.__healthcheck
+        return str(self.__healthcheck)

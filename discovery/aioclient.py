@@ -34,12 +34,12 @@ class Consul(BaseClient):
             port=service.port
         )
 
-        self.__id = await self.get_leader_current_id()
+        self.__id = await self.leader_current_id()
 
         logging.debug(f"Consul ID: {self.__id}")
         logging.info('Service successfully re-registered')
 
-    async def get_leader_current_id(self):
+    async def leader_current_id(self):
         """Retrieve current ID from consul leader."""
         consul_leader = await self.__discovery.status.leader()
         consul_instances = await self.__discovery.health.service('consul')
@@ -59,7 +59,7 @@ class Consul(BaseClient):
         while True:
             try:
                 await asyncio.sleep(self.DEFAULT_TIMEOUT)
-                current_id = await self.get_leader_current_id()
+                current_id = await self.leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
 
                 if current_id != self.__id:
@@ -95,10 +95,7 @@ class Consul(BaseClient):
 
     async def find_services(self, name):
         """
-        Search for a service in the consul's catalog.
-
-        Return a list of services registered on consul catalog.
-        """
+        Search for a service in the consul's catalog."""
         services = await self.__discovery.catalog.service(name)
         return self._format_catalog_service(services)
 
@@ -115,10 +112,9 @@ class Consul(BaseClient):
                 service_id=service.id,
                 check=service.healthcheck,
                 address=service.ip,
-                port=service.port
-            )
+                port=service.port)
 
-            self.__id = await self.get_leader_current_id()
+            self.__id = await self.leader_current_id()
 
             logging.info('service successfully registered!')
             logging.debug(f"Consul ID: {self.__id}")

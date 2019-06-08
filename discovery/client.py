@@ -28,24 +28,21 @@ class Consul(BaseClient):
         logging.debug('Service reconnect fallback')
 
         self.__discovery.agent.service.deregister(service.id)
-        self.__discovery.agent.service.register(
-            name=service.name,
-            service_id=service.id,
-            check=service.healthcheck,
-            address=service.ip,
-            port=service.port
-        )
-
-        self.__id = self.get_leader_current_id()
+        self.__discovery.agent.service.register(name=service.name,
+                                                service_id=service.id,
+                                                check=service.healthcheck,
+                                                address=service.ip,
+                                                port=service.port)
+        self.__id = self.leader_current_id()
         logging.info('Service successfully re-registered')
 
-    def get_leader_current_id(self):
+    def leader_current_id(self):
         """Retrieve current ID from consul leader."""
         consul_leader = self.__discovery.status.leader()
         consul_instances = self.__discovery.health.service('consul')[Filter.PAYLOAD.value]
         current_id = [instance['Node']['ID']
                       for instance in consul_instances
-                      if instance['Node']['Address'] == consul_leader.split(':')[0]]
+                      if instance['Node']['Address'] == consul_leader.split(':')[Filter.FIRST_ITEM.value]]
 
         if len(current_id) > 0:
             current_id = current_id[Filter.FIRST_ITEM.value]
@@ -61,7 +58,7 @@ class Consul(BaseClient):
             try:
                 time.sleep(self.DEFAULT_TIMEOUT)
 
-                current_id = self.get_leader_current_id()
+                current_id = self.leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
 
                 if current_id != self.__id:
@@ -108,15 +105,12 @@ class Consul(BaseClient):
     def register(self, service):
         """Register a new service."""
         try:
-            self.__discovery.agent.service.register(
-                name=service.name,
-                service_id=service.id,
-                check=service.healthcheck,
-                address=service.ip,
-                port=service.port
-            )
-
-            self.__id = self.get_leader_current_id()
+            self.__discovery.agent.service.register(name=service.name,
+                                                    service_id=service.id,
+                                                    check=service.healthcheck,
+                                                    address=service.ip,
+                                                    port=service.port)
+            self.__id = self.leader_current_id()
 
             logging.info('Service successfully registered!')
             logging.debug(f'Consul ID: {self.__id}')

@@ -6,6 +6,8 @@ import unittest
 import asynctest
 from asynctest import CoroutineMock, patch
 
+import aiohttp
+
 import consul.aio
 
 from discovery import aioclient
@@ -148,9 +150,9 @@ class TestAioClient(asynctest.TestCase):
         )
 
     @patch('discovery.aioclient.consul.aio.Consul')
-    def test_get_leader_current_id(self, MockAioClient):
+    def test_leader_current_id(self, MockAioClient):
         """Test retrieve the ID from Consul leader."""
-        async def async_test_get_leader_current_id(loop):
+        async def async_test_leader_current_id(loop):
             consul_client = MockAioClient(consul.aio.Consul)
             consul_client.status.leader = CoroutineMock(
                 return_value='127.0.0.1:8300'
@@ -160,7 +162,7 @@ class TestAioClient(asynctest.TestCase):
             )
 
             dc = aioclient.Consul('localhost', 8500, app=loop)
-            current_id = await dc.get_leader_current_id()
+            current_id = await dc.leader_current_id()
 
             self.assertIsNotNone(current_id)
             self.assertEqual(
@@ -169,7 +171,7 @@ class TestAioClient(asynctest.TestCase):
             )
 
         self.loop.run_until_complete(
-            async_test_get_leader_current_id(self.loop)
+            async_test_leader_current_id(self.loop)
         )
 
     @patch('discovery.aioclient.consul.aio.Consul')

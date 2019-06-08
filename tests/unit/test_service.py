@@ -4,7 +4,7 @@ import unittest
 import uuid
 
 from discovery import service
-from discovery.check import Check
+from discovery.check import Check, http
 
 
 class TestFilter(unittest.TestCase):
@@ -28,8 +28,7 @@ class TestFilter(unittest.TestCase):
 
     def test_default_service_instance(self):
         """Tests the creation of a new service."""
-        check = Check('myapp-check')
-        check.http('http://myapp:5000/manage/health')
+        check = Check('myapp-check', http('http://myapp:5000/manage/health'))
         svc = service.Service('myapp', 5000, check)
 
         self.assertEqual(svc.name, self.service_model['name'])
