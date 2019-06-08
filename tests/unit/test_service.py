@@ -1,4 +1,5 @@
 """Test service enum."""
+
 import socket
 import unittest
 import uuid

@@ -1,4 +1,5 @@
 """Test utils module."""
+
 import unittest
 
 from discovery.utils import select_one_randomly, select_one_rr

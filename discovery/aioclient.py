@@ -94,8 +94,7 @@ class Consul(BaseClient):
         return service
 
     async def find_services(self, name):
-        """
-        Search for a service in the consul's catalog."""
+        """Search for a service in the consul's catalog."""
         services = await self.__discovery.catalog.service(name)
         return self._format_catalog_service(services)
 

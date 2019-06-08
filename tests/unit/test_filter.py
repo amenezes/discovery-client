@@ -1,4 +1,5 @@
 """Test filter enum."""
+
 import unittest
 
 from discovery.filter import Filter

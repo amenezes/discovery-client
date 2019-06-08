@@ -1,4 +1,5 @@
 """Test Check module."""
+
 import unittest
 
 from discovery.check import (

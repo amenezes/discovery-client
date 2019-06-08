@@ -1,4 +1,5 @@
 """Test Consul standard client module."""
+
 import logging
 import os
 import unittest

@@ -1,4 +1,5 @@
 """Test Consul async client module."""
+
 import asyncio
 import os
 import unittest
@@ -172,7 +173,7 @@ class TestAioClient(asynctest.TestCase):
 
         self.loop.run_until_complete(
             async_test_leader_current_id(self.loop)
-        )
+        )          
 
     @patch('discovery.aioclient.consul.aio.Consul')
     def test_register(self, MockAioConsul):
