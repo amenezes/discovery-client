@@ -3,10 +3,10 @@
 import unittest
 
 from discovery.check import (
+    Check,
     alias,
-    tcp,
     http,
-    Check
+    tcp,
 )
 
 

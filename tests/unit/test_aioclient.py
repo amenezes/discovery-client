@@ -7,8 +7,6 @@ import unittest
 import asynctest
 from asynctest import CoroutineMock, patch
 
-import aiohttp
-
 import consul.aio
 
 from discovery import aioclient
@@ -172,8 +170,7 @@ class TestAioClient(asynctest.TestCase):
             )
 
         self.loop.run_until_complete(
-            async_test_leader_current_id(self.loop)
-        )          
+            async_test_leader_current_id(self.loop))
 
     @patch('discovery.aioclient.consul.aio.Consul')
     def test_register(self, MockAioConsul):
