@@ -45,7 +45,7 @@ class TestFilter(unittest.TestCase):
         """Tests the overwriting of the __str__ magic method."""
         svc = service.Service('myapp', 5000, Check('svc-check', alias('alias-test')))
 
-        regex_str = r'(Service.{17}name.{2}myapp.{2}port.{2}5000.{2}id.{42}ip.{16}healthcheck)'
+        regex_str = r'(Service.{17}name.{2}myapp.{2}port.{2}5000.{2}id.{42}ip.{16})'
         self.assertRegex(str(svc), regex_str)
 
     def test_additional_checks(self):
