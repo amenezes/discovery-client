@@ -13,14 +13,19 @@ class Check:
         name -- check name.
         fn -- a valid check function: tcp, alias or http.
         """
-        self._value = dict()
+        self._value = {}
         self._value.update({'name': name})
         self._value.update({'id': f"{uuid.uuid4().hex}"})
         self._value.update(fn)
 
     def __str__(self):
-        """Override default __str__ to represent current Check."""
+        """Representation of Check object."""
         return str(self._value)
+
+    @property
+    def value(self):
+        """Check object getter."""
+        return self._value
 
     @property
     def name(self):
@@ -52,7 +57,7 @@ def http(url, interval='10s', timeout='5s'):
     interval -- interval check (default '10s')
     timeout -- timeout (default '5s')
     """
-    return {'url': url, 'interval': interval, 'timeout': timeout}
+    return {'http': url, 'interval': interval, 'timeout': timeout}
 
 
 def alias(alias_service):

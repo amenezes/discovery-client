@@ -6,8 +6,9 @@ import time
 import consul
 
 from discovery.base_client import BaseClient
+from discovery.check import Check
 from discovery.filter import Filter
-from discovery.utils import select_one_randomly, select_one_rr
+from discovery.utils import select_one_rr
 
 import requests
 
@@ -28,11 +29,12 @@ class Consul(BaseClient):
         logging.debug('Service reconnect fallback')
 
         self.__discovery.agent.service.deregister(service.id)
-        self.__discovery.agent.service.register(name=service.name,
-                                                service_id=service.id,
-                                                check=service.healthcheck,
-                                                address=service.ip,
-                                                port=service.port)
+        self.__discovery.agent.service.register(
+            name=service.name,
+            service_id=service.id,
+            check=service.check,
+            address=service.ip,
+            port=service.port)
         self.__id = self.leader_current_id()
         logging.info('Service successfully re-registered')
 
@@ -70,18 +72,9 @@ class Consul(BaseClient):
                     f'Reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.'
                 )
 
-    def find_service(self, name, method='rr'):
-        """Search for a service in the consul's catalog.
-
-        Return a specific service using: round robin (default) or random.
-        """
-        services = self.find_services(name)
-
-        if method == 'rr':
-            service = select_one_rr(name, services)
-        else:
-            service = select_one_randomly(services)
-        return service
+    def find_service(self, name, fn=select_one_rr):
+        """Search for a service in the consul's catalog."""
+        return fn(self.find_services(name))
 
     def find_services(self, name):
         """
@@ -92,24 +85,28 @@ class Consul(BaseClient):
         services = self.__discovery.catalog.service(name)
         return self._format_catalog_service(services)
 
-    def deregister(self, service):
-        """Deregister a service registered."""
-        logging.debug(
-            f"Unregistering service id: {service.id}"
-        )
+    def deregister(self, service_id):
+        """Deregister a service registered.
 
-        self.__discovery.agent.service.deregister(service.id)
+        Keyword arguments:
+        service_id -- a valid service_id from a service previously registered.
+        """
+        logging.debug(
+            f"Unregistering service_id: {service_id}")
+
+        self.__discovery.agent.service.deregister(service_id)
 
         logging.info('Successfully unregistered application!')
 
     def register(self, service):
         """Register a new service."""
         try:
-            self.__discovery.agent.service.register(name=service.name,
-                                                    service_id=service.id,
-                                                    check=service.healthcheck,
-                                                    address=service.ip,
-                                                    port=service.port)
+            self.__discovery.agent.service.register(
+                name=service.name,
+                service_id=service.id,
+                check=service.check,
+                address=service.ip,
+                port=service.port)
             self.__id = self.leader_current_id()
 
             logging.info('Service successfully registered!')
@@ -118,11 +115,24 @@ class Consul(BaseClient):
         except requests.exceptions.ConnectionError:
             logging.error("Failed to connect to discovery...")
 
-    def append_healthcheck(self, service, check):
-        """Append a healthcheck to a service registered."""
-        self.__discovery.agent.check.register(
-            check.name, check.value, service_id=service.id)
+    def register_additional_check(self, check, service_id):
+        """Append a Consul's check to a service registered."""
+        if isinstance(check, Check):
+            self.__discovery.agent.check.register(
+                check.name, check.value, service_id=service_id)
+        else:
+            raise TypeError('check must be Check instance.')
 
-    def remove_healthcheck(self, service, check):
-        """Remove a healthcheck to a service registered."""
-        self.__discovery.agent.check.deregister(check.id)
+    def register_additional_checks(self, service):
+        """Append a Consul's check to a service registered."""
+        for check in service.additional_checks():
+            self.register_additional_check(check, service.id)
+
+    def deregister_additional_check(self, check_id):
+        """Remove a Consul's check to a service registered."""
+        self.__discovery.agent.check.deregister(check_id)
+
+    def deregister_additional_checks(self, service):
+        """Remove a Consul's check to a service registered."""
+        for check in service.additional_checks():
+            self.deregister_additional_check(check.id)

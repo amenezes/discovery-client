@@ -8,10 +8,8 @@ from unittest.mock import patch
 
 import consul
 
-from discovery import (
-    client,
-    service
-)
+from discovery import client, service
+from discovery.utils import select_one_random
 
 import requests
 
@@ -59,18 +57,19 @@ class TestClient(unittest.TestCase):
                 'service_name': 'myapp',
                 'service_port': 5000
             }]
+        self.svc = service.Service('myapp', 5000)
 
     def test_default_timeout(self):
         """Test default timeout used to check periodically health status of the Consul connection."""
         del os.environ['DEFAULT_TIMEOUT']
-        dc = client.Consul('localhost', 8500)
+        dc = client.Consul()
 
         self.assertEqual(dc.DEFAULT_TIMEOUT, 30)
 
     def test_changing_default_timeout(self):
         """Test change the time used to check periodically health status of the Consul connection."""
         os.environ['DEFAULT_TIMEOUT'] = '5'
-        dc = client.Consul('localhost', 8500)
+        dc = client.Consul()
 
         self.assertEqual(dc.DEFAULT_TIMEOUT, 5)
         self.assertNotEqual(dc.DEFAULT_TIMEOUT, 30)
@@ -86,7 +85,7 @@ class TestClient(unittest.TestCase):
             return_value=self.consul_raw_response
         )
 
-        dc = client.Consul('localhost', 8500)
+        dc = client.Consul()
         consul_service = dc.find_services('consul')
 
         self.assertIsInstance(consul_service, list)
@@ -101,7 +100,7 @@ class TestClient(unittest.TestCase):
         consul_client = MockConsul(consul.Consul)
         consul_client.catalog.service = MagicMock(return_value=(0, []))
 
-        dc = client.Consul('localhost', 8500)
+        dc = client.Consul()
         response = dc.find_services('myapp')
 
         self.assertEqual(response, [])
@@ -115,7 +114,7 @@ class TestClient(unittest.TestCase):
         consul_client = MockConsul(consul.Consul)
         consul_client.catalog.service = MagicMock(return_value=(0, []))
 
-        dc = client.Consul('localhost', 8500)
+        dc = client.Consul()
 
         with self.assertRaises(IndexError):
             dc.find_service('myapp')
@@ -132,8 +131,8 @@ class TestClient(unittest.TestCase):
             return_value=self.consul_raw_response
         )
 
-        dc = client.Consul('localhost', 8500)
-        consul_service = dc.find_service('consul')
+        dc = client.Consul()
+        consul_service = dc.find_service('consul', select_one_random)
 
         self.assertIsInstance(consul_service, dict)
         self.assertEqual(consul_service, self.fmt_response[0])
@@ -149,8 +148,8 @@ class TestClient(unittest.TestCase):
             return_value=self.consul_raw_response
         )
 
-        dc = client.Consul('localhost', 8500)
-        consul_service = dc.find_service('consul', method='random')
+        dc = client.Consul()
+        consul_service = dc.find_service('consul', select_one_random)
 
         self.assertIsInstance(consul_service, dict)
         self.assertEqual(consul_service, self.fmt_response[0])
@@ -170,9 +169,8 @@ class TestClient(unittest.TestCase):
             return_value=self.consul_health_response
         )
 
-        svc = service.Service('myapp', 5000)
-        dc = client.Consul('localhost', 8500)
-        dc.register(svc)
+        dc = client.Consul()
+        dc.register(self.svc)
         myapp_service = dc.find_service('myapp')
 
         self.assertIsInstance(myapp_service, dict)
@@ -189,10 +187,9 @@ class TestClient(unittest.TestCase):
             side_effect=requests.exceptions.ConnectionError
         )
 
-        svc = service.Service('myapp', 5000)
-        dc = client.Consul('localhost', 8500)
+        dc = client.Consul()
         with self.assertLogs() as cm:
-            logging.getLogger(dc.register(svc))
+            logging.getLogger(dc.register(self.svc))
         self.assertEqual(
             cm.output, ['ERROR:root:Failed to connect to discovery...']
         )
@@ -213,21 +210,20 @@ class TestClient(unittest.TestCase):
             return_value=self.consul_health_response
         )
 
-        svc = service.Service('myapp', 5000)
-        dc = client.Consul('localhost', 8500)
-        dc.register(svc)
+        dc = client.Consul()
+        dc.register(self.svc)
         myapp_service = dc.find_service('myapp')
 
         self.assertIsInstance(myapp_service, dict)
         self.assertEqual(myapp_service, self.fmt_response[1])
 
-        dc.deregister(svc)
+        dc.deregister(self.svc)
 
         consul_client.catalog.service = MagicMock(return_value=(0, []))
 
         with self.assertRaises(IndexError):
             myapp_service = dc.find_service('myapp')
 
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_register_additional_check(self):
+        """Test the registration of an additional check for a service registered."""
+        pass

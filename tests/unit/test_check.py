@@ -41,6 +41,7 @@ class TestCheck(unittest.TestCase):
     def test_check_tcp(self):
         """Tests the creation of a new service."""
         check = Check('tcp-check', tcp('test:5000'))
+        print(str(check))
 
         self.assertEqual(check.name, self.check_tcp['name'])
         self.assertRegex(check.id, self.regexp_id)
@@ -65,8 +66,11 @@ class TestCheck(unittest.TestCase):
         check = Check('str test', alias('alias-test'))
 
         regex_str = r'(.id.{1,4}\w{32}.{1,4}alias_service.{1,4}alias-test.)'
-        self.assertRegex(check.__str__(), regex_str)
+        self.assertRegex(str(check), regex_str)
 
+    def test_value_property(self):
+        """Tests retrieve check object representation."""
+        check = Check('str test', alias('alias-test'))
 
-if __name__ == '__main__':
-    unittest.main()
+        self.assertIsInstance(check.value, dict)
+        self.assertNotEqual(check.value, {})

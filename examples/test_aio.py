@@ -31,7 +31,7 @@ async def handle_service(request):
     response = {}
 
     try:
-        response = await dc.find_service(service_name)
+        response = await dc.find_services(service_name)
     except IndexError:
         logging.info(f'Service {service_name} not found!')
     return web.json_response(response)

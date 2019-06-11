@@ -16,7 +16,3 @@ class TestFilter(unittest.TestCase):
     def test_default_timeout_enum_value(self):
         """Tests the default value for reconnect timeout."""
         self.assertEqual(Filter.DEFAULT_TIMEOUT.value, 30)
-
-
-if __name__ == '__main__':
-    unittest.main()

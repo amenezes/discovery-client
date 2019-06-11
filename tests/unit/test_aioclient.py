@@ -2,7 +2,6 @@
 
 import asyncio
 import os
-import unittest
 
 import asynctest
 from asynctest import CoroutineMock, patch
@@ -11,6 +10,7 @@ import consul.aio
 
 from discovery import aioclient
 from discovery.service import Service
+from discovery.utils import select_one_random
 
 
 class TestAioClient(asynctest.TestCase):
@@ -139,7 +139,7 @@ class TestAioClient(asynctest.TestCase):
             )
 
             dc = aioclient.Consul('localhost', 8500, app=loop)
-            consul_service = await dc.find_service('consul', method='random')
+            consul_service = await dc.find_service('consul', select_one_random)
 
             self.assertIsInstance(consul_service, dict)
             self.assertEqual(consul_service, self.fmt_response[0])
@@ -237,7 +237,3 @@ class TestAioClient(asynctest.TestCase):
         self.loop.run_until_complete(
             async_test_deregister(self.loop)
         )
-
-
-if __name__ == '__main__':
-    unittest.main()

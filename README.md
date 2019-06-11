@@ -30,8 +30,9 @@ pip install -U discovery-client
 from discovery.client import Consul
 
 
-dc = Consul('localhost', 8500)
+dc = Consul()
 dc.find_service('consul')
+dc.find_services('consul')
 ````
 
 Integration with Flask + threading.
@@ -79,7 +80,7 @@ from discovery import aioclient
 
 
 loop = asyncio.get_event_loop()
-dc = aioclient.Consul('localhost', 8500, loop)
+dc = aioclient.Consul(loop)
 
 search_one_task = loop.create_task(dc.find_service('consul'))
 search_all_task = loop.create_task(dc.find_services('consul'))
@@ -115,7 +116,7 @@ async def handle_status(request):
 
 
 app = web.Application()
-dc = Consul('discovery', 8500, app.loop)
+dc = Consul(app=loop, 'discovery', 8500)
 
 app.on_startup.append(service_discovery)
 app.add_routes([web.get('/manage/health', handle_status),

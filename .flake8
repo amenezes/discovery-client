@@ -3,6 +3,8 @@ exclude = venv
           __pycache__
           *.pyc
           __init__.py
+          setup.py
+          examples
 ignore = E501 # line too long
 verbose = 2
 doctests = True

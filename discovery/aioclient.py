@@ -8,8 +8,9 @@ import aiohttp
 import consul.aio
 
 from discovery.base_client import BaseClient
+from discovery.check import Check
 from discovery.filter import Filter
-from discovery.utils import select_one_randomly, select_one_rr
+from discovery.utils import select_one_rr
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -21,7 +22,7 @@ class Consul(BaseClient):
     def __init__(self, host, port, app):
         """Create a instance for async consul client."""
         super().__init__()
-        self.__discovery = consul.aio.Consul(host, port, loop=app)
+        self.__discovery = consul.aio.Consul(loop=app, host='localhost', port=8500)
 
     async def _reconnect(self, service):
         """Service re-registration steps."""
@@ -29,7 +30,7 @@ class Consul(BaseClient):
         await self.__discovery.agent.service.register(
             name=service.name,
             service_id=service.id,
-            check=service.healthcheck,
+            check=service.check,
             address=service.ip,
             port=service.port
         )
@@ -47,7 +48,7 @@ class Consul(BaseClient):
 
         current_id = [instance['Node']['ID']
                       for instance in consul_instances
-                      if instance['Node']['Address'] == consul_leader.split(':')[0]]
+                      if instance['Node']['Address'] == consul_leader.split(':')[Filter.FIRST_ITEM.value]]
 
         return current_id[Filter.FIRST_ITEM.value]
 
@@ -79,19 +80,10 @@ class Consul(BaseClient):
                 asyncio.sleep(self.DEFAULT_TIMEOUT)
                 await self.check_consul_health(service)
 
-    async def find_service(self, name, method='rr'):
-        """Search for a service in the consul's catalog.
-
-        Return a specific service using: round robin (default) or random.
-        """
+    async def find_service(self, name, fn=select_one_rr):
+        """Search for a service in the consul's catalog."""
         services = await self.find_services(name)
-
-        if method == 'rr':
-            service = select_one_rr(name, services)
-        else:
-            service = select_one_randomly(services)
-
-        return service
+        return fn(services)
 
     async def find_services(self, name):
         """Search for a service in the consul's catalog."""
@@ -109,7 +101,7 @@ class Consul(BaseClient):
             await self.__discovery.agent.service.register(
                 name=service.name,
                 service_id=service.id,
-                check=service.healthcheck,
+                check=service.check,
                 address=service.ip,
                 port=service.port)
 
@@ -121,11 +113,24 @@ class Consul(BaseClient):
         except aiohttp.ClientConnectorError:
             logging.error("Failed to connect to discovery...")
 
-    async def append_healthcheck(self, service, check):
-        """Append a healthcheck to a service registered."""
-        await self.__discovery.agent.check.register(
-            check.name, check.value, service_id=service.id)
+    async def register_additional_check(self, check, service_id):
+        """Append a Consul's check to a service registered."""
+        if isinstance(check, Check):
+            self.__discovery.agent.check.register(
+                check.name, check.value, service_id=service_id)
+        else:
+            raise TypeError('check must be Check instance.')
 
-    async def remove_healthcheck(self, service, check):
-        """Remove a healthcheck to a service registered."""
-        await self.__discovery.agent.check.deregister(check.id)
+    async def register_additional_checks(self, service):
+        """Append a Consul's check to a service registered."""
+        for check in service.additional_checks():
+            await self.register_additional_check(check, service.id)
+
+    async def deregister_additional_check(self, check_id):
+        """Remove a Consul's check to a service registered."""
+        self.__discovery.agent.check.deregister(check_id)
+
+    async def deregister_additional_checks(self, service):
+        """Remove a Consul's check to a service registered."""
+        for check in service.additional_checks():
+            await self.deregister_additional_check(check.id)
