@@ -89,7 +89,7 @@ class TestClient(unittest.TestCase):
         consul_service = dc.find_services('consul')
 
         self.assertIsInstance(consul_service, list)
-        self.assertIn(self.fmt_response[0], consul_service)
+        self.assertIn(consul_service[0].raw, self.fmt_response)
 
     @patch('discovery.client.consul.Consul')
     def test_find_services_not_on_catalog(self, MockConsul):
@@ -134,8 +134,8 @@ class TestClient(unittest.TestCase):
         dc = client.Consul()
         consul_service = dc.find_service('consul', select_one_random)
 
-        self.assertIsInstance(consul_service, dict)
-        self.assertEqual(consul_service, self.fmt_response[0])
+        self.assertIsInstance(consul_service, service.Service)
+        self.assertEqual(consul_service.raw, self.fmt_response[0])
 
     @patch('discovery.client.consul.Consul')
     def test_find_service_random(self, MockConsul):
@@ -151,8 +151,8 @@ class TestClient(unittest.TestCase):
         dc = client.Consul()
         consul_service = dc.find_service('consul', select_one_random)
 
-        self.assertIsInstance(consul_service, dict)
-        self.assertEqual(consul_service, self.fmt_response[0])
+        self.assertIsInstance(consul_service, service.Service)
+        self.assertEqual(consul_service.raw, self.fmt_response[0])
 
     @patch('discovery.client.consul.Consul')
     def test_register(self, MockConsul):
@@ -173,8 +173,9 @@ class TestClient(unittest.TestCase):
         dc.register(self.svc)
         myapp_service = dc.find_service('myapp')
 
-        self.assertIsInstance(myapp_service, dict)
-        self.assertEqual(myapp_service, self.fmt_response[1])
+        # self.assertIsInstance(myapp_service, dict)
+        self.assertIsInstance(myapp_service, service.Service)
+        self.assertEqual(myapp_service.raw, self.fmt_response[1])
 
     @patch('discovery.client.consul.Consul')
     def test_register_connection_error(self, MockConsul):
@@ -214,8 +215,8 @@ class TestClient(unittest.TestCase):
         dc.register(self.svc)
         myapp_service = dc.find_service('myapp')
 
-        self.assertIsInstance(myapp_service, dict)
-        self.assertEqual(myapp_service, self.fmt_response[1])
+        self.assertIsInstance(myapp_service, service.Service)
+        self.assertEqual(myapp_service.raw, self.fmt_response[1])
 
         dc.deregister(self.svc)
 

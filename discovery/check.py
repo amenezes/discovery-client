@@ -33,7 +33,7 @@ class Check:
         return self._value['name']
 
     @property
-    def id(self):
+    def identifier(self):
         """Id check getter."""
         return self._value['id']
 

@@ -44,21 +44,21 @@ class TestCheck(unittest.TestCase):
         print(str(check))
 
         self.assertEqual(check.name, self.check_tcp['name'])
-        self.assertRegex(check.id, self.regexp_id)
+        self.assertRegex(check.identifier, self.regexp_id)
 
     def test_check_http(self):
         """Tests the creation of a new service."""
         check = Check('http-check', http('http://test:5000/manage/health'))
 
         self.assertEqual(check.name, self.check_http['name'])
-        self.assertRegex(check.id, self.regexp_id)
+        self.assertRegex(check.identifier, self.regexp_id)
 
     def test_check_alias(self):
         """Tests the creation of a new service."""
         check = Check('alias-check', alias('consul'))
 
         self.assertEqual(check.name, 'alias-check')
-        self.assertRegex(check.id, self.regexp_id)
+        self.assertRegex(check.identifier, self.regexp_id)
         self.assertRegex(str(check), self.regexp_alias)
 
     def test_str_magic_method(self):

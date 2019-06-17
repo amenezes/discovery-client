@@ -27,7 +27,10 @@ class TestFilter(unittest.TestCase):
             }
         }
         self.check = Check('myapp-check', http('http://myapp:5000/manage/health'))
-        self.svc = service.Service('myapp', 5000, self.check)
+        self.svc = service.Service('myapp',
+                                   5000,
+                                   ip=socket.gethostbyname(socket.gethostname()),
+                                   check=self.check)
 
     def test_default_service_instance(self):
         """Tests the creation of a new service."""
@@ -51,35 +54,35 @@ class TestFilter(unittest.TestCase):
     def test_additional_checks(self):
         """Tests additional check in a service registered."""
         consul_check = Check('consul', alias('consul'))
-        self.svc.append_check(consul_check)
+        self.svc.append(consul_check)
 
         self.assertEqual(len(self.svc.additional_checks()), 1)
 
     def test_append_invalid_check(self):
         """Tests if an invalid check will raise TypeError."""
         with self.assertRaises(TypeError):
-            self.svc.append_check(alias('consul'))
+            self.svc.append(alias('consul'))
 
-    def test_remove_check(self):
+    def test_remove_additional_check(self):
         """Tests remove additional check."""
-        self.svc.append_check(Check('consul', alias('consul')))
+        self.svc.append(Check('consul', alias('consul')))
         self.assertEqual(len(self.svc.additional_checks()), 1)
 
-        self.svc.remove_check('consul')
+        self.svc.remove('consul')
         self.assertEqual(len(self.svc.additional_checks()), 0)
 
     def test_remove_invalid_check(self):
         """Tests if an invalid deregister will raise ValueError."""
-        self.svc.append_check(Check('consul', alias('consul')))
+        self.svc.append(Check('consul', alias('consul')))
         self.assertEqual(len(self.svc.additional_checks()), 1)
 
         with self.assertRaises(ValueError):
-            self.svc.remove_check('myapp')
+            self.svc.remove('myapp')
 
     def test_additional_check(self):
         """Tests if additional check was registered with successfuly."""
         consul_check = Check('consul', alias('consul'))
-        self.svc.append_check(consul_check)
+        self.svc.append(consul_check)
 
         self.assertIsInstance(self.svc.additional_check('consul'), Check)
         self.assertEqual(self.svc.additional_check('consul').name, 'consul')
@@ -87,7 +90,7 @@ class TestFilter(unittest.TestCase):
     def test_additional_check_invalid(self):
         """Tests if an invalid Check will raise ValueError."""
         consul_check = Check('consul', alias('consul'))
-        self.svc.append_check(consul_check)
+        self.svc.append(consul_check)
 
         with self.assertRaises(ValueError):
             self.svc.additional_check('teste-consul')

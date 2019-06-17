@@ -98,8 +98,8 @@ class TestAioClient(asynctest.TestCase):
             dc = aioclient.Consul('localhost', 8500, app=loop)
             consul_service = await dc.find_service('consul')
 
-            self.assertIsInstance(consul_service, dict)
-            self.assertEqual(consul_service, self.fmt_response[0])
+            self.assertIsInstance(consul_service, Service)
+            self.assertEqual(consul_service.raw, self.fmt_response[0])
 
         self.loop.run_until_complete(
             async_test_find_services(self.loop)
@@ -141,8 +141,8 @@ class TestAioClient(asynctest.TestCase):
             dc = aioclient.Consul('localhost', 8500, app=loop)
             consul_service = await dc.find_service('consul', select_one_random)
 
-            self.assertIsInstance(consul_service, dict)
-            self.assertEqual(consul_service, self.fmt_response[0])
+            self.assertIsInstance(consul_service, Service)
+            self.assertEqual(consul_service.raw, self.fmt_response[0])
 
         self.loop.run_until_complete(
             async_test_find_services(self.loop)
@@ -193,8 +193,8 @@ class TestAioClient(asynctest.TestCase):
             await dc.register(svc)
             myapp_service = await dc.find_service('myapp')
 
-            self.assertIsInstance(myapp_service, dict)
-            self.assertEqual(myapp_service, self.fmt_response[1])
+            self.assertIsInstance(myapp_service, Service)
+            self.assertEqual(myapp_service.raw, self.fmt_response[1])
 
         self.loop.run_until_complete(
             async_test_register(self.loop)
@@ -222,8 +222,8 @@ class TestAioClient(asynctest.TestCase):
             await dc.register(svc)
             myapp_service = await dc.find_service('myapp')
 
-            self.assertIsInstance(myapp_service, dict)
-            self.assertEqual(myapp_service, self.fmt_response[1])
+            self.assertIsInstance(myapp_service, Service)
+            self.assertEqual(myapp_service.raw, self.fmt_response[1])
 
             await dc.deregister(svc)
 

@@ -28,10 +28,10 @@ class Consul(BaseClient):
         """Service re-registration steps."""
         logging.debug('Service reconnect fallback')
 
-        self.__discovery.agent.service.deregister(service.id)
+        self.__discovery.agent.service.deregister(service.identifier)
         self.__discovery.agent.service.register(
             name=service.name,
-            service_id=service.id,
+            service_id=service.identifier,
             check=service.check,
             address=service.ip,
             port=service.port)
@@ -103,7 +103,7 @@ class Consul(BaseClient):
         try:
             self.__discovery.agent.service.register(
                 name=service.name,
-                service_id=service.id,
+                service_id=service.identifier,
                 check=service.check,
                 address=service.ip,
                 port=service.port)
@@ -126,7 +126,7 @@ class Consul(BaseClient):
     def register_additional_checks(self, service):
         """Append a Consul's check to a service registered."""
         for check in service.additional_checks():
-            self.register_additional_check(check, service.id)
+            self.register_additional_check(check, service.identifier)
 
     def deregister_additional_check(self, check_id):
         """Remove a Consul's check to a service registered."""
@@ -135,4 +135,4 @@ class Consul(BaseClient):
     def deregister_additional_checks(self, service):
         """Remove a Consul's check to a service registered."""
         for check in service.additional_checks():
-            self.deregister_additional_check(check.id)
+            self.deregister_additional_check(check.identifier)

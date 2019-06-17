@@ -5,6 +5,7 @@ import os
 from abc import ABC
 
 from discovery.filter import Filter
+from discovery.service import Service
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -22,10 +23,11 @@ class BaseClient(ABC):
             self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
 
     def _format_catalog_service(self, services):
-        return [{"node": svc['Node'],
-                 "node_id": svc['ID'],
-                 "address": svc['Address'],
-                 "service_id": svc['ServiceID'],
-                 "service_name": svc['ServiceName'],
-                 "service_port": svc['ServicePort']}
-                for svc in services[Filter.PAYLOAD.value]]
+        return [Service(
+            svc['ServiceName'],
+            svc['ServicePort'],
+            ip=svc['Address'],
+            identifier=svc['ServiceID'],
+            node=svc['Node'],
+            node_id=svc['ID'])
+            for svc in services[Filter.PAYLOAD.value]]

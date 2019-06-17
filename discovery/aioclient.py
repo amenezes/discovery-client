@@ -26,10 +26,10 @@ class Consul(BaseClient):
 
     async def _reconnect(self, service):
         """Service re-registration steps."""
-        await self.__discovery.agent.service.deregister(service.id)
+        await self.__discovery.agent.service.deregister(service.identifier)
         await self.__discovery.agent.service.register(
             name=service.name,
-            service_id=service.id,
+            service_id=service.identifier,
             check=service.check,
             address=service.ip,
             port=service.port
@@ -92,7 +92,7 @@ class Consul(BaseClient):
 
     async def deregister(self, service):
         """Deregister a service registered."""
-        await self.__discovery.agent.service.deregister(service.id)
+        await self.__discovery.agent.service.deregister(service.identifier)
         logging.info('successfully unregistered application!')
 
     async def register(self, service):
@@ -100,7 +100,7 @@ class Consul(BaseClient):
         try:
             await self.__discovery.agent.service.register(
                 name=service.name,
-                service_id=service.id,
+                service_id=service.identifier,
                 check=service.check,
                 address=service.ip,
                 port=service.port)
@@ -124,7 +124,7 @@ class Consul(BaseClient):
     async def register_additional_checks(self, service):
         """Append a Consul's check to a service registered."""
         for check in service.additional_checks():
-            await self.register_additional_check(check, service.id)
+            await self.register_additional_check(check, service.identifier)
 
     async def deregister_additional_check(self, check_id):
         """Remove a Consul's check to a service registered."""
@@ -133,4 +133,4 @@ class Consul(BaseClient):
     async def deregister_additional_checks(self, service):
         """Remove a Consul's check to a service registered."""
         for check in service.additional_checks():
-            await self.deregister_additional_check(check.id)
+            await self.deregister_additional_check(check.identifier)
