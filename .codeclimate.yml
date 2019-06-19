@@ -11,6 +11,11 @@ plugins:
     enabled: true
   pep8:
     enabled: true
+  bandit:
+    enabled: true
+  pylint:
+    enabled: true
+    channel: "beta"
   sonar-python:
     enabled: true
     config:
