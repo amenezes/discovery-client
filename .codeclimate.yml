@@ -13,9 +13,9 @@ plugins:
     enabled: true
   bandit:
     enabled: true
-  pylint:
-    enabled: true
-    channel: "beta"
+#  pylint:
+#    enabled: true
+#    channel: "beta"
   sonar-python:
     enabled: true
     config:
