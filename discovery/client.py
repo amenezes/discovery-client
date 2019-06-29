@@ -25,12 +25,14 @@ class Consul(BaseClient):
         """Create a instance for standard consul client."""
         super().__init__()
         self.__discovery = consul.Consul(host, port)
-        self.__ensure_leader_connection(port)
+        self.__ensure_leader_connection(host, port)
 
-    def __ensure_leader_connection(self, port):
+    def __ensure_leader_connection(self, host, port):
         leader = self.__discovery.status.leader()
-        leader = leader.split(':')
-        self.__discovery = consul.Consul(f"{leader[0]}", port)
+        leader = leader.split(':')[0]
+        if leader in ['127.0.0.1', 'localhost', '127.0.1.1']:
+            leader = host
+        self.__discovery = consul.Consul(f"{leader}", port)
 
     def __create_service(self, service_name, service_port, healthcheck_path):
         """Adjust the data of the service to be managed."""
