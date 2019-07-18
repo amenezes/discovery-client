@@ -34,14 +34,10 @@ class TestCheck(unittest.TestCase):
             'alias_service': 'consul'
         }
         self.regexp_id = r'([\w]{32})'
-        self.regexp_tcp = r''
-        self.regexp_http = r''
-        self.regexp_alias = r'(.id.{4}[\w]{32}.{1,3}.alias_service.{1,4}\w+.)'
 
     def test_check_tcp(self):
         """Tests the creation of a new service."""
         check = Check('tcp-check', tcp('test:5000'))
-        print(str(check))
 
         self.assertEqual(check.name, self.check_tcp['name'])
         self.assertRegex(check.identifier, self.regexp_id)
@@ -59,14 +55,6 @@ class TestCheck(unittest.TestCase):
 
         self.assertEqual(check.name, 'alias-check')
         self.assertRegex(check.identifier, self.regexp_id)
-        self.assertRegex(str(check), self.regexp_alias)
-
-    def test_str_magic_method(self):
-        """Tests the overwriting of the __str__ magic method."""
-        check = Check('str test', alias('alias-test'))
-
-        regex_str = r'(.id.{1,4}\w{32}.{1,4}alias_service.{1,4}alias-test.)'
-        self.assertRegex(str(check), regex_str)
 
     def test_value_property(self):
         """Tests retrieve check object representation."""

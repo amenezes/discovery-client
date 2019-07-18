@@ -5,6 +5,8 @@ import logging
 
 import aiohttp
 
+import attr
+
 import consul.aio
 
 from discovery.base_client import BaseClient
@@ -16,13 +18,25 @@ from discovery.utils import select_one_rr
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+@attr.s(kw_only=True)
 class Consul(BaseClient):
     """Async Consul Service Registry."""
 
-    def __init__(self, host, port, app):
-        """Create a instance for async consul client."""
-        super().__init__()
-        self.__discovery = consul.aio.Consul(loop=app, host='localhost', port=8500)
+    _host = attr.ib(type=str, default='localhost')
+    _port = attr.ib(type=int, default=8500)
+    _app = attr.ib(default=asyncio.get_event_loop())
+
+    def __attrs_post_init__(self):
+        self.__discovery = consul.aio.Consul(
+            loop=self._app, host=self._host, port=self._port
+        )
+
+    def connect(self):
+        self.__discovery = consul.Consul(self._host, self._port)
+    # def __init__(self, host, port, app):
+    #     """Create a instance for async consul client."""
+    #     super().__init__()
+    #     self.__discovery = consul.aio.Consul(loop=app, host='localhost', port=8500)
 
     async def _reconnect(self, service):
         """Service re-registration steps."""

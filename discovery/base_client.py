@@ -7,20 +7,31 @@ from abc import ABC
 from discovery.filter import Filter
 from discovery.service import Service
 
+import attr
+
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+@attr.s
 class BaseClient(ABC):
     """Consul Base Client."""
 
     __id = ''
-    DEFAULT_TIMEOUT = int(Filter.DEFAULT_TIMEOUT.value)
+    _timeout = attr.ib(
+        default=os.getenv('DEFAULT_TIMEOUT'),
+        converter=attr.converters.default_if_none(
+            int(Filter.DEFAULT_TIMEOUT.value)
+        )
+    )
 
-    def __init__(self):
-        """Create a instance for standard consul client."""
-        if os.getenv('DEFAULT_TIMEOUT'):
-            self.DEFAULT_TIMEOUT = int(os.getenv('DEFAULT_TIMEOUT'))
+    @property
+    def timeout(self):
+        return int(self._timeout)
+
+    @timeout.setter
+    def timeout(self, value):
+        self._timeout = int(value)
 
     def _format_catalog_service(self, services):
         return [Service(

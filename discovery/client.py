@@ -3,6 +3,8 @@
 import logging
 import time
 
+import attr
+
 import consul
 
 from discovery.base_client import BaseClient
@@ -16,13 +18,18 @@ import requests
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+@attr.s(kw_only=True)
 class Consul(BaseClient):
     """Consul Service Registry."""
 
-    def __init__(self, host='localhost', port=8500):
-        """Create a instance for standard consul client."""
-        super().__init__()
-        self.__discovery = consul.Consul(host, port)
+    _host = attr.ib(type=str, default='localhost')
+    _port = attr.ib(type=int, default=8500)
+
+    def __attrs_post_init__(self):
+        self.connect()
+
+    def connect(self):
+        self.__discovery = consul.Consul(self._host, self._port)
 
     def __reconnect(self, service):
         """Service re-registration steps."""

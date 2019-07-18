@@ -1,7 +1,6 @@
 """Test Consul async client module."""
 
 import asyncio
-import os
 
 import asynctest
 from asynctest import CoroutineMock, patch
@@ -61,10 +60,8 @@ class TestAioClient(asynctest.TestCase):
     def test_default_timeout(self):
         """Test the default timeout used to check periodically health status of the Consul connection."""
         async def async_test_default_timeout(loop):
-            del os.environ['DEFAULT_TIMEOUT']
-            dc = aioclient.Consul('localhost', 8500, app=loop)
-
-            self.assertEqual(dc.DEFAULT_TIMEOUT, 30)
+            dc = aioclient.Consul()
+            self.assertEqual(dc.timeout, 30)
 
         self.loop.run_until_complete(
             async_test_default_timeout(self.loop)
@@ -73,11 +70,9 @@ class TestAioClient(asynctest.TestCase):
     def test_changing_default_timeout(self):
         """Test change the time used to check periodically health status of the Consul connection."""
         async def async_test_changing_default_timeout(loop):
-            os.environ['DEFAULT_TIMEOUT'] = '5'
-            dc = aioclient.Consul('localhost', 8500, app=loop)
-
-            self.assertEqual(dc.DEFAULT_TIMEOUT, 5)
-            self.assertNotEqual(dc.DEFAULT_TIMEOUT, 30)
+            dc = aioclient.Consul()
+            dc.timeout = '5'
+            self.assertNotEqual(dc.timeout, 30)
 
         self.loop.run_until_complete(
             async_test_changing_default_timeout(self.loop)
@@ -95,7 +90,7 @@ class TestAioClient(asynctest.TestCase):
                 return_value=self.consul_raw_response
             )
 
-            dc = aioclient.Consul('localhost', 8500, app=loop)
+            dc = aioclient.Consul()
             consul_service = await dc.find_service('consul')
 
             self.assertIsInstance(consul_service, Service)
@@ -117,7 +112,7 @@ class TestAioClient(asynctest.TestCase):
                 return_value=(0, [])
             )
 
-            dc = aioclient.Consul('localhost', 8500, app=loop)
+            dc = aioclient.Consul()
             response = await dc.find_services('myapp')
 
             self.assertEqual(response, [])
@@ -138,7 +133,7 @@ class TestAioClient(asynctest.TestCase):
                 return_value=self.consul_raw_response
             )
 
-            dc = aioclient.Consul('localhost', 8500, app=loop)
+            dc = aioclient.Consul()
             consul_service = await dc.find_service('consul', select_one_random)
 
             self.assertIsInstance(consul_service, Service)
@@ -160,7 +155,7 @@ class TestAioClient(asynctest.TestCase):
                 return_value=self.consul_health_response
             )
 
-            dc = aioclient.Consul('localhost', 8500, app=loop)
+            dc = aioclient.Consul()
             current_id = await dc.leader_current_id()
 
             self.assertIsNotNone(current_id)
@@ -189,7 +184,7 @@ class TestAioClient(asynctest.TestCase):
             )
 
             svc = Service('myapp', 5000)
-            dc = aioclient.Consul('localhost', 8500, app=loop)
+            dc = aioclient.Consul()
             await dc.register(svc)
             myapp_service = await dc.find_service('myapp')
 
@@ -218,7 +213,7 @@ class TestAioClient(asynctest.TestCase):
             )
 
             svc = Service('myapp', 5000)
-            dc = aioclient.Consul('localhost', 8500, app=loop)
+            dc = aioclient.Consul()
             await dc.register(svc)
             myapp_service = await dc.find_service('myapp')
 

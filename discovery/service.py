@@ -4,89 +4,68 @@ import logging
 import socket
 import uuid
 
+import attr
+
 from discovery.check import Check
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+@attr.s
 class Service:
     """Consul service."""
 
-    _check = None
-    _additional_checks = {}
+    _checks = {}
+    name = attr.ib()
+    port = attr.ib()
+    node = attr.ib(default='')
+    node_id = attr.ib(default='')
+    _check = attr.ib(
+        default=None,
+        validator=attr.validators.optional(
+            attr.validators.instance_of(Check)
+        )
+    )
+    ip = attr.ib(
+        default=None,
+        converter=attr.converters.default_if_none(
+            socket.gethostbyname(socket.gethostname())
+        )
+    )
+    identifier = attr.ib(
+        default="{name}-{uuid}"
+    )
 
-    def __init__(self,
-                 name,
-                 port,
-                 ip='',
-                 identifier='',
-                 node='',
-                 node_id='',
-                 check=None):
-        """Create a instance for consul's service."""
-        self._name = name
-        self._port = port
-        self._ip = ip
-        self._identifier = identifier
-        self._node = node
-        self._node_id = node_id
-
-        if ip == '':
-            self._ip = socket.gethostbyname(socket.gethostname())
-
-        if identifier == '':
-            self._identifier = f"{name}-{uuid.uuid4().hex}"
-
-        if isinstance(check, Check):
-            self._check = check
-
-    @property
-    def name(self):
-        """Getter from name property."""
-        return self._name
-
-    @property
-    def port(self):
-        """Getter from port property."""
-        return self._port
-
-    @property
-    def ip(self):
-        """Getter from ip property."""
-        return self._ip
-
-    @property
-    def identifier(self):
-        """Getter from id property."""
-        return self._identifier
-
-    @property
-    def node(self):
-        return self._node
-
-    @property
-    def node_id(self):
-        return self._node_id
+    def __attrs_post_init__(self):
+        self.identifier = self.identifier.format(
+            name=self.name,
+            uuid=uuid.uuid4().hex
+        )
+        if self._check is not None:
+            self._checks.update({self._check.name: self._check})
 
     @property
     def check(self):
-        """Getter from healthcheck property."""
-        response = {}
-        if self._check:
-            response = self._check.value
-        return response
-    
+        return self._check
+
+    @check.setter
+    def check(self, value):
+        if not isinstance(value, Check):
+            raise TypeError('check must be instance of Check.')
+        self._check = value
+        self._checks.update({self._check.name: self._check})
+
     @property
     def raw(self):
         """Return Service instance as dict."""
         return {
-            'node': self._node,
-            'node_id': self._node_id,
-            'address': self._ip,
-            'service_id': self._identifier,
-            'service_name': self._name,
-            'service_port': self._port
+            'node': self.node,
+            'node_id': self.node_id,
+            'address': self.ip,
+            'service_id': self.identifier,
+            'service_name': self.name,
+            'service_port': self.port
         }
 
     def append(self, check):
@@ -95,10 +74,9 @@ class Service:
         Keyword arguments:
         check -- additional check instance to append on service.
         """
-        if isinstance(check, Check):
-            self._additional_checks.update({check.name: check})
-        else:
+        if not isinstance(check, Check):
             raise TypeError('check must be Check instance')
+        self._checks.update({check.name: check})
 
     def remove(self, check_name):
         """Remove an additional Consul's check to a service registered.
@@ -106,22 +84,21 @@ class Service:
         Keyword arguments:
         name -- additional check name.
         """
-        if check_name in self._additional_checks.keys():
-            self._additional_checks.pop(check_name)
-        else:
+        if check_name not in self._checks.keys():
             raise ValueError('check not previously registered.')
+        elif check_name == self._check.name:
+            self._check = None
+        self._checks.pop(check_name)
 
-    def additional_checks(self):
+    def list_checks(self):
         """Retrieve all additional checks from a service."""
-        return [check for check in self._additional_checks.values()]
+        return [check for check in self._checks.values()]
+        t = None
+        for check in self._checks.values():
+            t.append(check)
 
-    def additional_check(self, name):
+    def get_check(self, name):
         """Retrieve a specific additional check from a service."""
-        if name in self._additional_checks.keys():
-            return self._additional_checks.get(name)
-        else:
+        if name not in self._checks.keys():
             raise ValueError('check not previously registered.')
-
-    def __str__(self):
-        """Representation of Service object."""
-        return str(f"Service:{id(self)} name: {self.name}, port: {self.port}, id: {self.identifier}, ip: {self.ip}, healthcheck: {self.check})")
+        return self._checks.get(name)

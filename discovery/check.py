@@ -2,25 +2,37 @@
 
 import uuid
 
+import attr
 
+
+@attr.s
 class Check:
     """Consul healthcheck."""
 
-    def __init__(self, name, fn):
-        """Create a instance for consul's check.
+    _value = {}
+    _name = attr.ib(
+        type=str,
+        validator=attr.validators.optional(
+            attr.validators.instance_of(str)
+        )
+    )
+    _check = attr.ib(
+        validator=attr.validators.instance_of(dict)
+    )
+    _id = attr.ib(
+        default="{uuid}",
+        validator=attr.validators.optional(
+            attr.validators.instance_of(str)
+        )
+    )
 
-        Keywords arguments:
-        name -- check name.
-        fn -- a valid check function: tcp, alias or http.
-        """
-        self._value = {}
-        self._value.update({'name': name})
-        self._value.update({'id': f"{uuid.uuid4().hex}"})
-        self._value.update(fn)
-
-    def __str__(self):
-        """Representation of Check object."""
-        return str(self._value)
+    def __attrs_post_init__(self):
+        self._id = self._id.format(
+            uuid=uuid.uuid4().hex
+        )
+        self._value.update({'name': self._name})
+        self._value.update({'id': self._id})
+        self._value.update(self._check)
 
     @property
     def value(self):
@@ -30,12 +42,12 @@ class Check:
     @property
     def name(self):
         """Name check getter."""
-        return self._value['name']
+        return self._name
 
     @property
     def identifier(self):
         """Id check getter."""
-        return self._value['id']
+        return self._id
 
 
 def tcp(tcp, interval='10s', timeout='5s'):
@@ -49,7 +61,7 @@ def tcp(tcp, interval='10s', timeout='5s'):
     return {'tcp': tcp, 'interval': interval, 'timeout': timeout}
 
 
-def http(url, interval='10s', timeout='5s'):
+def http(url, interval='10s', timeout='5s', deregister_after='1m'):
     """Configure a HTTP healthcheck.
 
     Keyword arguments:
@@ -57,7 +69,12 @@ def http(url, interval='10s', timeout='5s'):
     interval -- interval check (default '10s')
     timeout -- timeout (default '5s')
     """
-    return {'http': url, 'interval': interval, 'timeout': timeout}
+    return {
+        'http': url,
+        'interval': interval,
+        'timeout': timeout,
+        'DeregisterCriticalServiceAfter': deregister_after
+    }
 
 
 def alias(alias_service):
