@@ -21,25 +21,25 @@ class TestUtils(unittest.TestCase):
         # group 1: select single service
         servicesA = ['a', 'b', 'c']
 
-        self.assertEqual('a', select_one_rr(servicesA))
-        self.assertEqual('b', select_one_rr(servicesA))
-        self.assertEqual('c', select_one_rr(servicesA))
-        self.assertEqual('a', select_one_rr(servicesA))
+        self.assertEqual(select_one_rr(servicesA), 'a')
+        self.assertEqual(select_one_rr(servicesA), 'b')
+        self.assertEqual(select_one_rr(servicesA), 'c')
+        self.assertEqual(select_one_rr(servicesA), 'a')
+        self.assertEqual(select_one_rr(servicesA), 'b')
 
         # group 2: select alternate services
         servicesB = ['d', 'e']
         servicesC = ['f', 'g', 'h']
 
-        self.assertEqual('d', select_one_rr(servicesB))
-        self.assertEqual('f', select_one_rr(servicesC))
-        self.assertEqual('g', select_one_rr(servicesC))
-        self.assertEqual('e', select_one_rr(servicesB))
-        self.assertEqual('d', select_one_rr(servicesB))
+        self.assertEqual(select_one_rr(servicesB), 'd')
+        self.assertEqual(select_one_rr(servicesC), 'f')
+        self.assertEqual(select_one_rr(servicesC), 'g')
+        self.assertEqual(select_one_rr(servicesB), 'e')
+        self.assertEqual(select_one_rr(servicesB), 'd')
+        self.assertEqual(select_one_rr(servicesC), 'h')
+        self.assertEqual(select_one_rr(servicesC), 'f')
 
     def test_select_one_rr_exception(self):
         """Test raise IndexError for empty instances present on consul's catalog."""
-        instances = ['a', 'b']
-
-        self.assertEqual('a', select_one_rr(instances))
         with self.assertRaises(IndexError):
             select_one_rr([])

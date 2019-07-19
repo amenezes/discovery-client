@@ -87,7 +87,7 @@ class TestFilter(unittest.TestCase):
         """Tests if an invalid deregister will raise ValueError."""
         with self.assertRaises(ValueError):
             self.svc.remove('non-exist-check')
-    
+
     def test_get_invalid_check(self):
         with self.assertRaises(ValueError):
             self.svc.get_check('non-exist-check')

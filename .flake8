@@ -6,6 +6,8 @@ exclude = venv
           setup.py
           examples
 ignore = E501 # line too long
+         D102 # missing docstring in public method
+         D105 # missing docstring in magic method
 verbose = 2
 doctests = True
 format = [%(code)s] %(path)s [%(row)d,%(col)d] %(text)s

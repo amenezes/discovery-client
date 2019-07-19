@@ -4,10 +4,10 @@ import logging
 import os
 from abc import ABC
 
+import attr
+
 from discovery.filter import Filter
 from discovery.service import Service
-
-import attr
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
