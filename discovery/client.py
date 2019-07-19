@@ -10,6 +10,7 @@ import consul
 from discovery.base_client import BaseClient
 from discovery.check import Check
 from discovery.filter import Filter
+from discovery.service import Service
 from discovery.utils import select_one_rr
 
 import requests
@@ -24,6 +25,7 @@ class Consul(BaseClient):
 
     _host = attr.ib(type=str, default='localhost')
     _port = attr.ib(type=int, default=8500)
+    service = attr.ib(type=Service, default=None)
 
     def __attrs_post_init__(self):
         self.connect()
@@ -31,17 +33,17 @@ class Consul(BaseClient):
     def connect(self):
         self.__discovery = consul.Consul(self._host, self._port)
 
-    def __reconnect(self, service):
+    def __reconnect(self):
         """Service re-registration steps."""
         logging.debug('Service reconnect fallback')
 
-        self.__discovery.agent.service.deregister(service.identifier)
+        self.__discovery.agent.service.deregister(self.service.identifier)
         self.__discovery.agent.service.register(
-            name=service.name,
-            service_id=service.identifier,
-            check=service.check,
-            address=service.ip,
-            port=service.port)
+            name=self.service.name,
+            service_id=self.service.identifier,
+            check=self.service.check,
+            address=self.service.ip,
+            port=self.service.port)
         self.__id = self.leader_current_id()
         logging.info('Service successfully re-registered')
 
@@ -53,10 +55,10 @@ class Consul(BaseClient):
                       for instance in consul_instances
                       if instance['Node']['Address'] == consul_leader.split(':')[Filter.FIRST_ITEM.value]]
 
-        if len(current_id) > 0:
+        if current_id is not None:
             current_id = current_id[Filter.FIRST_ITEM.value]
 
-        return current_id[Filter.FIRST_ITEM.value]
+        return current_id
 
     def check_consul_health(self, service):
         """Start a loop that check consul health.
@@ -65,7 +67,7 @@ class Consul(BaseClient):
         """
         while True:
             try:
-                time.sleep(self.DEFAULT_TIMEOUT)
+                time.sleep(self.timeout)
 
                 current_id = self.leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
@@ -76,7 +78,7 @@ class Consul(BaseClient):
             except requests.exceptions.ConnectionError:
                 logging.error("Failed to connect to discovery service...")
                 logging.error(
-                    f'Reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.'
+                    f'Reconnect will occur in {self.timeout} seconds.'
                 )
 
     def find_service(self, name, fn=select_one_rr):
@@ -92,28 +94,24 @@ class Consul(BaseClient):
         services = self.__discovery.catalog.service(name)
         return self._format_catalog_service(services)
 
-    def deregister(self, service_id):
+    def deregister(self):
         """Deregister a service registered.
 
         Keyword arguments:
         service_id -- a valid service_id from a service previously registered.
         """
-        logging.debug(
-            f"Unregistering service_id: {service_id}")
-
-        self.__discovery.agent.service.deregister(service_id)
-
+        self.__discovery.agent.service.deregister(self.service.identifier)
         logging.info('Successfully unregistered application!')
 
-    def register(self, service):
+    def register(self):
         """Register a new service."""
         try:
             self.__discovery.agent.service.register(
-                name=service.name,
-                service_id=service.identifier,
-                check=service.check,
-                address=service.ip,
-                port=service.port)
+                name=self.service.name,
+                service_id=self.service.identifier,
+                check=self.service.check.value,
+                address=self.service.ip,
+                port=self.service.port)
             self.__id = self.leader_current_id()
 
             logging.info('Service successfully registered!')
@@ -122,24 +120,18 @@ class Consul(BaseClient):
         except requests.exceptions.ConnectionError:
             logging.error("Failed to connect to discovery...")
 
-    def register_additional_check(self, check, service_id):
+    def register_additional_check(self, check):
         """Append a Consul's check to a service registered."""
-        if isinstance(check, Check):
-            self.__discovery.agent.check.register(
-                check.name, check.value, service_id=service_id)
-        else:
+        if not isinstance(check, Check):
             raise TypeError('check must be Check instance.')
 
-    def register_additional_checks(self, service):
-        """Append a Consul's check to a service registered."""
-        for check in service.additional_checks():
-            self.register_additional_check(check, service.identifier)
+        self.__discovery.agent.check.register(
+            check.name, check.value, service_id=self.service.identifier
+        )
 
-    def deregister_additional_check(self, check_id):
+    def deregister_additional_check(self, check):
         """Remove a Consul's check to a service registered."""
-        self.__discovery.agent.check.deregister(check_id)
+        if not isinstance(check, Check):
+            raise TypeError('check must be Check instance.')
 
-    def deregister_additional_checks(self, service):
-        """Remove a Consul's check to a service registered."""
-        for check in service.additional_checks():
-            self.deregister_additional_check(check.identifier)
+        self.__discovery.agent.check.deregister(check.identifier)

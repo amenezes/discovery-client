@@ -19,7 +19,7 @@ class Check:
     _check = attr.ib(
         validator=attr.validators.instance_of(dict)
     )
-    _id = attr.ib(
+    _identifier = attr.ib(
         default="{uuid}",
         validator=attr.validators.optional(
             attr.validators.instance_of(str)
@@ -27,11 +27,11 @@ class Check:
     )
 
     def __attrs_post_init__(self):
-        self._id = self._id.format(
+        self._identifier = self._identifier.format(
             uuid=uuid.uuid4().hex
         )
         self._value.update({'name': self._name})
-        self._value.update({'id': self._id})
+        self._value.update({'id': self._identifier})
         self._value.update(self._check)
 
     @property
@@ -47,7 +47,7 @@ class Check:
     @property
     def identifier(self):
         """Id check getter."""
-        return self._id
+        return self._identifier
 
 
 def tcp(tcp, interval='10s', timeout='5s'):

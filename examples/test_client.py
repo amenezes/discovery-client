@@ -2,13 +2,26 @@ import json
 import threading
 
 from discovery.client import Consul
+from discovery.check import Check, http
+from discovery.service import Service
 
 from flask import Flask
 
 
 app = Flask(__name__)
-dc = Consul('discovery', 8500)
-dc.register('standard-client', 5000)
+dc = Consul(
+    host='discovery',
+    port=8500,
+    service=Service(
+        'standard-client',
+        5000,
+        check=Check(
+            'standard-client-check',
+            http('http://standard-client:5000/manage/health')
+        )
+    )
+)
+dc.register()
 
 
 @app.route('/manage/health')

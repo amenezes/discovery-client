@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import consul
 
-from discovery import client, service
+from discovery import check, client, service
 from discovery.utils import select_one_random
 
 import requests
@@ -57,12 +57,27 @@ class TestClient(unittest.TestCase):
                 'service_name': 'myapp',
                 'service_port': 5000
             }]
-        consul_client = MockConsul(consul.Consul)
-        consul_client.catalog.service = MagicMock(
+        self.consul_client = MockConsul(consul.Consul)
+        self.consul_client.agent.service.register = MagicMock()
+        self.consul_client.agent.service.deregister = MagicMock()
+        self.consul_client.agent.check.register = MagicMock()
+        self.consul_client.agent.check.deregister = MagicMock()
+        self.consul_client.catalog.service = MagicMock(
             return_value=self.consul_raw_response
         )
-        self.svc = service.Service('myapp', 5000)
+        self.consul_client.status.leader = MagicMock(
+            return_value='127.0.0.1:8300'
+        )
+        self.consul_client.health.service = MagicMock(
+            return_value=self.consul_health_response
+        )
+        self.svc = service.Service(
+            'myapp',
+            5000,
+            check=check.Check('test-check', check.alias('consul'))
+        )
         self.dc = client.Consul()
+        self.dc.service = self.svc
 
     def tearDown(self):
         self.dc.timeout = 30
@@ -86,33 +101,24 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(consul_service, list)
         self.assertIn(consul_service[0].raw, self.fmt_response)
 
-    @patch('discovery.client.consul.Consul')
-    def test_find_services_not_on_catalog(self, MockConsul):
+    def test_find_services_not_on_catalog(self):
         """Test for localization of a set of services not present in the consul's catalog.
 
         Return a empty list.
         """
-        consul_client = MockConsul(consul.Consul)
-        consul_client.catalog.service = MagicMock(return_value=(0, []))
-
-        dc = client.Consul()
-        response = dc.find_services('myapp')
+        self.consul_client.catalog.service = MagicMock(return_value=(0, []))
+        response = self.dc.find_services('myapp')
 
         self.assertEqual(response, [])
 
-    @patch('discovery.client.consul.Consul')
-    def test_find_service_not_found(self, MockConsul):
+    def test_find_service_not_found(self):
         """Test for localization of a service not present in the consul's catalog.
 
         Raise IndexError execption.
         """
-        consul_client = MockConsul(consul.Consul)
-        consul_client.catalog.service = MagicMock(return_value=(0, []))
-
-        dc = client.Consul()
-
+        self.consul_client.catalog.service = MagicMock(return_value=(0, []))
         with self.assertRaises(IndexError):
-            dc.find_service('myapp')
+            self.dc.find_service('myapp')
 
     def test_find_service_rr(self):
         """Test for localization of a service present in the consul's catalog.
@@ -135,77 +141,53 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(consul_service, service.Service)
         self.assertEqual(consul_service.raw, self.fmt_response[0])
 
-    @patch('discovery.client.consul.Consul')
-    def test_register(self, MockConsul):
+    def test_register(self):
         """Test registration of a service in the  consul's catalog."""
-        consul_client = MockConsul(consul.Consul)
-        consul_client.agent.service.register = MagicMock()
-        consul_client.catalog.service = MagicMock(
-            return_value=self.myapp_raw_response
-        )
-        consul_client.status.leader = MagicMock(
-            return_value='127.0.0.1:8300'
-        )
-        consul_client.health.service = MagicMock(
-            return_value=self.consul_health_response
-        )
+        self.dc.register()
+        myapp_service = self.dc.find_service('myapp')
 
-        dc = client.Consul()
-        dc.register(self.svc)
-        myapp_service = dc.find_service('myapp')
-
-        # self.assertIsInstance(myapp_service, dict)
         self.assertIsInstance(myapp_service, service.Service)
-        self.assertEqual(myapp_service.raw, self.fmt_response[1])
+        self.assertIn(myapp_service.raw, self.fmt_response)
 
-    @patch('discovery.client.consul.Consul')
-    def test_register_connection_error(self, MockConsul):
+    def test_register_connection_error(self):
         """Failure test to register a service when there is no instance of consul available."""
-        consul_client = MockConsul(consul.Consul)
-        consul_client.agent.service.register = MagicMock(
+        self.consul_client.agent.service.register = MagicMock(
             side_effect=requests.exceptions.ConnectionError
         )
-        consul_client.health.service = MagicMock(
+        self.consul_client.health.service = MagicMock(
             side_effect=requests.exceptions.ConnectionError
         )
 
-        dc = client.Consul()
         with self.assertLogs() as cm:
-            logging.getLogger(dc.register(self.svc))
+            logging.getLogger(self.dc.register())
         self.assertEqual(
             cm.output, ['ERROR:root:Failed to connect to discovery...']
         )
 
-    @patch('discovery.client.consul.Consul')
-    def test_deregister(self, MockConsul):
+    def test_deregister(self):
         """Test the deregistration of a service present in the consul's catalog."""
-        consul_client = MockConsul(consul.Consul)
-        consul_client.agent.service.register = MagicMock()
-        consul_client.agent.service.deregister = MagicMock()
-        consul_client.catalog.service = MagicMock(
-            return_value=self.myapp_raw_response
-        )
-        consul_client.status.leader = MagicMock(
-            return_value='127.0.0.1:8300'
-        )
-        consul_client.health.service = MagicMock(
-            return_value=self.consul_health_response
-        )
-
-        dc = client.Consul()
-        dc.register(self.svc)
-        myapp_service = dc.find_service('myapp')
+        self.dc.register()
+        myapp_service = self.dc.find_service('myapp')
 
         self.assertIsInstance(myapp_service, service.Service)
-        self.assertEqual(myapp_service.raw, self.fmt_response[1])
+        self.assertIn(myapp_service.raw, self.fmt_response)
 
-        dc.deregister(self.svc)
+        self.dc.deregister()
 
-        consul_client.catalog.service = MagicMock(return_value=(0, []))
+        self.consul_client.catalog.service = MagicMock(return_value=(0, []))
 
         with self.assertRaises(IndexError):
-            myapp_service = dc.find_service('myapp')
+            myapp_service = self.dc.find_service('myapp')
 
     def test_register_additional_check(self):
         """Test the registration of an additional check for a service registered."""
-        pass
+        self.dc.register_additional_check(
+            check.Check(
+                name='additional-check',
+                check=check.alias('consul')
+            )
+        )
+
+    def test_register_additional_check_failed(self):
+        with self.assertRaises(TypeError):
+            self.dc.register_additional_check('invalid-check')

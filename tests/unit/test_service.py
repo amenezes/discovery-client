@@ -27,12 +27,12 @@ class TestFilter(unittest.TestCase):
             }
         }
         self.check = Check(
-            'myapp-check',
-            http('http://myapp:5000/manage/health')
+            name='myapp-check',
+            check=http('http://myapp:5000/manage/health')
         )
         self.svc = service.Service(
-            'myapp',
-            5000,
+            name='myapp',
+            port=5000,
             ip=socket.gethostbyname(socket.gethostname()),
             check=self.check
         )
@@ -44,7 +44,7 @@ class TestFilter(unittest.TestCase):
         self.assertEqual(self.svc.ip, self.service_model['ip'])
 
     def test_create_service_without_check(self):
-        svc = service.Service('myapp2', 5001)
+        svc = service.Service(name='myapp2', port=5001)
         self.assertIsNone(svc.check)
 
     def test_check_property(self):

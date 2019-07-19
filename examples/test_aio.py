@@ -4,12 +4,14 @@ import logging
 from aiohttp import web
 
 from discovery.aioclient import Consul
+from discovery.service import Service
+from discovery.check import Check, http
 
 
 async def service_discovery(app):
-    app.loop.create_task(dc.register('aio-client', 5000))
+    app.loop.create_task(dc.register())
     asyncio.sleep(15)
-    app.loop.create_task(dc.consul_is_healthy())
+    app.loop.create_task(dc.check_consul_health())
 
 
 async def handle_info(request):
@@ -43,7 +45,20 @@ async def shutdown_server(app):
 
 
 app = web.Application()
-dc = Consul('discovery', 8500, app.loop)
+
+dc = Consul(
+    host='discovery',
+    port=8500,
+    app=app.loop,
+    service=Service(
+        'aio-client',
+        5000,
+        check=Check(
+            'app-check',
+            http('http://aio-client:5000/manage/health')
+        )
+    )
+)
 
 app.on_startup.append(service_discovery)
 app.on_shutdown.append(shutdown_server)

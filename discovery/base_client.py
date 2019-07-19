@@ -34,11 +34,13 @@ class BaseClient(ABC):
         self._timeout = int(value)
 
     def _format_catalog_service(self, services):
-        return [Service(
-            svc['ServiceName'],
-            svc['ServicePort'],
-            ip=svc['Address'],
-            identifier=svc['ServiceID'],
-            node=svc['Node'],
-            node_id=svc['ID'])
-            for svc in services[Filter.PAYLOAD.value]]
+        return [
+            Service(
+                name=svc.get('ServiceName'),
+                port=svc.get('ServicePort'),
+                ip=svc.get('Address'),
+                identifier=svc.get('ServiceID'),
+                node=svc.get('Node'),
+                node_id=svc.get('ID'))
+            for svc in services[Filter.PAYLOAD.value]
+        ]

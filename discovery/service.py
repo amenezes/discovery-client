@@ -93,9 +93,6 @@ class Service:
     def list_checks(self):
         """Retrieve all additional checks from a service."""
         return [check for check in self._checks.values()]
-        t = None
-        for check in self._checks.values():
-            t.append(check)
 
     def get_check(self, name):
         """Retrieve a specific additional check from a service."""

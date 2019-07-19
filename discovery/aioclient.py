@@ -12,6 +12,7 @@ import consul.aio
 from discovery.base_client import BaseClient
 from discovery.check import Check
 from discovery.filter import Filter
+from discovery.service import Service
 from discovery.utils import select_one_rr
 
 
@@ -25,6 +26,7 @@ class Consul(BaseClient):
     _host = attr.ib(type=str, default='localhost')
     _port = attr.ib(type=int, default=8500)
     _app = attr.ib(default=asyncio.get_event_loop())
+    service = attr.ib(type=Service, default=None)
 
     def __attrs_post_init__(self):
         self.__discovery = consul.aio.Consul(
@@ -33,20 +35,16 @@ class Consul(BaseClient):
 
     def connect(self):
         self.__discovery = consul.Consul(self._host, self._port)
-    # def __init__(self, host, port, app):
-    #     """Create a instance for async consul client."""
-    #     super().__init__()
-    #     self.__discovery = consul.aio.Consul(loop=app, host='localhost', port=8500)
 
-    async def _reconnect(self, service):
+    async def _reconnect(self):
         """Service re-registration steps."""
-        await self.__discovery.agent.service.deregister(service.identifier)
+        await self.__discovery.agent.service.deregister(self.service.identifier)
         await self.__discovery.agent.service.register(
-            name=service.name,
-            service_id=service.identifier,
-            check=service.check,
-            address=service.ip,
-            port=service.port
+            name=self.service.name,
+            service_id=self.service.identifier,
+            check=self.service.check,
+            address=self.service.ip,
+            port=self.service.port
         )
 
         self.__id = await self.leader_current_id()
@@ -66,33 +64,33 @@ class Consul(BaseClient):
 
         return current_id[Filter.FIRST_ITEM.value]
 
-    async def check_consul_health(self, service):
+    async def check_consul_health(self):
         """Start a loop that check consul health.
 
         Necessary to re-register service in case of consul fail.
         """
         while True:
             try:
-                await asyncio.sleep(self.DEFAULT_TIMEOUT)
+                await asyncio.sleep(self.timeout)
                 current_id = await self.leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
 
                 if current_id != self.__id:
-                    await self._reconnect(service)
+                    await self._reconnect(self.service)
 
             except aiohttp.ClientConnectorError:
                 logging.error('failed to connect to discovery service...')
                 logging.error(
-                    f"reconnect will occur in {self.DEFAULT_TIMEOUT} seconds."
+                    f"reconnect will occur in {self.timeout} seconds."
                 )
-                await self.check_consul_health(service)
+                await self.check_consul_health(self.service)
 
             except aiohttp.ServerDisconnectedError:
                 logging.error(
                     'temporary loss of communication with the discovery server.'
                 )
-                asyncio.sleep(self.DEFAULT_TIMEOUT)
-                await self.check_consul_health(service)
+                asyncio.sleep(self.timeout)
+                await self.check_consul_health(self.service)
 
     async def find_service(self, name, fn=select_one_rr):
         """Search for a service in the consul's catalog."""
@@ -104,20 +102,21 @@ class Consul(BaseClient):
         services = await self.__discovery.catalog.service(name)
         return self._format_catalog_service(services)
 
-    async def deregister(self, service):
+    async def deregister(self):
         """Deregister a service registered."""
-        await self.__discovery.agent.service.deregister(service.identifier)
+        await self.__discovery.agent.service.deregister(self.service.identifier)
         logging.info('successfully unregistered application!')
 
-    async def register(self, service):
+    async def register(self):
         """Register a new service."""
         try:
             await self.__discovery.agent.service.register(
-                name=service.name,
-                service_id=service.identifier,
-                check=service.check,
-                address=service.ip,
-                port=service.port)
+                name=self.service.name,
+                service_id=self.service.identifier,
+                check=self.service.check.value,
+                address=self.service.ip,
+                port=self.service.port
+            )
 
             self.__id = await self.leader_current_id()
 
@@ -127,24 +126,18 @@ class Consul(BaseClient):
         except aiohttp.ClientConnectorError:
             logging.error("Failed to connect to discovery...")
 
-    async def register_additional_check(self, check, service_id):
+    async def register_additional_check(self, check):
         """Append a Consul's check to a service registered."""
-        if isinstance(check, Check):
-            self.__discovery.agent.check.register(
-                check.name, check.value, service_id=service_id)
-        else:
+        if not isinstance(check, Check):
             raise TypeError('check must be Check instance.')
 
-    async def register_additional_checks(self, service):
-        """Append a Consul's check to a service registered."""
-        for check in service.additional_checks():
-            await self.register_additional_check(check, service.identifier)
+        self.__discovery.agent.check.register(
+            check.name, check.value, service_id=self.service.identifier
+        )
 
-    async def deregister_additional_check(self, check_id):
+    async def deregister_additional_check(self, check):
         """Remove a Consul's check to a service registered."""
-        self.__discovery.agent.check.deregister(check_id)
+        if not isinstance(check, Check):
+            raise TypeError('check must be Check instance.')
 
-    async def deregister_additional_checks(self, service):
-        """Remove a Consul's check to a service registered."""
-        for check in service.additional_checks():
-            await self.deregister_additional_check(check.identifier)
+        self.__discovery.agent.check.deregister(check.identifier)
