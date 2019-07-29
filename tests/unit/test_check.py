@@ -1,5 +1,5 @@
 """Test Check module."""
-
+import json
 import unittest
 
 from discovery.check import (
@@ -37,28 +37,26 @@ class TestCheck(unittest.TestCase):
 
     def test_check_tcp(self):
         """Tests the creation of a new service."""
-        check = Check('tcp-check', tcp('test:5000'))
+        check = Check(tcp('test:5000'), 'tcp-check')
 
         self.assertEqual(check.name, self.check_tcp['name'])
         self.assertRegex(check.identifier, self.regexp_id)
 
     def test_check_http(self):
         """Tests the creation of a new service."""
-        check = Check('http-check', http('http://test:5000/manage/health'))
+        check = Check(http('http://test:5000/manage/health'), 'http-check')
 
         self.assertEqual(check.name, self.check_http['name'])
         self.assertRegex(check.identifier, self.regexp_id)
 
     def test_check_alias(self):
         """Tests the creation of a new service."""
-        check = Check('alias-check', alias('consul'))
+        check = Check(alias('consul'), 'alias-check')
 
         self.assertEqual(check.name, 'alias-check')
         self.assertRegex(check.identifier, self.regexp_id)
 
     def test_value_property(self):
         """Tests retrieve check object representation."""
-        check = Check('str test', alias('alias-test'))
-
-        self.assertIsInstance(check.value, dict)
-        self.assertNotEqual(check.value, {})
+        check = Check(alias('alias-test'), 'str test')
+        self.assertIsInstance(json.loads(check.json()), dict)

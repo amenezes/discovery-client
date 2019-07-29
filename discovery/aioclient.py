@@ -7,39 +7,33 @@ import aiohttp
 
 import attr
 
-import consul.aio
-
 from discovery.base_client import BaseClient
 from discovery.check import Check
+from discovery.core.engine.aio import AioEngine
+from discovery.core.engine.base import Engine
+from discovery.exceptions import ServiceNotFoundException
 from discovery.filter import Filter
-from discovery.service import Service
 from discovery.utils import select_one_rr
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-@attr.s(kw_only=True)
+@attr.s(slots=True)
 class Consul(BaseClient):
     """Async Consul Service Registry."""
 
-    _host = attr.ib(type=str, default='localhost')
-    _port = attr.ib(type=int, default=8500)
-    _app = attr.ib(default=asyncio.get_event_loop())
-    service = attr.ib(type=Service, default=None)
+    app = attr.ib(default=asyncio.get_event_loop())
+    client = attr.ib(
+        type=Engine,
+        default=AioEngine(),
+        validator=attr.validators.instance_of(Engine)
+    )
 
-    def __attrs_post_init__(self):
-        self.__discovery = consul.aio.Consul(
-            loop=self._app, host=self._host, port=self._port
-        )
-
-    def connect(self):
-        self.__discovery = consul.Consul(self._host, self._port)
-
-    async def _reconnect(self):
+    async def reconnect(self):
         """Service re-registration steps."""
-        await self.__discovery.agent.service.deregister(self.service.identifier)
-        await self.__discovery.agent.service.register(
+        await self.agent.service.deregister(self.service.identifier)
+        await self.agent.service.register(
             name=self.service.name,
             service_id=self.service.identifier,
             check=self.service.check,
@@ -52,17 +46,30 @@ class Consul(BaseClient):
         logging.debug(f"Consul ID: {self.__id}")
         logging.info('Service successfully re-registered')
 
+    async def get_leader_ip(self):
+        leader_response = await self.status.leader()
+        leader_response = await leader_response.json()
+        consul_leader, _ = leader_response.split(':')
+        return consul_leader
+
+    async def get_consul_health(self):
+        health_response = await self.health.service('consul')
+        consul_instances = await health_response.json()
+        return consul_instances
+
     async def leader_current_id(self):
         """Retrieve current ID from consul leader."""
-        consul_leader = await self.__discovery.status.leader()
-        consul_instances = await self.__discovery.health.service('consul')
-        consul_instances = consul_instances[Filter.PAYLOAD.value]
+        consul_leader = await self.get_leader_ip()
+        consul_instances = await self.get_consul_health()
 
-        current_id = [instance['Node']['ID']
+        current_id = [instance.get('Node').get('ID')
                       for instance in consul_instances
-                      if instance['Node']['Address'] == consul_leader.split(':')[Filter.FIRST_ITEM.value]]
+                      if instance.get('Node').get('Address') == consul_leader]
 
-        return current_id[Filter.FIRST_ITEM.value]
+        if current_id is not None:
+            current_id = current_id[Filter.FIRST_ITEM.value]
+
+        return current_id
 
     async def check_consul_health(self):
         """Start a loop that check consul health.
@@ -76,7 +83,7 @@ class Consul(BaseClient):
                 logging.debug(f"Consul ID: {current_id}")
 
                 if current_id != self.__id:
-                    await self._reconnect(self.service)
+                    await self.reconnect(self.service)
 
             except aiohttp.ClientConnectorError:
                 logging.error('failed to connect to discovery service...')
@@ -94,13 +101,16 @@ class Consul(BaseClient):
 
     async def find_service(self, name, fn=select_one_rr):
         """Search for a service in the consul's catalog."""
-        services = await self.find_services(name)
+        response = await self.find_services(name)
+        if not response.status == 200:
+            raise ServiceNotFoundException
+        services = await response.json()
         return fn(services)
 
     async def find_services(self, name):
         """Search for a service in the consul's catalog."""
-        services = await self.__discovery.catalog.service(name)
-        return self._format_catalog_service(services)
+        services = await self.catalog.service(name)
+        return services
 
     async def deregister(self):
         """Deregister a service registered."""

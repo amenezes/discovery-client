@@ -5,55 +5,51 @@ import time
 
 import attr
 
-import consul
-
 from discovery.base_client import BaseClient
 from discovery.check import Check
+from discovery.exceptions import (
+    ClientOperationException,
+    ServiceNotFoundException
+)
 from discovery.filter import Filter
-from discovery.service import Service
+from discovery.service import Service as Svc
 from discovery.utils import select_one_rr
 
-import requests
+from requests.exceptions import ConnectionError
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-@attr.s(kw_only=True)
+@attr.s(slots=True)
 class Consul(BaseClient):
     """Consul Service Registry."""
 
-    _host = attr.ib(type=str, default='localhost')
-    _port = attr.ib(type=int, default=8500)
-    service = attr.ib(type=Service, default=None)
+    service = attr.ib(
+        type=Svc,
+        default=None
+    )
 
-    def __attrs_post_init__(self):
-        self.connect()
-
-    def connect(self):
-        self.__discovery = consul.Consul(self._host, self._port)
-
-    def __reconnect(self):
+    def reconnect(self):
         """Service re-registration steps."""
         logging.debug('Service reconnect fallback')
-
-        self.__discovery.agent.service.deregister(self.service.identifier)
-        self.__discovery.agent.service.register(
+        self.agent.service.deregister(self.service.identifier)
+        self.agent.service.register(
             name=self.service.name,
             service_id=self.service.identifier,
             check=self.service.check,
             address=self.service.ip,
             port=self.service.port)
-        self.__id = self.leader_current_id()
+        self._id = self.leader_current_id()
         logging.info('Service successfully re-registered')
 
     def leader_current_id(self):
         """Retrieve current ID from consul leader."""
-        consul_leader = self.__discovery.status.leader()
-        consul_instances = self.__discovery.health.service('consul')[Filter.PAYLOAD.value]
+        consul_leader, _ = self.status.leader().json().split(':')
+        consul_instances = self.health.service('consul').json()
         current_id = [instance['Node']['ID']
                       for instance in consul_instances
-                      if instance['Node']['Address'] == consul_leader.split(':')[Filter.FIRST_ITEM.value]]
+                      if instance['Node']['Address'] == consul_leader]
 
         if current_id is not None:
             current_id = current_id[Filter.FIRST_ITEM.value]
@@ -72,10 +68,10 @@ class Consul(BaseClient):
                 current_id = self.leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
 
-                if current_id != self.__id:
-                    self.__reconnect(service)
+                if current_id != self._id:
+                    self.reconnect(service)
 
-            except requests.exceptions.ConnectionError:
+            except ConnectionError:
                 logging.error("Failed to connect to discovery service...")
                 logging.error(
                     f'Reconnect will occur in {self.timeout} seconds.'
@@ -83,7 +79,10 @@ class Consul(BaseClient):
 
     def find_service(self, name, fn=select_one_rr):
         """Search for a service in the consul's catalog."""
-        return fn(self.find_services(name))
+        response = self.find_services(name)
+        if not response.ok:
+            raise ServiceNotFoundException
+        return fn(response.json())
 
     def find_services(self, name):
         """
@@ -91,33 +90,24 @@ class Consul(BaseClient):
 
         Return a list of services registered on consul catalog.
         """
-        services = self.__discovery.catalog.service(name)
-        return self._format_catalog_service(services)
+        return self.catalog.service(name)
 
     def deregister(self):
-        """Deregister a service registered.
-
-        Keyword arguments:
-        service_id -- a valid service_id from a service previously registered.
-        """
-        self.__discovery.agent.service.deregister(self.service.identifier)
-        logging.info('Successfully unregistered application!')
+        """Deregister a service registered."""
+        self.agent.service.deregister(self.service)
 
     def register(self):
         """Register a new service."""
         try:
-            self.__discovery.agent.service.register(
-                name=self.service.name,
-                service_id=self.service.identifier,
-                check=self.service.check.value,
-                address=self.service.ip,
-                port=self.service.port)
-            self.__id = self.leader_current_id()
+            response = self.agent.service.register(self.service.json())
+            if not response.ok:
+                raise ClientOperationException('Error registering service.')
+            self._id = self.leader_current_id()
 
             logging.info('Service successfully registered!')
-            logging.debug(f'Consul ID: {self.__id}')
+            logging.debug(f'Consul ID: {self._id}')
 
-        except requests.exceptions.ConnectionError:
+        except ConnectionError:
             logging.error("Failed to connect to discovery...")
 
     def register_additional_check(self, check):
@@ -125,7 +115,7 @@ class Consul(BaseClient):
         if not isinstance(check, Check):
             raise TypeError('check must be Check instance.')
 
-        self.__discovery.agent.check.register(
+        self.client.agent.checks.register(
             check.name, check.value, service_id=self.service.identifier
         )
 
@@ -134,4 +124,4 @@ class Consul(BaseClient):
         if not isinstance(check, Check):
             raise TypeError('check must be Check instance.')
 
-        self.__discovery.agent.check.deregister(check.identifier)
+        self.agent.check.deregister(check.identifier)

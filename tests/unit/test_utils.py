@@ -2,6 +2,7 @@
 
 import unittest
 
+from discovery.exceptions import ServiceNotFoundException
 from discovery.utils import select_one_random, select_one_rr
 
 
@@ -41,5 +42,5 @@ class TestUtils(unittest.TestCase):
 
     def test_select_one_rr_exception(self):
         """Test raise IndexError for empty instances present on consul's catalog."""
-        with self.assertRaises(IndexError):
+        with self.assertRaises(ServiceNotFoundException):
             select_one_rr([])

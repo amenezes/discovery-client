@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="discovery-client",
-    version="0.2.2",
+    version="0.3.0",
     author="alexandre menezes",
     author_email="alexandre.fmenezes@gmail.com",
     description="discovery service client",
@@ -22,7 +22,7 @@ setuptools.setup(
         ('Issue tracker', 'https://github.com/amenezes/discovery-client/issues')
     )),
     extras_require={
-        'consul': ['python-consul']
+        'attrs': ['attrs']
     },
     classifiers=[
         "Programming Language :: Python :: 3.6",
@@ -33,5 +33,6 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
+        "Topic :: Software Development :: Distributed Computing",
     ],
 )
