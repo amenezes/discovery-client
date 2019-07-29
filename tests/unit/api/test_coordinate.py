@@ -29,20 +29,16 @@ class TestCoordinate(unittest.TestCase):
 
     def test_read_wan(self):
         response = self.coordinate.read_wan()
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
+        self.assertTrue(response.ok)
 
     def test_read_lan(self):
         response = self.coordinate.read_lan()
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
+        self.assertTrue(response.ok)
 
     def test_read_lan_node(self):
         response = self.coordinate.read_lan_node(self.get_node())
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
+        self.assertTrue(response.ok)
 
     def test_update_lan_node(self):
         response = self.coordinate.update_lan_node(self.get_sample_payload())
-        self.assertIsNotNone(response)
-        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.ok)
