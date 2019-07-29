@@ -4,7 +4,7 @@ python:
   - 3.6
   - 3.7
 install:
-  - make develop
+  - make install-deps
 script:
   - make all
 notifications:

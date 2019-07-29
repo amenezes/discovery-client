@@ -12,11 +12,13 @@ tests:
 doc: 
 	@echo "> generate project documentation..."
 
-develop:
+install-deps:
+	pip install -r requirements-dev.txt
+
+develop: install-deps
 	pip install virtualenv	
 	virtualenv venv
 	source venv/bin/activate
-	pip install -r requirements-dev.txt
 
 about:
 	@echo "> discovery-client"
