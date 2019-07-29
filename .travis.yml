@@ -12,7 +12,7 @@ before_install:
 install:
   - make install-deps
 script:
-  - make all
+  - make ci
 notifications:
   webhooks:
     urls:
