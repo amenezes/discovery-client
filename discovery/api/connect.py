@@ -33,7 +33,7 @@ class Connect(BaseApi):
         )
 
     def ca_roots(self, **kwargs):
-        return self.client.get(f"{self.url}/ca/roots")
+        return self.client.get(f"{self.url}/ca/roots", params=kwargs)
 
     def ca_leaf(self, service, **kwargs):
         return self.client.get(

@@ -13,19 +13,21 @@ doc:
 	@echo "> generate project documentation..."
 
 install-deps:
+	@echo "> installing development dependencies..."
 	pip install -r requirements-dev.txt
 
 develop: install-deps
+	@echo "> preparing local development environment"
 	pip install virtualenv	
 	virtualenv venv
 	source venv/bin/activate
 
 about:
-	@echo "> discovery-client"
+	@echo "> `cat setup.py| grep name= | cut -d'"' -f2` [`cat setup.py| grep version= | cut -d'"' -f2`]"
 	@echo ""
-	@echo "version: 0.2.0"
-	@echo "project page: https://github.com/amenezes/discovery-client"
+	@echo "project page: `cat setup.py | grep url= | cut -d'"' -f2`"
 	@echo "pypi: https://pypi.org/project/discovery-client/"
+	@echo "license: `cat setup.py| grep License | awk '{print tolower($$6), tolower($$7), tolower($$8)}' | cut -d '"' -f1`"
 
 ci: all
 	@echo "--- download CI dependencies ---"

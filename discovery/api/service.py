@@ -16,11 +16,11 @@ class Service(BaseApi):
         503: 'At least one of the healthchecks is critical'
     }
 
-    def services(self):
-        return self.client.get(f"{self.url}s")
+    def services(self, **kwargs):
+        return self.client.get(f"{self.url}s", params=kwargs)
 
-    def service(self, name):
-        return self.client.get(f"{self.url}/{name}")
+    def service(self, service_id, **kwargs):
+        return self.client.get(f"{self.url}/{service_id}", params=kwargs)
 
     def configuration(self, service_id, **kwargs):
         return self.client.get(f"{self.url}/{service_id}", params=kwargs)

@@ -7,8 +7,8 @@ from discovery.api.base import BaseApi
 class AuthMethod(BaseApi):
     endpoint = attr.ib(default='/acl/auth-method')
 
-    def create(self, data):
-        return self.client.put(f"{self.url}", data=data)
+    def create(self, data, **kwargs):
+        return self.client.put(f"{self.url}", data=data, params=kwargs)
 
     def read(self, name, **kwargs):
         return self.client.put(f"{self.url}/{name}", params=kwargs)

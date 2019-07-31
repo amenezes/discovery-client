@@ -7,8 +7,8 @@ from discovery.api.base import BaseApi
 class Raft(BaseApi):
     endpoint = attr.ib(default='/operator/raft')
 
-    def read_configuration(self):
-        return self.client.get(f"{self.url}/configuration")
+    def read_configuration(self, **kwargs):
+        return self.client.get(f"{self.url}/configuration", params=kwargs)
 
     def delete_peer(self, **kwargs):
         print(kwargs)

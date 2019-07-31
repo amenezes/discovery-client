@@ -16,10 +16,10 @@ class Intentions(BaseApi):
         return self.client.post(f"{self.url}", params=kwargs, data=data)
 
     def read(self, uuid, **kwargs):
-        return self.client.get(f"{self.url}/{uuid}")
+        return self.client.get(f"{self.url}/{uuid}", params=kwargs)
 
     def list(self, **kwargs):
-        return self.client.get(f"{self.url}")
+        return self.client.get(f"{self.url}", params=kwargs)
 
     def update(self, uuid, data, **kwargs):
         return self.client.put(

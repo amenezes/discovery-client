@@ -29,17 +29,21 @@ class Agent(BaseApi):
     def reload(self, **kwargs):
         return self.client.put(f"{self.url}/reload", params=kwargs)
 
-    def maintenance(self, enable=True, reason=None):
+    def maintenance(self, enable=True, reason=None, **kwargs):
         reason = reason or ''
         return self.client.put(
-            f"{self.url}/maintenance?enable={enable}&reason={quote_plus(reason)}"
+            f"{self.url}/maintenance?enable={enable}&reason={quote_plus(reason)}",
+            params=kwargs
         )
 
-    def metrics(self, format=None):
+    def metrics(self, format=None, **kwargs):
         format = format or ''
-        return self.client.get(f"{self.url}/metrics{format}")
+        return self.client.get(
+            f"{self.url}/metrics{format}",
+            params=kwargs
+        )
 
-    def monitor(self, loglevel='info', **kwargs):
+    def stream_logs(self, loglevel='info', **kwargs):
         return self.client.get(
             f"{self.url}/monitor?loglevel={loglevel}",
             params=kwargs

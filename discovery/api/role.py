@@ -10,14 +10,18 @@ class Role(BaseApi):
     def create(self, data, **kwargs):
         return self.client.put(f"{self.url}", params=kwargs, data=data)
 
-    def read(self, role_id, **kwargs):
+    def read_by_id(self, role_id, **kwargs):
         return self.client.put(f"{self.url}/{role_id}", params=kwargs)
 
     def read_by_name(self, name, **kwargs):
         return self.client.put(f"{self.url}/name/{name}", params=kwargs)
 
-    def update(self, role_id, **kwargs):
-        return self.client.put(f"{self.url}/{role_id}", params=kwargs)
+    def update(self, role_id, data, **kwargs):
+        return self.client.put(
+            f"{self.url}/{role_id}",
+            params=kwargs,
+            data=data
+        )
 
     def delete(self, role_id, **kwargs):
         return self.client.delete(f"{self.url}/{role_id}", params=kwargs)

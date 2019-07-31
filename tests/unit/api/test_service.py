@@ -52,9 +52,8 @@ class TestService(unittest.TestCase):
         response = self.service.services()
         self.assertTrue(response.ok)
 
-    @unittest.skip
     def test_service(self):
-        response = self.service.service(self.get_service_name())
+        response = self.service.service(self.get_service_id())
         self.assertTrue(response.ok)
 
     def test_configuration(self):
@@ -64,7 +63,6 @@ class TestService(unittest.TestCase):
     def test_register(self):
         self.service.deregister(self.get_service_id())
         response = self.service.register(self.get_sample_payload())
-        self.assertEqual(response.text, '')
         self.assertTrue(response.ok)
 
     def test_deregister(self):
