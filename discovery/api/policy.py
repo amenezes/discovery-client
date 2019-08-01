@@ -13,8 +13,12 @@ class Policy(BaseApi):
     def read(self, policy_id, **kwargs):
         return self.client.get(f"{self.url}/{policy_id}", params=kwargs)
 
-    def update(self, data, **kwargs):
-        return self.client.put(f"{self.url}", params=kwargs, data=data)
+    def update(self, policy_id, data, **kwargs):
+        return self.client.put(
+            f"{self.url}/{policy_id}",
+            params=kwargs,
+            data=data
+        )
 
     def delete(self, policy_id, **kwargs):
         return self.client.delete(f"{self.url}/{policy_id}", params=kwargs)

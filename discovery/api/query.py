@@ -17,11 +17,11 @@ class Query(BaseApi):
             uri = f"{self.url}"
         return self.client.get(uri, params=kwargs)
 
-    def update(self, uuid, data, **kwargs):
-        return self.client.put(f"{self.url}/{uuid}", params=kwargs)
-
     def delete(self, uuid, **kwargs):
         return self.client.delete(f"{self.url}/{uuid}", params=kwargs)
+
+    def update(self, uuid, data, **kwargs):
+        return self.client.put(f"{self.url}/{uuid}", params=kwargs)
 
     def execute(self, uuid, **kwargs):
         return self.client.get(f"{self.url}/{uuid}/execute", params=kwargs)
