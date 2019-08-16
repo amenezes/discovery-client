@@ -26,7 +26,6 @@ class Service(BaseApi):
         return self.client.get(f"{self.url}/{service_id}", params=kwargs)
 
     def register(self, data, **kwargs):
-        print(data)
         return self.client.put(
             f"{self.url}/register",
             params=kwargs,

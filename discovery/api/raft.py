@@ -11,7 +11,6 @@ class Raft(BaseApi):
         return self.client.get(f"{self.url}/configuration", params=kwargs)
 
     def delete_peer(self, **kwargs):
-        print(kwargs)
         return self.client.delete(
             f"{self.url}/peer", params=kwargs
         )

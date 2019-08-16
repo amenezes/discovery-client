@@ -32,7 +32,7 @@ class Check:
         )
 
     def json(self):
-        response = dict(name=self.name, id=self.identifier)
+        response = dict(id=self.identifier)
         response.update(self._check)
         return json.dumps(response)
 

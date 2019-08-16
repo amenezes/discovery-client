@@ -58,6 +58,7 @@ class Service:
         )
         if self._check:
             self._checks.update({self._check.name: self._check})
+            self._checks.update({self.name: self._check})
 
     @property
     def check(self):
