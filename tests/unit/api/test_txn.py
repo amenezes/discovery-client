@@ -1,73 +1,69 @@
 import json
-import unittest
 
-from discovery.api.txn import Txn
-from discovery.core.engine.standard import StandardEngine
+import pytest
+
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestTxn(unittest.TestCase):
-
-    def get_sample_payload(self):
-        return json.dumps([
+def sample_payload():
+    return json.dumps(
+        [
             {
-                'KV': {
-                    'Verb': 'get',
-                    'Key': '<key>',
-                    'Value': '<Base64-encoded blob of data>',
-                    'Flags': '<flags>',
-                    'Index': '<index>',
-                    'Session': '<session id>'
+                "KV": {
+                    "Verb": "get",
+                    "Key": "<key>",
+                    "Value": "<Base64-encoded blob of data>",
+                    "Flags": "<flags>",
+                    "Index": "<index>",
+                    "Session": "<session id>",
                 }
             },
             {
-                'Node': {
-                    'Verb': 'set',
-                    'Node': {
-                        'ID': '67539c9d-b948-ba67-edd4-d07a676d6673',
-                        'Node': 'bar',
-                        'Address': '192.168.0.1',
-                        'Datacenter': 'dc1',
-                        'Meta': {
-                            'instance_type': 'm2.large'
-                        }
-                    }
+                "Node": {
+                    "Verb": "set",
+                    "Node": {
+                        "ID": "67539c9d-b948-ba67-edd4-d07a676d6673",
+                        "Node": "bar",
+                        "Address": "192.168.0.1",
+                        "Datacenter": "dc1",
+                        "Meta": {"instance_type": "m2.large"},
+                    },
                 }
             },
+            {"Service": {"Verb": "delete", "Node": "foo", "Service": {"ID": "db1"},}},
             {
-                'Service': {
-                    'Verb': 'delete',
-                    'Node': 'foo',
-                    'Service': {
-                        'ID': 'db1'
-                    }
-                }
-            },
-            {
-                'Check': {
-                    'Verb': 'cas',
-                    'Check': {
-                        'Node': 'bar',
-                        'CheckID': 'service:web1',
-                        'Name': 'Web HTTP Check',
-                        'Status': 'critical',
-                        'ServiceID': 'web1',
-                        'ServiceName': 'web',
-                        'ServiceTags': None,
-                        'Definition': {
-                            'HTTP': 'http://localhost:8080',
-                            'Interval': '10s'
+                "Check": {
+                    "Verb": "cas",
+                    "Check": {
+                        "Node": "bar",
+                        "CheckID": "service:web1",
+                        "Name": "Web HTTP Check",
+                        "Status": "critical",
+                        "ServiceID": "web1",
+                        "ServiceName": "web",
+                        "ServiceTags": None,
+                        "Definition": {
+                            "HTTP": "http://localhost:8080",
+                            "Interval": "10s",
                         },
-                        'ModifyIndex': 22
-                    }
+                        "ModifyIndex": 22,
+                    },
                 }
-            }
-        ])
+            },
+        ]
+    )
 
-    def setUp(self):
-        client = StandardEngine()
-        self.txn = Txn(client)
 
-    def test_create(self):
-        response = self.txn.create(self.get_sample_payload())
-        self.assertIsNotNone(response)
-        # self.assertEqual(response.status_code, 200)
+@pytest.fixture
+@pytest.mark.asyncio
+async def txn(consul_api):
+    return api.Txn(client=consul_api)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_create(txn, expected):
+    txn.client.expected = expected
+    response = await txn.create(sample_payload())
+    assert response.status == 200

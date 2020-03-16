@@ -1,21 +1,16 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class Events(BaseApi):
-    endpoint = attr.ib(default='/event')
+class Events(Api):
+    def __init__(self, endpoint: str = "/event", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def fire(self, name, data, **kwargs):
-        return self.client.put(
-            f"{self.url}/fire/{name}",
-            params=kwargs,
-            data=data
+    async def fire(self, name, data, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/fire/{name}", params=kwargs, data=data
         )
+        return response
 
-    def list(self, key, **kwargs):
-        return self.client.get(
-            f"{self.url}/list",
-            params=kwargs
-        )
+    async def list(self, key, **kwargs):
+        response = await self.client.get(f"{self.url}/list", params=kwargs)
+        return response

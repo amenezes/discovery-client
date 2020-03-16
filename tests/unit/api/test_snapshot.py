@@ -1,21 +1,28 @@
-import unittest
+import pytest
 
-from discovery.api.snapshot import Snapshot
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestSnapshot(unittest.TestCase):
+@pytest.fixture
+@pytest.mark.asyncio
+async def snapshot(consul_api):
+    return api.Snapshot(client=consul_api)
 
-    def setUp(self):
-        client = StandardEngine()
-        self.snapshot = Snapshot(client)
 
-    def test_generate(self):
-        response = self.snapshot.generate()
-        self.assertIsNotNone(response)
-        self.assertEqual(response.status_code, 200)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_generate(snapshot, expected):
+    snapshot.client.expected = expected
+    response = await snapshot.generate()
+    assert response.status == 200
 
-    def test_restore(self):
-        snapshot = self.snapshot.generate()
-        response = self.snapshot.restore(snapshot)
-        self.assertIsNotNone(response)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_restore(snapshot, expected):
+    snapshot.client.expected = expected
+    snap = await snapshot.generate()
+    data = await snap.read()
+    response = await snapshot.restore(data=data)
+    assert response.status == 200

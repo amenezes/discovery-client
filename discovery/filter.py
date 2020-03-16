@@ -9,4 +9,3 @@ class Filter(Enum):
 
     FIRST_ITEM = 0
     PAYLOAD = 1
-    DEFAULT_TIMEOUT = 30

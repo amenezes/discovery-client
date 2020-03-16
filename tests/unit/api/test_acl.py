@@ -1,13 +1,75 @@
-import unittest
+import pytest
 
-from discovery.api.acl import Acl
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestAcl(unittest.TestCase):
+def bootstrap_response():
+    return {
+        "ID": "527347d3-9653-07dc-adc0-598b8f2b0f4d",
+        "AccessorID": "b5b1a918-50bc-fc46-dec2-d481359da4e3",
+        "SecretID": "527347d3-9653-07dc-adc0-598b8f2b0f4d",
+        "Description": "Bootstrap Token (Global Management)",
+        "Policies": [
+            {"ID": "00000000-0000-0000-0000-000000000001", "Name": "global-management"}
+        ],
+        "Local": False,
+        "CreateTime": "2018-10-24T10:34:20.843397-04:00",
+        "Hash": "oyrov6+GFLjo/KZAfqgxF/X4J/3LX0435DOBy9V22I0=",
+        "CreateIndex": 12,
+        "ModifyIndex": 12,
+    }
 
-    def setUp(self):
-        self.client = StandardEngine()
 
-    def test_create_acl(self):
-        Acl(self.client)
+def replication_response():
+    return {
+        "Enabled": True,
+        "Running": True,
+        "SourceDatacenter": "dc1",
+        "ReplicationType": "tokens",
+        "ReplicatedIndex": 1976,
+        "ReplicatedTokenIndex": 2018,
+        "LastSuccess": "2018-11-03T06:28:58Z",
+        "LastError": "2016-11-03T06:28:28Z",
+    }
+
+
+def translate_payload():
+    return 'agent "" {policy = "read"}'
+
+
+def translate_response():
+    return 'agent_prefix "" {policy = "read"}'
+
+
+@pytest.fixture
+@pytest.mark.asyncio
+async def acl(consul_api):
+    return api.Acl(client=consul_api)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [bootstrap_response()])
+async def test_bootstrap(acl, expected):
+    acl.client.expected = expected
+    response = await acl.bootstrap()
+    response = await response.json()
+    assert response == bootstrap_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [replication_response()])
+async def test_replication(acl, expected):
+    acl.client.expected = expected
+    response = await acl.replication()
+    response = await response.json()
+    assert response == replication_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [translate_response()])
+async def test_translate(acl, expected):
+    acl.client.expected = expected
+    response = await acl.translate(translate_payload())
+    response = await response.text()
+    assert response == translate_response()

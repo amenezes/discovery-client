@@ -1,15 +1,10 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Txn(BaseApi):
-    endpoint = attr.ib(default='/txn')
+class Txn(Api):
+    def __init__(self, endpoint: str = "/txn", **kwargs) -> None:
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def create(self, data, **kwargs):
-        return self.client.put(
-            f'{self.url}',
-            data=data,
-            params=kwargs
-        )
+    async def create(self, data, **kwargs):
+        response = await self.client.put(f"{self.url}", data=data, params=kwargs)
+        return response

@@ -1,49 +1,109 @@
-import unittest
+import pytest
 
-from discovery.api.checks import Checks
-from discovery.check import Check, alias
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestChecks(unittest.TestCase):
+def checks_response():
+    return {
+        "service:redis": {
+            "Node": "foobar",
+            "CheckID": "service:redis",
+            "Name": "Service 'redis' check",
+            "Status": "passing",
+            "Notes": "",
+            "Output": "",
+            "ServiceID": "redis",
+            "ServiceName": "redis",
+            "ServiceTags": ["primary"],
+        }
+    }
 
-    def setUp(self):
-        client = StandardEngine()
-        self.checks = Checks(client)
-        self.data = Check(alias('consul'), 'test-check')
 
-    def test_checks(self):
-        response = self.checks.checks()
-        self.assertIsInstance(response.json(), dict)
+def register_payload():
+    return {
+        "ID": "mem",
+        "Name": "Memory utilization",
+        "Notes": "Ensure we don't oversubscribe memory",
+        "DeregisterCriticalServiceAfter": "90m",
+        "Args": ["/usr/local/bin/check_mem.py"],
+        "DockerContainerID": "f972c95ebf0e",
+        "Shell": "/bin/bash",
+        "HTTP": "https://example.com",
+        "Method": "POST",
+        "Header": {"Content-Type": "application/json"},
+        "Body": '{"check":"mem"}',
+        "TCP": "example.com:22",
+        "Interval": "10s",
+        "Timeout": "5s",
+        "TLSSkipVerify": True,
+    }
 
-    def test_register(self):
-        response = self.checks.register(self.data.json())
-        self.assertIsNotNone(response)
 
-    def test_deregister(self):
-        response = self.checks.deregister(self.data.identifier)
-        self.assertIsNotNone(response)
+@pytest.fixture
+@pytest.mark.asyncio
+async def checks(consul_api):
+    return api.Checks(client=consul_api)
 
-    def test_check_pass(self):
-        response = self.checks.check_pass(self.data.identifier)
-        self.assertIsNotNone(response)
 
-    def test_check_warn(self):
-        response = self.checks.check_warn(self.data.identifier)
-        self.assertIsNotNone(response)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [checks_response()])
+async def test_list_checks(checks, expected):
+    checks.client.expected = expected
+    response = await checks.checks()
+    response = await response.json()
+    assert response == checks_response()
 
-    def test_check_fail(self):
-        response = self.checks.check_fail(self.data.identifier)
-        self.assertIsNotNone(response)
 
-    def test_check_update_success(self):
-        response = self.checks.check_update(self.data.identifier, 'passing')
-        self.assertIsNotNone(response)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_register(checks, expected):
+    checks.client.expected = expected
+    response = await checks.register(register_payload)
+    assert response.status == 200
 
-    def test_check_update_invalid_type(self):
-        with self.assertRaises(TypeError):
-            self.checks.check_update(self.data.identifier, 1)
 
-    def test_check_update_value_error(self):
-        with self.assertRaises(ValueError):
-            self.checks.check_update(self.data.identifier, 'ok')
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_deregister(checks, expected):
+    checks.client.expected = expected
+    response = await checks.deregister("my-check-id")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_check_pass(checks, expected):
+    checks.client.expected = expected
+    response = await checks.check_pass("my-check-id")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_check_warn(checks, expected):
+    checks.client.expected = expected
+    response = await checks.check_warn("my-check-id")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_check_fail(checks, expected):
+    checks.client.expected = expected
+    response = await checks.check_fail("my-check-id")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_check_update(checks, expected):
+    checks.client.expected = expected
+    response = await checks.check_update("my-check-id", "passing")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+async def test_check_update_value_error(checks):
+    with pytest.raises(ValueError):
+        await checks.check_update("my-check-id", "ok")

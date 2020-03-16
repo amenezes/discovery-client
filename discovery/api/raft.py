@@ -1,16 +1,14 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Raft(BaseApi):
-    endpoint = attr.ib(default='/operator/raft')
+class Raft(Api):
+    def __init__(self, endpoint: str = "/operator/raft", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def read_configuration(self, **kwargs):
-        return self.client.get(f"{self.url}/configuration", params=kwargs)
+    async def read_configuration(self, **kwargs):
+        response = await self.client.get(f"{self.url}/configuration", params=kwargs)
+        return response
 
-    def delete_peer(self, **kwargs):
-        return self.client.delete(
-            f"{self.url}/peer", params=kwargs
-        )
+    async def delete_peer(self, **kwargs):
+        response = await self.client.delete(f"{self.url}/peer", params=kwargs)
+        return response

@@ -1,20 +1,22 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class Kv(BaseApi):
-    endpoint = attr.ib(default='/kv')
+class Kv(Api):
+    def __init__(self, endpoint: str = "/kv", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def create(self, key, data, **kwargs):
-        return self.update(key, data, **kwargs)
+    async def create(self, key, data, **kwargs):
+        response = await self.update(key, data, **kwargs)
+        return response
 
-    def read(self, key, **kwargs):
-        return self.client.get(f"{self.url}/{key}", params=kwargs)
+    async def read(self, key, **kwargs):
+        response = await self.client.get(f"{self.url}/{key}", params=kwargs)
+        return response
 
-    def update(self, key, data, **kwargs):
-        return self.client.put(f"{self.url}/{key}", params=kwargs, data=data)
+    async def update(self, key, data, **kwargs):
+        response = await self.client.put(f"{self.url}/{key}", params=kwargs, data=data)
+        return response
 
-    def delete(self, key, **kwargs):
-        return self.client.delete(f"{self.url}/{key}", params=kwargs)
+    async def delete(self, key, **kwargs):
+        response = await self.client.delete(f"{self.url}/{key}", params=kwargs)
+        return response

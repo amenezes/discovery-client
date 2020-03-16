@@ -1,14 +1,14 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Status(BaseApi):
-    endpoint = attr.ib(default='/status')
+class Status(Api):
+    def __init__(self, endpoint: str = "/status", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def leader(self, **kwargs):
-        return self.client.get(f"{self.url}/leader", params=kwargs)
+    async def leader(self, **kwargs):
+        response = await self.client.get(f"{self.url}/leader", params=kwargs)
+        return response
 
-    def peers(self, **kwargs):
-        return self.client.get(f"{self.url}/peers", params=kwargs)
+    async def peers(self, **kwargs):
+        response = await self.client.get(f"{self.url}/peers", params=kwargs)
+        return response

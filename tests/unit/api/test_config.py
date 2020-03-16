@@ -1,59 +1,99 @@
-import unittest
+import pytest
 
-from discovery.api.config import Config
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestConfig(unittest.TestCase):
+def sample_payload():
+    return {
+        "Kind": "service-defaults",
+        "Name": "web",
+        "Protocol": "http",
+    }
 
-    def get_sample_payload(self):
-        return {
-            'Kind': 'service-defaults',
-            'Name': 'web',
-            'Protocol': 'http',
-        }
 
-    def setUp(self):
-        client = StandardEngine()
-        self.config = Config(client)
+def config_response():
+    return {
+        "Kind": "service-defaults",
+        "Name": "web",
+        "Protocol": "http",
+        "CreateIndex": 15,
+        "ModifyIndex": 35,
+    }
 
-    def test_apply(self):
-        response = self.config.apply(self.get_sample_payload())
-        self.assertIsNotNone(response, str)
 
-    def test_get_success(self):
-        response = self.config.get('service-defaults', 'web')
-        self.assertIsNotNone(response)
+def list_response():
+    return [
+        {
+            "Kind": "service-defaults",
+            "Name": "db",
+            "Protocol": "tcp",
+            "CreateIndex": 16,
+            "ModifyIndex": 16,
+        },
+        {
+            "Kind": "service-defaults",
+            "Name": "web",
+            "Protocol": "http",
+            "CreateIndex": 13,
+            "ModifyIndex": 13,
+        },
+    ]
 
-    def test_get_type_error(self):
-        with self.assertRaises(TypeError):
-            self.config.get(1, 'web')
 
-    def test_get_value_error(self):
-        with self.assertRaises(ValueError):
-            self.config.get('service', 'web')
+@pytest.fixture
+@pytest.mark.asyncio
+def config(consul_api):
+    return api.Config(client=consul_api)
 
-    def test_list_success(self):
-        response = self.config.list('service-defaults')
-        self.assertIsNotNone(response)
-        self.assertEqual(response.status_code, 200)
 
-    def test_list_type_error(self):
-        with self.assertRaises(TypeError):
-            self.config.list(1)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_apply(config, expected):
+    config.client.expected = expected
+    response = await config.apply(sample_payload())
+    assert response.status == 200
 
-    def test_list_value_error(self):
-        with self.assertRaises(ValueError):
-            self.config.list('service')
 
-    def test_delete_success(self):
-        response = self.config.delete('service-defaults', 'web')
-        self.assertIsNotNone(response)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [config_response()])
+async def test_get_success(config, expected):
+    config.client.expected = expected
+    response = await config.get("service-defaults", "web")
+    response = await response.json()
+    assert response == config_response()
 
-    def test_delete_type_error(self):
-        with self.assertRaises(TypeError):
-            self.config.delete(1, 'web')
 
-    def test_delete_value_error(self):
-        with self.assertRaises(ValueError):
-            self.config.delete('service', 'web')
+@pytest.mark.asyncio
+async def test_get_value_error(config):
+    with pytest.raises(ValueError):
+        await config.get("service", "web")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [list_response()])
+async def test_list_success(config, expected):
+    config.client.expected = expected
+    response = await config.list("service-defaults")
+    response = await response.json()
+    assert response == list_response()
+
+
+@pytest.mark.asyncio
+async def test_list_value_error(config):
+    with pytest.raises(ValueError):
+        await config.list("service")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_delete_success(config, expected):
+    config.client.expected = expected
+    response = await config.delete("service-defaults", "web")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+async def test_delete_value_error(config):
+    with pytest.raises(ValueError):
+        await config.delete("service", "web")

@@ -1,11 +1,10 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Segment(BaseApi):
-    endpoint = attr.ib(default='/operator/segment')
+class Segment(Api):
+    def __init__(self, endpoint: str = "/operator/segment", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def list(self, **kwargs):
-        return self.client.get(f"{self.url}", params=kwargs)
+    async def list(self, **kwargs):
+        response = await self.client.get(f"{self.url}", params=kwargs)
+        return response

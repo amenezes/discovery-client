@@ -1,27 +1,23 @@
-import attr
-
-from discovery.api.area import Area
-from discovery.api.autopilot import AutoPilot
-from discovery.api.base import BaseApi
-from discovery.api.keyring import Keyring
-from discovery.api.license import License
-from discovery.api.raft import Raft
-from discovery.api.segment import Segment
+from discovery import api
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class Operator(BaseApi):
-    area = attr.ib(type=Area, default=None)
-    autopilot = attr.ib(type=AutoPilot, default=None)
-    keyring = attr.ib(type=Keyring, default=None)
-    license = attr.ib(type=License, default=None)
-    raft = attr.ib(type=Raft, default=None)
-    segment = attr.ib(type=Segment, default=None)
-
-    def __attrs_post_init__(self):
-        self.area = Area(self.client)
-        self.autopilot = AutoPilot(self.client)
-        self.keyring = Keyring(self.client)
-        self.license = License(self.client)
-        self.raft = Raft(self.client)
-        self.segment = Segment(self.client)
+class Operator(Api):
+    def __init__(
+        self,
+        area=None,
+        autopilot=None,
+        keyring=None,
+        license=None,
+        raft=None,
+        segment=None,
+        endpoint: str = "/operator",
+        **kwargs
+    ):
+        super().__init__(endpoint=endpoint, **kwargs)
+        self.area = area or api.Area(client=self.client)
+        self.autopilot = autopilot or api.AutoPilot(client=self.client)
+        self.keyring = keyring or api.Keyring(client=self.client)
+        self.license = license or api.License(client=self.client)
+        self.raft = raft or api.Raft(client=self.client)
+        self.segment = segment or api.Segment(client=self.client)

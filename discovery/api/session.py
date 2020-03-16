@@ -1,28 +1,30 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Session(BaseApi):
-    endpoint = attr.ib(default='/session')
+class Session(Api):
+    def __init__(self, endpoint: str = "/session", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def create(self, params, **kwargs):
-        return self.client.put(
-            f"{self.url}/create", params=kwargs, data=kwargs
-        )
+    async def create(self, data, **kwargs):
+        response = await self.client.put(f"{self.url}/create", data=data, params=kwargs)
+        return response
 
-    def delete(self, uuid, **kwargs):
-        return self.client.put(f"{self.url}/destroy/{uuid}", params=kwargs)
+    async def delete(self, uuid, **kwargs):
+        response = await self.client.put(f"{self.url}/destroy/{uuid}", params=kwargs)
+        return response
 
-    def read(self, uuid, **kwargs):
-        return self.client.get(f"{self.url}/info/{uuid}", params=kwargs)
+    async def read(self, uuid, **kwargs):
+        response = await self.client.get(f"{self.url}/info/{uuid}", params=kwargs)
+        return response
 
-    def list_node_session(self, node, **kwargs):
-        return self.client.get(f"{self.url}/node/{node}", params=kwargs)
+    async def list_node_session(self, node, **kwargs):
+        response = await self.client.get(f"{self.url}/node/{node}", params=kwargs)
+        return response
 
-    def list(self, **kwargs):
-        return self.client.get(f"{self.url}/list", params=kwargs)
+    async def list(self, **kwargs):
+        response = await self.client.get(f"{self.url}/list", params=kwargs)
+        return response
 
-    def renew(self, uuid, **kwargs):
-        return self.client.put(f"{self.url}/renew/{uuid}", params=kwargs)
+    async def renew(self, uuid, **kwargs):
+        response = await self.client.put(f"{self.url}/renew/{uuid}", params=kwargs)
+        return response

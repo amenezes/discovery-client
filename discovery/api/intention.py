@@ -1,48 +1,44 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class Intentions(BaseApi):
-    endpoint = attr.ib(default='/connect/intentions')
+class Intentions(Api):
+    def __init__(self, endpoint: str = "/connect/intentions", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
     def by_is_valid(self, by):
-        if by.lower() not in ['source', 'destination']:
+        if by.lower() not in ["source", "destination"]:
             raise ValueError('by must be: "source" or "destination"')
         return True
 
-    def create(self, data, **kwargs):
-        return self.client.post(f"{self.url}", params=kwargs, data=data)
+    async def create(self, data, **kwargs):
+        response = await self.client.post(f"{self.url}", params=kwargs, data=data)
+        return response
 
-    def read(self, uuid, **kwargs):
-        return self.client.get(f"{self.url}/{uuid}", params=kwargs)
+    async def read(self, uuid, **kwargs):
+        response = await self.client.get(f"{self.url}/{uuid}", params=kwargs)
+        return response
 
-    def list(self, **kwargs):
-        return self.client.get(f"{self.url}", params=kwargs)
+    async def list(self, **kwargs):
+        response = await self.client.get(f"{self.url}", params=kwargs)
+        return response
 
-    def update(self, uuid, data, **kwargs):
-        return self.client.put(
-            f"{self.url}/{uuid}",
-            params=kwargs,
-            data=data
+    async def update(self, uuid, data, **kwargs):
+        response = await self.client.put(f"{self.url}/{uuid}", params=kwargs, data=data)
+        return response
+
+    async def delete(self, uuid, **kwargs):
+        response = await self.client.delete(f"{self.url}/{uuid}", params=kwargs)
+        return response
+
+    async def check(self, source, destination, **kwargs):
+        response = await self.client.get(
+            f"{self.url}/check?source={source}&destination={destination}", params=kwargs
         )
+        return response
 
-    def delete(self, uuid, **kwargs):
-        return self.client.delete(
-            f"{self.url}/{uuid}",
-            params=kwargs
-        )
-
-    def check(self, source, destination, **kwargs):
-        return self.client.get(
-            f"{self.url}/check?source={source}&destination={destination}",
-            params=kwargs
-        )
-
-    def match(self, by, name, **kwargs):
+    async def match(self, by, name, **kwargs):
         if self.by_is_valid(by):
-            return self.client.get(
-                f"{self.url}/match?by={by}&name={name}",
-                params=kwargs
+            response = await self.client.get(
+                f"{self.url}/match?by={by}&name={name}", params=kwargs
             )
+            return response

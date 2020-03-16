@@ -1,21 +1,20 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class AutoPilot(BaseApi):
-    endpoint = attr.ib(default='/operator/autopilot')
+class AutoPilot(Api):
+    def __init__(self, endpoint: str = "/operator/autopilot", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def read_configuration(self, **kwargs):
-        return self.client.get(f"{self.url}/configuration", params=kwargs)
+    async def read_configuration(self, **kwargs):
+        response = await self.client.get(f"{self.url}/configuration", params=kwargs)
+        return response
 
-    def update_configuration(self, data, **kwargs):
-        return self.client.put(
-            f"{self.url}/configuration",
-            data=data,
-            params=kwargs
+    async def update_configuration(self, data, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/configuration", data=data, params=kwargs
         )
+        return response
 
-    def read_health(self, **kwargs):
-        return self.client.get(f"{self.url}/health", params=kwargs)
+    async def read_health(self, **kwargs):
+        response = await self.client.get(f"{self.url}/health", params=kwargs)
+        return response

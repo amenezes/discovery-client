@@ -1,19 +1,26 @@
-import unittest
 from unittest.mock import MagicMock, patch
 
-from discovery.api.segment import Segment
-from discovery.core.engine.standard import StandardEngine
+import aiohttp
+import pytest
+
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestSegment(unittest.TestCase):
+def sample_response():
+    return ["", "alpha", "beta"]
 
-    @patch('discovery.core.engine.standard.requests.Session')
-    def setUp(self, RequestsMock):
-        session = RequestsMock()
-        session.get = MagicMock(return_value=["", "alpha", "beta"])
-        client = StandardEngine(session=session)
-        self.segment = Segment(client=client)
 
-    def test_list(self):
-        response = self.segment.list()
-        self.assertEqual(response, ["", "alpha", "beta"])
+@pytest.fixture
+@pytest.mark.asyncio
+async def segment(consul_api):
+    return api.Segment(client=consul_api)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_list(segment, expected):
+    segment.client.expected = expected
+    response = await segment.list()
+    resp = await response.json()
+    assert resp == sample_response()

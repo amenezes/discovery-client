@@ -1,65 +1,124 @@
-import unittest
-from unittest.mock import MagicMock, patch
+import pytest
 
-from discovery.api.binding_rule import BindingRule
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestBindingRule(unittest.TestCase):
+def sample_payload():
+    return {
+        "Description": "example rule",
+        "AuthMethod": "minikube",
+        "Selector": "serviceaccount.namespace==default",
+        "BindType": "service",
+        "BindName": "{{ serviceaccount.name }}",
+    }
 
-    def get_sample_payload(self):
-        return {
-            'Description': 'example rule',
-            'AuthMethod': 'minikube',
-            'Selector': 'serviceaccount.namespace==default',
-            'BindType': 'service',
-            'BindName': '{{ serviceaccount.name }}'
-        }
 
-    def get_rule_id(self):
-        response = self.get_sample_response()
-        return response.get('ID')
+def update_payload():
+    return {
+        "Description": "updated rule",
+        "Selector": "serviceaccount.namespace=dev",
+        "BindType": "role",
+        "BindName": "{{ serviceaccount.name }}",
+    }
 
-    def get_sample_response(self):
-        return {
-            'ID': '000ed53c-e2d3-e7e6-31a5-c19bc3518a3d',
-            'Description': 'example rule',
-            'AuthMethod': 'minikube',
-            'Selector': 'serviceaccount.namespace==default',
-            'BindType': 'service',
-            'BindName': '{{ serviceaccount.name }}',
-            'CreateIndex': 17,
-            'ModifyIndex': 17
-        }
 
-    @patch('discovery.core.engine.standard.requests.Session')
-    def setUp(self, RequestsMock):
-        self.session = RequestsMock()
-        self.session.get = MagicMock(return_value=self.get_sample_response())
-        self.session.put = MagicMock(return_value=self.get_sample_response())
-        self.session.delete = MagicMock(return_value=True)
-        client = StandardEngine(session=self.session)
-        self.binding_rule = BindingRule(client)
+def update_response():
+    return {
+        "ID": "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d",
+        "Description": "updated rule",
+        "AuthMethod": "minikube",
+        "Selector": "serviceaccount.namespace=dev",
+        "BindType": "role",
+        "BindName": "{{ serviceaccount.name }}",
+        "CreateIndex": 17,
+        "ModifyIndex": 18,
+    }
 
-    def test_create(self):
-        response = self.binding_rule.create(self.get_sample_payload())
-        self.assertIsInstance(response, dict)
 
-    def test_read(self):
-        response = self.binding_rule.read(self.get_rule_id())
-        self.assertIsInstance(response, dict)
+def sample_response():
+    return {
+        "ID": "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d",
+        "Description": "example rule",
+        "AuthMethod": "minikube",
+        "Selector": "serviceaccount.namespace==default",
+        "BindType": "service",
+        "BindName": "{{ serviceaccount.name }}",
+        "CreateIndex": 17,
+        "ModifyIndex": 17,
+    }
 
-    def test_update(self):
-        response = self.binding_rule.update(
-            self.get_rule_id(),
-            self.get_sample_payload()
-        )
-        self.assertIsInstance(response, dict)
 
-    def test_delete(self):
-        response = self.binding_rule.delete(self.get_rule_id())
-        self.assertTrue(response)
+def list_binding_response():
+    return [
+        {
+            "ID": "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d",
+            "Description": "example 1",
+            "AuthMethod": "minikube-1",
+            "BindType": "service",
+            "BindName": "k8s-{{ serviceaccount.name }}",
+            "CreateIndex": 17,
+            "ModifyIndex": 17,
+        },
+        {
+            "ID": "b4f0a0a3-69f2-7a4f-6bef-326034ace9fa",
+            "Description": "example 2",
+            "AuthMethod": "minikube-2",
+            "Selector": "serviceaccount.namespace==default",
+            "BindName": "k8s-{{ serviceaccount.name }}",
+            "CreateIndex": 18,
+            "ModifyIndex": 18,
+        },
+    ]
 
-    def test_list(self):
-        response = self.binding_rule.list()
-        self.assertIsInstance(response, dict)
+
+@pytest.fixture
+@pytest.mark.asyncio
+async def binding_rule(consul_api):
+    return api.BindingRule(client=consul_api)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_create(binding_rule, expected):
+    binding_rule.client.expected = expected
+    response = await binding_rule.create(sample_payload())
+    response = await response.json()
+    assert response == sample_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_read(binding_rule, expected):
+    binding_rule.client.expected = expected
+    response = await binding_rule.read("000ed53c-e2d3-e7e6-31a5-c19bc3518a3d")
+    response = await response.json()
+    assert response == sample_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [update_response()])
+async def test_update(binding_rule, expected):
+    binding_rule.client.expected = expected
+    response = await binding_rule.update(
+        "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d", update_payload()
+    )
+    response = await response.json()
+    assert response == update_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_delete(binding_rule, expected):
+    binding_rule.client.expected = expected
+    response = await binding_rule.delete("000ed53c-e2d3-e7e6-31a5-c19bc3518a3d")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [list_binding_response()])
+async def test_list(binding_rule, expected):
+    binding_rule.client.expected = expected
+    response = await binding_rule.list()
+    response = await response.json()
+    assert response == list_binding_response()

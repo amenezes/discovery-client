@@ -1,21 +1,32 @@
-import unittest
+import pytest
 
-from discovery.api.status import Status
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestStatus(unittest.TestCase):
+@pytest.fixture
+@pytest.mark.asyncio
+async def status(consul_api):
+    return api.Status(client=consul_api)
 
-    def setUp(self):
-        client = StandardEngine()
-        self.status = Status(client)
 
-    def test_leader(self):
-        response = self.status.leader()
-        self.assertIsNotNone(response)
-        self.assertEqual(response.json(), '127.0.0.1:8300')
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", ["127.0.0.1:8300"])
+async def test_leader(status, expected):
+    status.client.expected = expected
+    response = await status.leader()
+    resp = await response.json()
+    assert resp == "127.0.0.1:8300"
 
-    def test_peers(self):
-        response = self.status.peers()
-        self.assertIsNotNone(response)
-        self.assertEqual(response.json(), ['127.0.0.1:8300'])
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [["127.0.0.1:8300"]])
+async def test_peers(status, expected):
+    status.client.expected = expected
+    response = await status.peers()
+    resp = await response.json()
+    assert resp == ["127.0.0.1:8300"]
+
+
+def test_repr(status):
+    assert f"{status}" == "Status(endpoint=/v1/status)"

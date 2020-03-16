@@ -1,27 +1,28 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class BindingRule(BaseApi):
-    endpoint = attr.ib(default='/acl/binding-rule')
+class BindingRule(Api):
+    def __init__(self, endpoint: str = "/acl/binding-rule", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def create(self, data, **kwargs):
-        return self.client.put(f"{self.url}", data=data, params=kwargs)
+    async def create(self, data, **kwargs):
+        response = await self.client.put(f"{self.url}", data=data, params=kwargs)
+        return response
 
-    def read(self, role_id, **kwargs):
-        return self.client.get(f"{self.url}/{role_id}", params=kwargs)
+    async def read(self, role_id, **kwargs):
+        response = await self.client.get(f"{self.url}/{role_id}", params=kwargs)
+        return response
 
-    def update(self, data, role_id, **kwargs):
-        return self.client.put(
-            f"{self.url}/{role_id}",
-            data=data,
-            params=kwargs
+    async def update(self, data, role_id, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/{role_id}", data=data, params=kwargs
         )
+        return response
 
-    def delete(self, role_id, **kwargs):
-        return self.client.delete(f"{self.url}/{role_id}", params=kwargs)
+    async def delete(self, role_id, **kwargs):
+        response = await self.client.delete(f"{self.url}/{role_id}", params=kwargs)
+        return response
 
-    def list(self, **kwargs):
-        return self.client.get(f"{self.url}", params=kwargs)
+    async def list(self, **kwargs):
+        response = await self.client.get(f"{self.url}", params=kwargs)
+        return response

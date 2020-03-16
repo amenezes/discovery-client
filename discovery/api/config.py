@@ -1,32 +1,35 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class Config(BaseApi):
-    endpoint = attr.ib(default='/config')
+class Config(Api):
+    def __init__(self, endpoint: str = "/config", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
     def config_entry_kind_is_valid(self, kind):
-        if not isinstance(kind, str):
-            raise TypeError('kind must be a str.')
-        elif kind.lower() not in ['service-defaults', 'proxy-defaults']:
+        kind = str(kind).lower()
+        if kind not in ["service-defaults", "proxy-defaults"]:
             raise ValueError(
                 'Valid values are "service-defaults" and "proxy-defaults".'
             )
         return True
 
-    def apply(self, data, **kwargs):
-        return self.client.put(f"{self.url}", params=kwargs, data=data)
+    async def apply(self, data, **kwargs):
+        response = await self.client.put(f"{self.url}", params=kwargs, data=data)
+        return response
 
-    def get(self, kind, name, **kwargs):
+    async def get(self, kind, name, **kwargs):
         if self.config_entry_kind_is_valid(kind):
-            return self.client.get(f"{self.url}/{kind}/{name}", params=kwargs)
+            response = await self.client.get(f"{self.url}/{kind}/{name}", params=kwargs)
+            return response
 
-    def list(self, kind, **kwargs):
+    async def list(self, kind, **kwargs):
         if self.config_entry_kind_is_valid(kind):
-            return self.client.get(f"{self.url}/{kind}", params=kwargs)
+            response = await self.client.get(f"{self.url}/{kind}", params=kwargs)
+            return response
 
-    def delete(self, kind, name, **kwargs):
+    async def delete(self, kind, name, **kwargs):
         if self.config_entry_kind_is_valid(kind):
-            return self.client.delete(f"{self.url}/{kind}/{name}", params=kwargs)
+            response = await self.client.delete(
+                f"{self.url}/{kind}/{name}", params=kwargs
+            )
+            return response

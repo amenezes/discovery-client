@@ -1,61 +1,52 @@
 import json
 
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Checks(BaseApi):
-    endpoint = attr.ib(default='/agent/check')
+class Checks(Api):
+    def __init__(self, endpoint: str = "/agent/check", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def checks(self, **kwargs):
-        return self.client.get(f"{self.url}s", params=kwargs)
+    async def checks(self, **kwargs):
+        response = await self.client.get(f"{self.url}s", params=kwargs)
+        return response
 
-    def register(self, data, **kwargs):
-        return self.client.put(
-            f"{self.url}/register",
-            data=data,
-            params=kwargs
+    async def register(self, data, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/register", data=data, params=kwargs
         )
+        return response
 
-    def deregister(self, check_id, **kwargs):
-        return self.client.put(
-            f"{self.url}/deregister/{check_id}",
-            params=kwargs
+    async def deregister(self, check_id, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/deregister/{check_id}", params=kwargs
         )
+        return response
 
-    def check_pass(self, check_id, notes='', **kwargs):
-        return self.client.put(
-            f"{self.url}/pass/{check_id}",
-            data=notes,
-            params=kwargs
+    async def check_pass(self, check_id, notes="", **kwargs):
+        response = await self.client.put(
+            f"{self.url}/pass/{check_id}", data=notes, params=kwargs
         )
+        return response
 
-    def check_warn(self, check_id, notes='', **kwargs):
-        return self.client.put(
-            f"{self.url}/warn/{check_id}",
-            data=notes,
-            params=kwargs
+    async def check_warn(self, check_id, notes="", **kwargs):
+        response = await self.client.put(
+            f"{self.url}/warn/{check_id}", data=notes, params=kwargs
         )
+        return response
 
-    def check_fail(self, check_id, notes='', **kwargs):
-        return self.client.put(
-            f"{self.url}/fail/{check_id}",
-            data=notes,
-            params=kwargs
+    async def check_fail(self, check_id, notes="", **kwargs):
+        response = await self.client.put(
+            f"{self.url}/fail/{check_id}", data=notes, params=kwargs
         )
+        return response
 
-    def check_update(self, check_id, status, output='', **kwargs):
-        if not isinstance(status, str):
-            raise TypeError('status must be a str.')
-        if status.lower() not in ['passing', 'warning', 'critical']:
-            raise ValueError(
-                'Valid values are "passing", "warning", and "critical"'
-            )
+    async def check_update(self, check_id, status, output="", **kwargs):
+        status = str(status).lower()
+        if status not in ["passing", "warning", "critical"]:
+            raise ValueError('Valid values are "passing", "warning", and "critical"')
         data = dict(status=status, output=output)
-        return self.client.put(
-            f"{self.url}/update/{check_id}",
-            data=json.dumps(data),
-            params=kwargs
+        response = await self.client.put(
+            f"{self.url}/update/{check_id}", data=json.dumps(data), params=kwargs
         )
+        return response

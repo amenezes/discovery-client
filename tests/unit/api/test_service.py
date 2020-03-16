@@ -1,116 +1,155 @@
 import json
-import unittest
 
-from discovery.api.service import Service
-from discovery.core.engine.standard import StandardEngine
+import pytest
+
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestService(unittest.TestCase):
+def list_services_response():
+    return {
+        "redis": {
+            "ID": "redis",
+            "Service": "redis",
+            "Tags": [],
+            "TaggedAddresses": {
+                "lan": {"address": "127.0.0.1", "port": 8000},
+                "wan": {"address": "198.18.0.53", "port": 80},
+            },
+            "Meta": {"redis_version": "4.0"},
+            "Port": 8000,
+            "Address": "",
+            "EnableTagOverride": False,
+            "Weights": {"Passing": 10, "Warning": 1},
+        }
+    }
 
-    def get_sample_payload(self):
-        return json.dumps({
-            'ID': 'redis1',
-            'Name': 'redis',
-            'Tags': [
-                'primary',
-                'v1'
+
+def register_payload():
+    return {
+        "ID": "redis1",
+        "Name": "redis",
+        "Tags": ["primary", "v1"],
+        "Address": "127.0.0.1",
+        "Port": 8000,
+        "Meta": {"redis_version": "4.0"},
+        "EnableTagOverride": False,
+        "Check": {
+            "DeregisterCriticalServiceAfter": "90m",
+            "Args": ["/usr/local/bin/check_redis.py"],
+            "Interval": "10s",
+            "Timeout": "5s",
+        },
+        "Weights": {"Passing": 10, "Warning": 1},
+    }
+
+
+def service_payload_response():
+    return {
+        "Kind": "connect-proxy",
+        "ID": "web-sidecar-proxy",
+        "Service": "web-sidecar-proxy",
+        "Tags": None,
+        "Meta": None,
+        "Port": 18080,
+        "Address": "",
+        "TaggedAddresses": {
+            "lan": {"address": "127.0.0.1", "port": 8000},
+            "wan": {"address": "198.18.0.53", "port": 80},
+        },
+        "Weights": {"Passing": 1, "Warning": 1},
+        "EnableTagOverride": False,
+        "ContentHash": "4ecd29c7bc647ca8",
+        "Proxy": {
+            "DestinationServiceName": "web",
+            "DestinationServiceID": "web",
+            "LocalServiceAddress": "127.0.0.1",
+            "LocalServicePort": 8080,
+            "Config": {"foo": "bar"},
+            "Upstreams": [
+                {
+                    "DestinationType": "service",
+                    "DestinationName": "db",
+                    "LocalBindPort": 9191,
+                }
             ],
-            'Address': '127.0.0.1',
-            'Port': 8000,
-            'Meta': {
-                'redis_version': '4.0'
+        },
+    }
+
+
+def status_response():
+    return {
+        "passing": {
+            "ID": "web1",
+            "Service": "web",
+            "Tags": ["rails"],
+            "Address": "",
+            "TaggedAddresses": {
+                "lan": {"address": "127.0.0.1", "port": 8000},
+                "wan": {"address": "198.18.0.53", "port": 80},
             },
-            'EnableTagOverride': False,
-            'Check': {
-                'DeregisterCriticalServiceAfter': '90m',
-                'HTTP': 'http://localhost:5000/health',
-                'Interval': '10s'
-            },
-            'Weights': {
-                'Passing': 10,
-                'Warning': 1
-            }
-        })
+            "Meta": None,
+            "Port": 80,
+            "EnableTagOverride": False,
+            "Connect": {"Native": False, "Proxy": None},
+            "CreateIndex": 0,
+            "ModifyIndex": 0,
+        }
+    }
 
-    def get_service_id(self):
-        response = json.loads(self.get_sample_payload())
-        return response.get('ID')
 
-    def get_service_name(self):
-        response = json.loads(self.get_sample_payload())
-        return response.get('Name')
+@pytest.fixture
+@pytest.mark.asyncio
+async def service(consul_api):
+    return api.Service(client=consul_api)
 
-    def setUp(self):
-        client = StandardEngine()
-        self.service = Service(client)
-        self.service.register(self.get_sample_payload())
 
-    def tearDown(self):
-        self.service.deregister(self.get_service_id())
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [list_services_response()])
+async def test_services(service, expected):
+    service.client.expected = expected
+    response = await service.services()
+    response = await response.json()
+    assert response == list_services_response()
 
-    def test_services(self):
-        response = self.service.services()
-        self.assertTrue(response.ok)
 
-    def test_service(self):
-        response = self.service.service(self.get_service_id())
-        self.assertTrue(response.ok)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [service_payload_response()])
+async def test_service(service, expected):
+    service.client.expected = expected
+    response = await service.service("web-sidecar-proxy")
+    response = await response.json()
+    assert response == service_payload_response()
 
-    def test_configuration(self):
-        response = self.service.configuration(self.get_service_id())
-        self.assertTrue(response.ok)
 
-    def test_register(self):
-        self.service.deregister(self.get_service_id())
-        response = self.service.register(self.get_sample_payload())
-        self.assertTrue(response.ok)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_register(service, expected):
+    service.client.expected = expected
+    response = await service.register(register_payload())
+    assert response.status == 200
 
-    def test_deregister(self):
-        response = self.service.deregister(self.get_service_id())
-        self.assertTrue(response.ok)
 
-    def test_maintenance(self):
-        response = self.service.maintenance(
-            self.get_service_id(),
-            True,
-            'For the tests'
-        )
-        self.assertEqual(response.text, '')
-        self.assertTrue(response.ok)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_deregister(service, expected):
+    service.client.expected = expected
+    response = await service.deregister("my-service-id")
+    assert response.status == 200
 
-    def test_get_local_service_health(self):
-        response = self.service.get_local_service_health(
-            self.get_service_name()
-        )
-        self.assertEqual(response.status_code, 503)
 
-    def test_format_is_valid(self):
-        with self.assertRaises(ValueError):
-            self.service.get_local_service_health(
-                self.get_service_name(),
-                ''
-            )
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_maintenance(service, expected):
+    service.client.expected = expected
+    response = await service.maintenance("my-service-id", True, "For the tests")
+    assert response.status == 200
 
-    def test_describe_health_code_valid(self):
-        response = self.service.get_local_service_health(
-            self.get_service_name()
-        )
-        description = self.service.describe_health_code(
-            response.status_code
-        )
-        self.assertIsInstance(description, str)
 
-    def test_describe_health_code_invalid(self):
-        description = self.service.describe_health_code(201)
-        self.assertEqual(
-            description,
-            'Invalid code. Please see: '
-            'https://www.consul.io/'
-            'api/agent/service.html#get-local-service-health'
-        )
-
-    def test_get_local_service_health_by_id(self):
-        response = self.service.get_local_service_health_by_id(
-            self.get_service_id()
-        )
-        self.assertEqual(response.status_code, 503)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [service_payload_response()])
+async def test_configuration(service, expected):
+    service.client.expected = expected
+    response = await service.configuration("web-sidecar-proxy")
+    response = await response.json()
+    assert response == service_payload_response()

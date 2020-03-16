@@ -1,17 +1,18 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(slots=True)
-class License(BaseApi):
-    endpoint = attr.ib(default='/operator/license')
+class License(Api):
+    def __init__(self, endpoint: str = "/operator/license", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def current(self, **kwargs):
-        return self.client.get(f"{self.url}", params=kwargs)
+    async def current(self, **kwargs):
+        resp = await self.client.get(f"{self.url}", params=kwargs)
+        return resp
 
-    def update(self, data, **kwargs):
-        return self.client.put(f"{self.url}", params=kwargs, data=data)
+    async def update(self, data, **kwargs):
+        resp = await self.client.put(f"{self.url}", params=kwargs, data=data)
+        return resp
 
-    def reset(self, **kwargs):
-        return self.client.delete(f"{self.url}", params=kwargs)
+    async def reset(self, **kwargs):
+        response = await self.client.delete(f"{self.url}", params=kwargs)
+        return response

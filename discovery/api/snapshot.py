@@ -1,14 +1,14 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Snapshot(BaseApi):
-    endpoint = attr.ib(default='/snapshot')
+class Snapshot(Api):
+    def __init__(self, endpoint: str = "/snapshot", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def generate(self, **kwargs):
-        return self.client.get(f"{self.url}", params=kwargs)
+    async def generate(self, **kwargs):
+        response = await self.client.get(f"{self.url}", params=kwargs)
+        return response
 
-    def restore(self, data, **kwargs):
-        return self.client.put(f"{self.url}", params=kwargs, data=data)
+    async def restore(self, data, **kwargs):
+        response = await self.client.put(f"{self.url}", data=data, params=kwargs)
+        return response

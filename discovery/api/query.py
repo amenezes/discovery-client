@@ -1,30 +1,34 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Query(BaseApi):
-    endpoint = attr.ib(default='/query')
+class Query(Api):
+    def __init__(self, endpoint: str = "/query", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def create(self, data, **kwargs):
-        return self.client.post(f"{self.url}", params=kwargs, data=data)
+    async def create(self, data, **kwargs):
+        response = await self.client.post(f"{self.url}", params=kwargs, data=data)
+        return response
 
-    def read(self, uuid=None, **kwargs):
+    async def read(self, uuid=None, **kwargs):
         if uuid:
             uri = f"{self.url}/{uuid}"
         else:
             uri = f"{self.url}"
-        return self.client.get(uri, params=kwargs)
+        response = await self.client.get(uri, params=kwargs)
+        return response
 
-    def delete(self, uuid, **kwargs):
-        return self.client.delete(f"{self.url}/{uuid}", params=kwargs)
+    async def delete(self, uuid, **kwargs):
+        response = await self.client.delete(f"{self.url}/{uuid}", params=kwargs)
+        return response
 
-    def update(self, uuid, data, **kwargs):
-        return self.client.put(f"{self.url}/{uuid}", params=kwargs)
+    async def update(self, uuid, data, **kwargs):
+        response = await self.client.put(f"{self.url}/{uuid}", params=kwargs)
+        return response
 
-    def execute(self, uuid, **kwargs):
-        return self.client.get(f"{self.url}/{uuid}/execute", params=kwargs)
+    async def execute(self, uuid, **kwargs):
+        response = await self.client.get(f"{self.url}/{uuid}/execute", params=kwargs)
+        return response
 
-    def explain(self, uuid, **kwargs):
-        return self.client.get(f"{self.url}/{uuid}/explain", params=kwargs)
+    async def explain(self, uuid, **kwargs):
+        response = await self.client.get(f"{self.url}/{uuid}/explain", params=kwargs)
+        return response

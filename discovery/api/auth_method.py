@@ -1,27 +1,26 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class AuthMethod(BaseApi):
-    endpoint = attr.ib(default='/acl/auth-method')
+class AuthMethod(Api):
+    def __init__(self, endpoint: str = "/acl/auth-method", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def create(self, data, **kwargs):
-        return self.client.put(f"{self.url}", data=data, params=kwargs)
+    async def create(self, data, **kwargs):
+        response = await self.client.put(f"{self.url}", data=data, params=kwargs)
+        return response
 
-    def read(self, name, **kwargs):
-        return self.client.put(f"{self.url}/{name}", params=kwargs)
+    async def read(self, name, **kwargs):
+        response = await self.client.put(f"{self.url}/{name}", params=kwargs)
+        return response
 
-    def update(self, name, data, **kwargs):
-        return self.client.put(
-            f"{self.url}/{name}",
-            params=kwargs,
-            data=data
-        )
+    async def update(self, name, data, **kwargs):
+        response = await self.client.put(f"{self.url}/{name}", params=kwargs, data=data)
+        return response
 
-    def delete(self, name, **kwargs):
-        return self.client.delete(f"{self.url}/{name}", params=kwargs)
+    async def delete(self, name, **kwargs):
+        response = await self.client.delete(f"{self.url}/{name}", params=kwargs)
+        return response
 
-    def list(self, **kwargs):
-        return self.client.put(f"{self.url}s", params=kwargs)
+    async def list(self, **kwargs):
+        response = await self.client.put(f"{self.url}s", params=kwargs)
+        return response

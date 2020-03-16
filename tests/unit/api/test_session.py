@@ -1,64 +1,89 @@
-import unittest
+import pytest
 
-from discovery.api.catalog import Catalog
-from discovery.api.session import Session
-from discovery.core.engine.standard import StandardEngine
+from discovery import api
+from tests.unit.setup import consul_api
 
 
-class TestSession(unittest.TestCase):
+def sample_payload():
+    {
+        "LockDelay": "15s",
+        "Name": "my-service-lock",
+        "Node": "foobar",
+        "Checks": ["a", "b", "c"],
+        "Behavior": "release",
+        "TTL": "30s",
+    }
 
-    def get_sample_payload(self):
+
+def sample_response():
+    return [
         {
-            'LockDelay': '15s',
-            'Name': 'my-service-lock',
-            'Node': 'foobar',
-            'Checks': ['a', 'b', 'c'],
-            'Behavior': 'release',
-            'TTL': '30s'
+            "ID": "adf4238a-882b-9ddc-4a9d-5b6758e4159e",
+            "Name": "test-session",
+            "Node": "raja-laptop-02",
+            "Checks": ["serfHealth"],
+            "LockDelay": 1.5e10,
+            "Behavior": "release",
+            "TTL": "30s",
+            "CreateIndex": 1086449,
+            "ModifyIndex": 1086449,
         }
+    ]
 
-    def get_node(self):
-        catalog = Catalog(self.client)
-        node = catalog.nodes()
-        return node.json()[0].get('Node')
 
-    def get_session(self):
-        response = self.session.create(self.get_sample_payload())
-        return response.json()
+@pytest.fixture
+@pytest.mark.asyncio
+async def session(consul_api):
+    return api.Session(client=consul_api)
 
-    def setUp(self):
-        self.client = StandardEngine()
-        self.session = Session(self.client)
 
-    def test_create(self):
-        response = self.get_session()
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response, dict)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_create(session, expected):
+    session.client.expected = expected
+    response = await session.create(sample_payload())
+    assert response.status == 200
 
-    def test_delete(self):
-        session = self.get_session()
-        response = self.session.delete(session.get('ID'), dc='dc1')
-        self.assertTrue(response)
 
-    def test_read(self):
-        session = self.get_session()
-        response = self.session.read(session.get('ID'))
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_delete(session, expected):
+    session.client.expected = expected
+    response = await session.delete("adf4238a-882b-9ddc-4a9d-5b6758e4159e")
+    assert response.status == 200
 
-    def test_list_node_session(self):
-        node = self.get_node()
-        response = self.session.list_node_session(node)
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
 
-    def test_list(self):
-        response = self.session.list()
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_read(session, expected):
+    session.client.expected = expected
+    resp = await session.read("adf4238a-882b-9ddc-4a9d-5b6758e4159e")
+    resp = await resp.json()
+    assert resp == sample_response()
 
-    def test_renew(self):
-        session = self.get_session()
-        response = self.session.renew(session.get('ID'))
-        self.assertIsNotNone(response)
-        self.assertIsInstance(response.json(), list)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_list_node_session(session, expected):
+    session.client.expected = expected
+    response = await session.list_node_session("raja-laptop-02")
+    response = await response.json()
+    assert response == sample_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_list(session, expected):
+    session.client.expected = expected
+    response = await session.list()
+    response = await response.json()
+    assert response == sample_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [sample_response()])
+async def test_renew(session, expected):
+    session.client.expected = expected
+    resp = await session.renew("adf4238a-882b-9ddc-4a9d-5b6758e4159e")
+    resp = await resp.json()
+    assert resp == sample_response()

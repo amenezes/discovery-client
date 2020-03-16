@@ -1,29 +1,31 @@
-import attr
-
-from discovery.api.base import BaseApi
+from discovery.api.abc import Api
 
 
-@attr.s(frozen=True, slots=True)
-class Health(BaseApi):
-    endpoint = attr.ib(default='/health')
+class Health(Api):
+    def __init__(self, endpoint: str = "/health", **kwargs):
+        super().__init__(endpoint=endpoint, **kwargs)
 
-    def node(self, node, **kwargs):
-        return self.client.get(f"{self.url}/node/{node}", params=kwargs)
+    async def node(self, node, **kwargs):
+        response = await self.client.get(f"{self.url}/node/{node}", params=kwargs)
+        return response
 
-    def checks(self, service, **kwargs):
-        return self.client.get(f"{self.url}/checks/{service}", params=kwargs)
+    async def checks(self, service, **kwargs):
+        response = await self.client.get(f"{self.url}/checks/{service}", params=kwargs)
+        return response
 
-    def service(self, service, **kwargs):
-        return self.client.get(f"{self.url}/service/{service}", params=kwargs)
+    async def service(self, service, **kwargs):
+        response = await self.client.get(f"{self.url}/service/{service}", params=kwargs)
+        return response
 
-    def connect(self, service, **kwargs):
-        return self.client.get(f"{self.url}/connect/{service}", params=kwargs)
+    async def connect(self, service, **kwargs):
+        response = await self.client.get(f"{self.url}/connect/{service}", params=kwargs)
+        return response
 
-    def state(self, state, **kwargs):
-        if not isinstance(state, str):
-            raise TypeError('state must be a str.')
-        elif state.lower() not in ['passing', 'warning', 'critical']:
-            raise ValueError(
-                'Valid values are "passing", "warning", and "critical"'
-            )
-        return self.client.get(f"{self.url}/state/{state}", params=kwargs)
+    async def state(self, state, **kwargs):
+        state = str(state).lower()
+        if state not in ["passing", "warning", "critical"]:
+            raise ValueError('Valid values are "passing", "warning", and "critical"')
+        response = await self.client.get(
+            f"{self.url}/state/{str(state)}", params=kwargs
+        )
+        return response
