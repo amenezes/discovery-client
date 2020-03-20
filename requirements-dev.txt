@@ -2,7 +2,7 @@
 aiohttp==3.6.2
 httpx==0.12.0
 # dev dependencies
-mypy==0.770po
+mypy==0.770
 flake8==3.7.9
 pytest==5.4.1
 pytest-cov==2.8.1
