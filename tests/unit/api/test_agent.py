@@ -1,7 +1,6 @@
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 def stream_logs_sample():
@@ -13,68 +12,6 @@ def stream_logs_sample():
         "YYYY/MM/DD HH:MM:SS [INFO] serf: EventMemberJoin: machine-osx.dc1 127.0.0.1",
         'YYYY/MM/DD HH:MM:SS [INFO] consul: Handled member-join event for server "machine-osx.dc1" in area "wan"',
     ]
-
-
-def service_health_name_response():
-    return {
-        "critical": [
-            {
-                "ID": "web2",
-                "Service": "web",
-                "Tags": ["rails"],
-                "Address": "",
-                "TaggedAddresses": {
-                    "lan": {"address": "127.0.0.1", "port": 8000},
-                    "wan": {"address": "198.18.0.53", "port": 80},
-                },
-                "Meta": None,
-                "Port": 80,
-                "EnableTagOverride": False,
-                "Connect": {"Native": False, "Proxy": None},
-                "CreateIndex": 0,
-                "ModifyIndex": 0,
-            }
-        ],
-        "passing": [
-            {
-                "ID": "web1",
-                "Service": "web",
-                "Tags": ["rails"],
-                "Address": "",
-                "TaggedAddresses": {
-                    "lan": {"address": "127.0.0.1", "port": 8000},
-                    "wan": {"address": "198.18.0.53", "port": 80},
-                },
-                "Meta": None,
-                "Port": 80,
-                "EnableTagOverride": False,
-                "Connect": {"Native": False, "Proxy": None},
-                "CreateIndex": 0,
-                "ModifyIndex": 0,
-            }
-        ],
-    }
-
-
-def service_health_id_response():
-    return {
-        "passing": {
-            "ID": "web1",
-            "Service": "web",
-            "Tags": ["rails"],
-            "Address": "",
-            "TaggedAddresses": {
-                "lan": {"address": "127.0.0.1", "port": 8000},
-                "wan": {"address": "198.18.0.53", "port": 80},
-            },
-            "Meta": None,
-            "Port": 80,
-            "EnableTagOverride": False,
-            "Connect": {"Native": False, "Proxy": None},
-            "CreateIndex": 0,
-            "ModifyIndex": 0,
-        }
-    }
 
 
 def members_response():
@@ -288,21 +225,3 @@ async def test_force_leave(agent, expected):
     agent.client.expected = expected
     response = await agent.force_leave("agent-one")
     assert response.status == 200
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [service_health_name_response()])
-async def test_service_health_by_name(agent, expected):
-    agent.client.expected = expected
-    response = await agent.service_health_by_name("web")
-    response = await response.json()
-    assert response == service_health_name_response()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [service_health_id_response()])
-async def test_service_health_by_id(agent, expected):
-    agent.client.expected = expected
-    response = await agent.service_health_by_id("web1")
-    response = await response.json()
-    assert response == service_health_id_response()

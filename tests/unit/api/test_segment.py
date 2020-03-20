@@ -1,20 +1,8 @@
-from unittest.mock import MagicMock, patch
-
-import aiohttp
 import pytest
-
-from discovery import api
-from tests.unit.setup import consul_api
 
 
 def sample_response():
     return ["", "alpha", "beta"]
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def segment(consul_api):
-    return api.Segment(client=consul_api)
 
 
 @pytest.mark.asyncio

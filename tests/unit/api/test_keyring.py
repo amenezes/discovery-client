@@ -2,9 +2,6 @@ import json
 
 import pytest
 
-from discovery import api
-from tests.unit.setup import consul_api
-
 
 def sample_payload():
     return json.dumps({"Key": "3lg9DxVfKNzI8O+IQ5Ek+Q=="})
@@ -35,12 +32,6 @@ def sample_response():
             "NumNodes": 1,
         },
     ]
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def keyring(consul_api):
-    return api.Keyring(client=consul_api)
 
 
 @pytest.mark.asyncio

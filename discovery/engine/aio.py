@@ -11,8 +11,10 @@ has_aiohttp = False
 
 with suppress(ImportError):
     import aiohttp
+
     has_aiohttp = True
     import httpx
+
     has_httpx = True
 
 
@@ -41,13 +43,13 @@ class AioEngine(Engine):
         await self._session.close()
 
 
-async def aiohttp_session():
+async def aiohttp_session(*args, **kwargs):
     if not has_aiohttp:
         raise ModuleNotFoundError("aiohttp module not found!")
-    return aiohttp.ClientSession()
+    return aiohttp.ClientSession(*args, **kwargs)
 
 
-async def httpx_client():
+async def httpx_client(*args, **kwargs):
     if not has_httpx:
         raise ModuleNotFoundError("httpx module not found!")
-    return httpx.AsyncClient()
+    return httpx.AsyncClient(*args, **kwargs)

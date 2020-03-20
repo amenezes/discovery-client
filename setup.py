@@ -27,8 +27,12 @@ setuptools.setup(
     )),
     install_requires=[
         "aiohttp<=3.6.2",
-        "httpx<=0.12.0"
     ],
+    extras_require={
+        "aio": ["aiohttp<=3.6.2"],
+        "httpx": ["httpx>=0.12.0"],
+        "all": ["aiohttp<=3.6.2", "httpx>=0.12.0"],
+    },
     setup_requires=["setuptools>=38.6.0"],
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",

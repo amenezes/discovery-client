@@ -22,3 +22,15 @@ class Engine(abc.ABC):
     @property
     def url(self):
         return f"{self.scheme}://{self.host}:{self.port}"
+
+    async def get(self, *args, **kwargs):
+        raise NotImplementedError
+
+    async def put(self, *args, **kwargs):
+        raise NotImplementedError
+
+    async def delete(self, *args, **kwargs):
+        raise NotImplementedError
+
+    async def post(self, *args, **kwargs):
+        raise NotImplementedError

@@ -1,13 +1,6 @@
 import pytest
 
 from discovery import api
-from tests.unit.api.test_area import area
-from tests.unit.api.test_autopilot import autopilot
-from tests.unit.api.test_keyring import keyring
-from tests.unit.api.test_license import license
-from tests.unit.api.test_raft import raft
-from tests.unit.api.test_segment import segment
-from tests.unit.setup import consul_api
 
 
 @pytest.fixture

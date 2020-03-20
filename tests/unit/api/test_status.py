@@ -1,7 +1,6 @@
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 @pytest.fixture

@@ -73,14 +73,14 @@ class Agent(Api):
         )
         return response
 
-    async def service_health_by_name(self, name, **kwargs):
-        response = await self.client.get(
-            f"{self.url}/health/service/name/{name}", params=kwargs
-        )
-        return response
+    # async def service_health_by_name(self, name, **kwargs):
+    #     response = await self.client.get(
+    #         f"{self.url}/health/service/name/{name}", params=kwargs
+    #     )
+    #     return response
 
-    async def service_health_by_id(self, name, **kwargs):
-        response = await self.client.get(
-            f"{self.url}/health/service/id/{name}", params=kwargs
-        )
-        return response
+    # async def service_health_by_id(self, name, **kwargs):
+    #     response = await self.client.get(
+    #         f"{self.url}/health/service/id/{name}", params=kwargs
+    #     )
+    #     return response

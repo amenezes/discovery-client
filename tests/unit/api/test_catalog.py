@@ -3,7 +3,6 @@ import json
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 def sample_payload():
@@ -97,7 +96,7 @@ def map_services_node_response():
                 "ID": "redis",
                 "Service": "redis",
                 "TaggedAddresses": {
-                    "lan": {"address": "10.1.10.12", "port": 8000,},
+                    "lan": {"address": "10.1.10.12", "port": 8000},
                     "wan": {"address": "198.18.1.2", "port": 80},
                 },
                 "Tags": ["v1"],

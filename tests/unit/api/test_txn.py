@@ -3,7 +3,6 @@ import json
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 def sample_payload():
@@ -31,7 +30,7 @@ def sample_payload():
                     },
                 }
             },
-            {"Service": {"Verb": "delete", "Node": "foo", "Service": {"ID": "db1"},}},
+            {"Service": {"Verb": "delete", "Node": "foo", "Service": {"ID": "db1"}}},
             {
                 "Check": {
                     "Verb": "cas",

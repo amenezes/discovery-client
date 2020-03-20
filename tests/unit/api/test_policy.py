@@ -1,9 +1,6 @@
-from unittest.mock import MagicMock, patch
-
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 def sample_payload():

@@ -3,7 +3,6 @@ import json
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 def sample_list_response(*args, **kwargs):

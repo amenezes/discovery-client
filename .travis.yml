@@ -1,14 +1,8 @@
 dist: xenial
 language: python
-services:
-  - docker
 python:
   - 3.6
   - 3.7
-before_install:
-  - docker pull consul
-  - docker run -d -p 127.0.0.1:8500:8500 --name consul --rm consul
-  - sleep 30 # wait necessary to consul's container read lan coordinates successfully.
 install:
   - make install-deps
 script:

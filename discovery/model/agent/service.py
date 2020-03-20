@@ -1,5 +1,4 @@
 import json
-import logging
 import socket
 from functools import singledispatch
 from uuid import uuid4
@@ -28,7 +27,6 @@ def service(
         "meta": meta,
     }
     if check:
-        logging.debug(f"CHK: {json.dumps(register_check(check))}")
         response.update(register_check(check))
     return json.dumps(response)
 

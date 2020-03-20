@@ -1,6 +1,9 @@
 [![Build Status](https://travis-ci.org/amenezes/discovery-client.svg?branch=master)](https://travis-ci.org/amenezes/discovery-client)
 [![Maintainability](https://api.codeclimate.com/v1/badges/fc7916aab464c8b7d742/maintainability)](https://codeclimate.com/github/amenezes/discovery-client/maintainability)
 [![codecov](https://codecov.io/gh/amenezes/discovery-client/branch/master/graph/badge.svg)](https://codecov.io/gh/amenezes/discovery-client)
+[![PyPI version](https://badge.fury.io/py/discovery-client.svg)](https://badge.fury.io/py/discovery-client)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/discovery-client)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # discovery-client
 

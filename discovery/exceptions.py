@@ -4,7 +4,3 @@ class ServiceNotFoundException(Exception):
 
 class ClientOperationException(Exception):
     pass
-
-
-class DiscoveryConnectionError(Exception):
-    pass

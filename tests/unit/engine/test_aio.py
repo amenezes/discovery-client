@@ -1,15 +1,4 @@
-import aiohttp
 import pytest
-
-from discovery.engine import AioEngine
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def aiohttp_client():
-    session = aiohttp.ClientSession()
-    yield AioEngine(session=session)
-    await session.close()
 
 
 @pytest.mark.asyncio

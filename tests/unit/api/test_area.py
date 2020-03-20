@@ -2,9 +2,6 @@ import json
 
 import pytest
 
-from discovery import api
-from tests.unit.setup import consul_api
-
 
 def sample_payload():
     return json.dumps(
@@ -77,12 +74,6 @@ def members_response():
             },
         ]
     )
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-def area(consul_api):
-    return api.Area(client=consul_api)
 
 
 @pytest.mark.asyncio

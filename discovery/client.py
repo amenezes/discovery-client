@@ -4,12 +4,13 @@ import logging
 from functools import partial
 
 import discovery
-from discovery.abc import BaseClient
-from discovery.exceptions import DiscoveryConnectionError, ServiceNotFoundException
-from discovery.filter import Filter
+from discovery import BaseClient
+from discovery.engine.aio import has_aiohttp
+from discovery.exceptions import ServiceNotFoundException
 from discovery.utils import select_one_rr
 
-# import aiohttp
+if has_aiohttp:
+    import aiohttp
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -28,7 +29,6 @@ class Consul(BaseClient):
             await self.agent.service.register(svc)
 
         self.__id = await self.leader_current_id()
-
         logging.debug(f"Consul ID: {self.__id}")
         logging.info("Service successfully re-registered")
 
@@ -52,13 +52,13 @@ class Consul(BaseClient):
             for instance in consul_instances
             if instance.get("Node").get("Address") == consul_leader
         ]
-
         if current_id is not None:
-            current_id = current_id[Filter.FIRST_ITEM.value]
-
+            current_id = current_id[0]
         return current_id
 
     async def check_consul_health(self):
+        if not has_aiohttp:
+            raise ModuleNotFoundError("aiohttp module not found.")
         while True:
             try:
                 await asyncio.sleep(self.timeout)
@@ -68,15 +68,13 @@ class Consul(BaseClient):
                 if current_id != self.__id:
                     await self.reconnect()
 
-            # except aiohttp.ClientConnectorError:
-            except DiscoveryConnectionError:
+            except aiohttp.ClientConnectorError:
                 logging.error("failed to connect to discovery service...")
                 logging.error(f"reconnect will occur in {self.timeout} seconds.")
                 await asyncio.sleep(self.timeout)
                 await self.check_consul_health()
 
-            # except aiohttp.ServerDisconnectedError:
-            except DiscoveryConnectionError:
+            except aiohttp.ServerDisconnectedError:
                 logging.error(
                     "temporary loss of communication with the discovery server."
                 )
@@ -92,7 +90,10 @@ class Consul(BaseClient):
 
     async def find_services(self, name):
         response = await self.catalog.service(name)
-        response = await response.json()
+        if asyncio.iscoroutinefunction(response.json):
+            response = await response.json()
+        else:
+            response = response.json()
         return response
 
     async def register(self, service_name: str, service_port: int, check=None) -> None:
@@ -106,15 +107,10 @@ class Consul(BaseClient):
             }
             self.__id = await self.leader_current_id()
             logging.debug(f"Consul ID: {self.__id}")
+        except aiohttp.ClientConnectorError:
+            logging.error("Failed to connect to consul...")
 
-        #        except aiohttp.ClientConnectorError:
-        except DiscoveryConnectionError:
-            logging.error("Failed to connect to discovery...")
-
-    async def deregister(self, service_name: str) -> None:
-        service = self.managed_services.get(service_name)
-        if not service:
-            # alterar para servicenotmanaged
-            raise ServiceNotFoundException
-        await self.agent.service.deregister(service.get("id"))
-        self.managed_services.pop(service_name)
+    async def deregister(self) -> None:
+        for service, data in self.managed_services.items():
+            await self.agent.service.deregister(data.get("id"))
+        self.managed_services.clear()

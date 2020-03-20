@@ -2,9 +2,6 @@ import json
 
 import pytest
 
-from discovery import api
-from tests.unit.setup import consul_api
-
 
 def sample_payload():
     return json.dumps(
@@ -72,12 +69,6 @@ def health_response():
             },
         ],
     }
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def autopilot(consul_api):
-    return api.AutoPilot(client=consul_api)
 
 
 @pytest.mark.asyncio

@@ -2,9 +2,6 @@ import json
 
 import pytest
 
-from discovery import api
-from tests.unit.setup import consul_api
-
 
 def sample_payload(*args, **kwargs):
     return json.dumps(
@@ -32,12 +29,6 @@ def sample_payload(*args, **kwargs):
             "Warnings": [],
         }
     )
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def license(consul_api):
-    return api.License(client=consul_api)
 
 
 @pytest.mark.asyncio

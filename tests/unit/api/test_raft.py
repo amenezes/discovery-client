@@ -1,14 +1,5 @@
 import pytest
 
-from discovery import api
-from tests.unit.setup import consul_api
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def raft(consul_api):
-    return api.Raft(client=consul_api)
-
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [200])

@@ -1,9 +1,6 @@
-import json
-
 import pytest
 
 from discovery import api
-from tests.unit.setup import consul_api
 
 
 def list_services_response():
@@ -41,6 +38,68 @@ def register_payload():
             "Timeout": "5s",
         },
         "Weights": {"Passing": 10, "Warning": 1},
+    }
+
+
+def service_health_id_response():
+    return {
+        "passing": {
+            "ID": "web1",
+            "Service": "web",
+            "Tags": ["rails"],
+            "Address": "",
+            "TaggedAddresses": {
+                "lan": {"address": "127.0.0.1", "port": 8000},
+                "wan": {"address": "198.18.0.53", "port": 80},
+            },
+            "Meta": None,
+            "Port": 80,
+            "EnableTagOverride": False,
+            "Connect": {"Native": False, "Proxy": None},
+            "CreateIndex": 0,
+            "ModifyIndex": 0,
+        }
+    }
+
+
+def service_health_name_response():
+    return {
+        "critical": [
+            {
+                "ID": "web2",
+                "Service": "web",
+                "Tags": ["rails"],
+                "Address": "",
+                "TaggedAddresses": {
+                    "lan": {"address": "127.0.0.1", "port": 8000},
+                    "wan": {"address": "198.18.0.53", "port": 80},
+                },
+                "Meta": None,
+                "Port": 80,
+                "EnableTagOverride": False,
+                "Connect": {"Native": False, "Proxy": None},
+                "CreateIndex": 0,
+                "ModifyIndex": 0,
+            }
+        ],
+        "passing": [
+            {
+                "ID": "web1",
+                "Service": "web",
+                "Tags": ["rails"],
+                "Address": "",
+                "TaggedAddresses": {
+                    "lan": {"address": "127.0.0.1", "port": 8000},
+                    "wan": {"address": "198.18.0.53", "port": 80},
+                },
+                "Meta": None,
+                "Port": 80,
+                "EnableTagOverride": False,
+                "Connect": {"Native": False, "Proxy": None},
+                "CreateIndex": 0,
+                "ModifyIndex": 0,
+            }
+        ],
     }
 
 
@@ -153,3 +212,21 @@ async def test_configuration(service, expected):
     response = await service.configuration("web-sidecar-proxy")
     response = await response.json()
     assert response == service_payload_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [service_health_name_response()])
+async def test_service_health_by_name(service, expected):
+    service.client.expected = expected
+    response = await service.service_health_by_name("web")
+    response = await response.json()
+    assert response == service_health_name_response()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [service_health_id_response()])
+async def test_service_health_by_id(service, expected):
+    service.client.expected = expected
+    response = await service.service_health_by_id("web1")
+    response = await response.json()
+    assert response == service_health_id_response()

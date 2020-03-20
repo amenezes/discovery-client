@@ -1,5 +1,3 @@
-"""Module of utilitarian methods."""
-
 import collections
 import random
 import uuid
@@ -10,13 +8,11 @@ __rr_services = {}
 
 
 def select_one_random(services):
-    """Select one service randomly."""
     service_selected = random.randint(0, (len(services) - 1))
     return services[service_selected]
 
 
 def select_one_rr(services):
-    """Select one service using round robin algorithm."""
     if len(services) == 0:
         raise ServiceNotFoundException()
 

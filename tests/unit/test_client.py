@@ -3,7 +3,6 @@ import pytest
 import discovery
 from discovery.exceptions import ServiceNotFoundException
 from discovery.utils import select_one_random
-from tests.unit.setup import aiohttp_client, consul_api
 
 
 def service_response():
@@ -107,7 +106,9 @@ def healthy_instances_response():
 @pytest.fixture
 @pytest.mark.asyncio
 async def client(consul_api):
-    return discovery.Consul(client=consul_api)
+    session = await discovery.aiohttp_session()
+    yield discovery.Consul(session, client=consul_api)
+    await session.close()
 
 
 @pytest.mark.asyncio
@@ -195,12 +196,6 @@ async def test_deregister(client, expected):
     client.client.expected = expected
     response = await client.deregister("myapp")
     assert response is None
-
-
-@pytest.mark.asyncio
-async def test_deregister_fail(client):
-    with pytest.raises(ServiceNotFoundException):
-        await client.deregister("myapp")
 
     # async def test_register_additional_check(client):
     #     """Test the registration of an additional check for a service registered."""

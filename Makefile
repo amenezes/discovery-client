@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := about
+DTYPE=server
 
 lint:
 	@echo "> running isort..."
@@ -19,7 +20,7 @@ tests:
 
 docs: 
 	@echo "> generate project documentation..."
-	portray server
+	portray $(DTYPE)
 
 install-deps:
 	@echo "> installing development dependencies..."
@@ -29,14 +30,16 @@ about:
 	@echo "> discovery-client"
 	@echo ""
 	@echo "make lint         - Runs: [isort > black > flake8 > mypy]"
-	@echo "make tests        - Execute tests."
-	@echo "make tox          - Runs tox."
-	@echo "make docs         - Generate project documentation."
-	@echo "make install-deps - Install development dependencies."
+	@echo "make tests        - Execute tests"
+	@echo "make tox          - Runs tox"
+	@echo "make docs         - Generate project documentation [DTYPE=server]"
+	@echo "make ci           - Runs: [make lint > make tests]"
+	@echo "make install-deps - Install development dependencies"
 	@echo ""
 	@echo "mailto: alexandre.fmenezes@gmail.com"
 
 ci: lint tests
+ifeq ($(CI), true)
 	@echo "--- download CI dependencies ---"
 	curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
 	chmod +x ./cc-test-reporter
@@ -44,7 +47,8 @@ ci: lint tests
 	codecov --file coverage.xml -t $$CODECOV_TOKEN
 	./cc-test-reporter format-coverage -t coverage.py -o codeclimate.json
 	./cc-test-reporter upload-coverage -i codeclimate.json -r $$CC_TEST_REPORTER_ID
+endif
 
-all: lint tests docs
+all: install-deps ci docs
 
 .PHONY: lint tests docs about ci all
