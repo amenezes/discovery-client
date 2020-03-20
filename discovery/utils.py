@@ -4,7 +4,8 @@ import uuid
 
 from discovery.exceptions import ServiceNotFoundException
 
-__rr_services = {}
+__rr_services = {}  # type: ignore
+# Temporarily
 
 
 def select_one_random(services):
