@@ -2,8 +2,6 @@ import collections
 import random
 import uuid
 
-from discovery.exceptions import ServiceNotFoundException
-
 __rr_services = {}  # type: ignore
 # Temporarily
 
@@ -14,9 +12,6 @@ def select_one_random(services):
 
 
 def select_one_rr(services):
-    if len(services) == 0:
-        raise ServiceNotFoundException()
-
     global __rr_services
     key_ = uuid.uuid5(uuid.NAMESPACE_DNS, str(services)).hex
     if key_ not in __rr_services.keys() or len(__rr_services.get(key_)) == 0:

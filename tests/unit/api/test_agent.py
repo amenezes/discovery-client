@@ -138,6 +138,9 @@ def metrics_response():
     }
 
 
+token_payload = {"Token": "adf4238a-882b-9ddc-4a9d-5b6758e4159e"}
+
+
 @pytest.fixture
 @pytest.mark.asyncio
 async def agent(consul_api):
@@ -225,3 +228,17 @@ async def test_force_leave(agent, expected):
     agent.client.expected = expected
     response = await agent.force_leave("agent-one")
     assert response.status == 200
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("expected", [200])
+async def test_update_acl_token(agent, expected):
+    agent.client.expected = expected
+    response = await agent.update_acl_token("default")
+    assert response.status == 200
+
+
+@pytest.mark.asyncio
+async def test_update_acl_token_invalid(agent):
+    with pytest.raises(ValueError):
+        await agent.update_acl_token("invalid")

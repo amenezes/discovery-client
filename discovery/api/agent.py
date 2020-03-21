@@ -73,14 +73,20 @@ class Agent(Api):
         )
         return response
 
-    # async def service_health_by_name(self, name, **kwargs):
-    #     response = await self.client.get(
-    #         f"{self.url}/health/service/name/{name}", params=kwargs
-    #     )
-    #     return response
-
-    # async def service_health_by_id(self, name, **kwargs):
-    #     response = await self.client.get(
-    #         f"{self.url}/health/service/id/{name}", params=kwargs
-    #     )
-    #     return response
+    async def update_acl_token(self, token_type: str):
+        if token_type not in [
+            "default",
+            "agent",
+            "agent_master",
+            "replication",
+            "acl_token",  # legacy
+            "acl_agent_token",
+            "acl_agent_master_token",
+            "acl_replication_token",
+        ]:
+            raise ValueError(
+                "token_type invalid. See the valid values in: "
+                "https://www.consul.io/api/agent.html#update-acl-tokens"
+            )
+        response = await self.client.put(f"{self.url}/token/{token_type}")
+        return response

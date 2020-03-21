@@ -15,7 +15,7 @@ lint:
 	mypy discovery
 
 tests:
-	@echo "--- unittest ---"
+	@echo "> running tests"
 	python -m pytest -v --cov-report xml --cov-report term --cov=discovery tests
 
 docs: 
@@ -48,6 +48,10 @@ ifeq ($(CI), true)
 	./cc-test-reporter format-coverage -t coverage.py -o codeclimate.json
 	./cc-test-reporter upload-coverage -i codeclimate.json -r $$CC_TEST_REPORTER_ID
 endif
+
+tox:
+	@echo "> running tox..."
+	tox -r -p all
 
 all: install-deps ci docs
 

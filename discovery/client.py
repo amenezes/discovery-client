@@ -21,6 +21,7 @@ class Consul(BaseClient):
         super().__init__(*args, **kwargs)
         self.managed_services = {}
         self._leader_id = None
+        self.__id = None
 
     async def reconnect(self):
         for key, value in self.managed_services.items():
@@ -34,13 +35,13 @@ class Consul(BaseClient):
 
     async def leader_ip(self):
         leader_response = await self.status.leader()
-        leader_response = await leader_response.json()
+        leader_response = await self._get_response(leader_response)
         consul_leader, _ = leader_response.split(":")
         return consul_leader
 
     async def consul_healthy_instances(self):
         health_response = await self.health.service("consul")
-        consul_instances = await health_response.json()
+        consul_instances = await self._get_response(health_response)
         return consul_instances
 
     async def leader_current_id(self):
@@ -89,12 +90,15 @@ class Consul(BaseClient):
         return func()
 
     async def find_services(self, name):
-        response = await self.catalog.service(name)
-        if asyncio.iscoroutinefunction(response.json):
-            response = await response.json()
-        else:
-            response = response.json()
+        resp = await self.catalog.service(name)
+        response = await self._get_response(resp)
         return response
+
+    async def _get_response(self, resp):
+        if asyncio.iscoroutinefunction(resp.json):
+            response = await resp.json()
+            return response
+        return resp.json()
 
     async def register(self, service_name: str, service_port: int, check=None) -> None:
         svc = discovery.service(service_name, service_port, check=check)

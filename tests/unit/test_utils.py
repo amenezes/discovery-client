@@ -1,6 +1,5 @@
 import pytest
 
-from discovery.exceptions import ServiceNotFoundException
 from discovery.utils import select_one_random, select_one_rr
 
 
@@ -30,8 +29,3 @@ def test_select_one_rr(services):
     assert select_one_rr(servicesB) == "d"
     assert select_one_rr(servicesC) == "h"
     assert select_one_rr(servicesC) == "f"
-
-
-def test_select_one_rr_exception():
-    with pytest.raises(ServiceNotFoundException):
-        select_one_rr([])

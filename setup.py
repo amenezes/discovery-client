@@ -44,7 +44,7 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: Implementation :: CPython",
-        "Topic :: Software Development :: Distributed Computing",
+        "Topic :: System :: Distributed Computing",
         "Topic :: Software Development :: Libraries",
     ],
 )
