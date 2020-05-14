@@ -1,4 +1,5 @@
 .DEFAULT_GOAL := about
+VERSION := $(shell cat discovery/__version__.py | cut -d'"' -f2)
 DTYPE=server
 
 lint:
@@ -27,7 +28,7 @@ install-deps:
 	pip install -r requirements-dev.txt
 
 about:
-	@echo "> discovery-client"
+	@echo "> discovery-client v$(VERSION)"
 	@echo ""
 	@echo "make lint         - Runs: [isort > black > flake8 > mypy]"
 	@echo "make tests        - Execute tests"

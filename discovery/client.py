@@ -36,7 +36,10 @@ class Consul(BaseClient):
     async def leader_ip(self):
         leader_response = await self.status.leader()
         leader_response = await self._get_response(leader_response)
-        consul_leader, _ = leader_response.split(":")
+        try:
+            consul_leader, _ = leader_response.split(":")
+        except ValueError:
+            logging.error("Error to identify Consul's leader")
         return consul_leader
 
     async def consul_healthy_instances(self):
@@ -112,7 +115,7 @@ class Consul(BaseClient):
             self.__id = await self.leader_current_id()
             logging.debug(f"Consul ID: {self.__id}")
         except aiohttp.ClientConnectorError:
-            logging.error("Failed to connect to consul...")
+            logging.error("Failed to connect on Consul...")
 
     async def deregister(self) -> None:
         for service, data in self.managed_services.items():

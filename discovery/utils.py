@@ -2,8 +2,20 @@ import collections
 import random
 import uuid
 
-__rr_services = {}  # type: ignore
-# Temporarily
+
+class _InnerServices:
+    def __init__(self):
+        self.services = {}
+
+    def add(self, key, value):
+        if key not in self.services or len(self.services.get(key)) == 0:
+            self.services.update({key: collections.deque(value)})
+
+    def get(self, value):
+        return self.services.get(value).popleft()
+
+
+rr_services = _InnerServices()
 
 
 def select_one_random(services):
@@ -12,9 +24,6 @@ def select_one_random(services):
 
 
 def select_one_rr(services):
-    global __rr_services
     key_ = uuid.uuid5(uuid.NAMESPACE_DNS, str(services)).hex
-    if key_ not in __rr_services.keys() or len(__rr_services.get(key_)) == 0:
-        __rr_services.update({key_: collections.deque(services)})
-
-    return __rr_services.get(key_).popleft()
+    rr_services.add(key_, services)
+    return rr_services.get(key_)

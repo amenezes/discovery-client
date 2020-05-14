@@ -41,12 +41,12 @@ def test_json():
 
 def test_alias_check():
     resp = discovery.alias("myapp", "other_service_id")
-    assert tuple(["name", "service_id", "alias_service"]) == tuple(resp)
+    assert tuple(["name", "service_id", "aliasservice"]) == tuple(json.loads(resp))
 
 
 def test_script_check():
     resp = discovery.script(["/usr/local/bin/check_mem.py", "-limit", "256MB"])
-    assert tuple(["args", "interval", "timeout", "name"]) == tuple(resp)
+    assert tuple(["args", "interval", "timeout", "name"]) == tuple(json.loads(resp))
 
 
 def test_http_check():
@@ -63,17 +63,17 @@ def test_http_check():
             "deregister_critical_service_after",
             "name",
         ]
-    ) == tuple(resp)
+    ) == tuple(json.loads(resp))
 
 
 def test_tcp_check():
     resp = discovery.tcp("localhost:22")
-    assert tuple(["tcp", "interval", "timeout", "name"]) == tuple(resp)
+    assert tuple(["tcp", "interval", "timeout", "name"]) == tuple(json.loads(resp))
 
 
 def test_ttl_check():
     resp = discovery.ttl("my custom ttl", "30s")
-    assert tuple(["notes", "ttl", "name"]) == tuple(resp)
+    assert tuple(["notes", "ttl", "name"]) == tuple(json.loads(resp))
 
 
 def test_docker_check():
@@ -81,10 +81,12 @@ def test_docker_check():
         container_id="f972c95ebf0e", args=["/usr/local/bin/check_mem.py"]
     )
     assert tuple(["docker_container_id", "shell", "args", "interval", "name"]) == tuple(
-        resp.keys()
+        json.loads(resp).keys()
     )
 
 
 def test_grpc_check():
     resp = discovery.grpc("127.0.0.1:12345")
-    assert tuple(["grpc", "grpc_use_tls", "interval", "name"]) == tuple(resp)
+    assert tuple(["grpc", "grpc_use_tls", "interval", "name"]) == tuple(
+        json.loads(resp)
+    )
