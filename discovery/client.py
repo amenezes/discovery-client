@@ -33,33 +33,6 @@ class Consul(BaseClient):
         logging.debug(f"Consul ID: {self.__id}")
         logging.info("Service successfully re-registered")
 
-    async def leader_ip(self):
-        leader_response = await self.status.leader()
-        leader_response = await self._get_response(leader_response)
-        try:
-            consul_leader, _ = leader_response.split(":")
-        except ValueError:
-            logging.error("Error to identify Consul's leader")
-        return consul_leader
-
-    async def consul_healthy_instances(self):
-        health_response = await self.health.service("consul")
-        consul_instances = await self._get_response(health_response)
-        return consul_instances
-
-    async def leader_current_id(self):
-        consul_leader = await self.leader_ip()
-        consul_instances = await self.consul_healthy_instances()
-
-        current_id = [
-            instance.get("Node").get("ID")
-            for instance in consul_instances
-            if instance.get("Node").get("Address") == consul_leader
-        ]
-        if current_id is not None:
-            current_id = current_id[0]
-        return current_id
-
     async def check_consul_health(self):
         if not has_aiohttp:
             raise ModuleNotFoundError("aiohttp module not found.")
@@ -68,20 +41,15 @@ class Consul(BaseClient):
                 await asyncio.sleep(self.timeout)
                 current_id = await self.leader_current_id()
                 logging.debug(f"Consul ID: {current_id}")
-
                 if current_id != self.__id:
                     await self.reconnect()
-
-            except aiohttp.ClientConnectorError:
-                logging.error("failed to connect to discovery service...")
-                logging.error(f"reconnect will occur in {self.timeout} seconds.")
-                await asyncio.sleep(self.timeout)
-                await self.check_consul_health()
-
-            except aiohttp.ServerDisconnectedError:
-                logging.error(
-                    "temporary loss of communication with the discovery server."
-                )
+            except (
+                aiohttp.ClientConnectorError,
+                aiohttp.ServerDisconnectedError,
+            ) as err:
+                logging.warning("Failed to connect on Consul")
+                logging.warning(f"reconnect will occur in {self.timeout} seconds.")
+                logging.error(err)
                 await asyncio.sleep(self.timeout)
                 await self.check_consul_health()
 
@@ -97,12 +65,6 @@ class Consul(BaseClient):
         response = await self._get_response(resp)
         return response
 
-    async def _get_response(self, resp):
-        if asyncio.iscoroutinefunction(resp.json):
-            response = await resp.json()
-            return response
-        return resp.json()
-
     async def register(self, service_name: str, service_port: int, check=None) -> None:
         svc = discovery.service(service_name, service_port, check=check)
         try:
@@ -114,8 +76,42 @@ class Consul(BaseClient):
             }
             self.__id = await self.leader_current_id()
             logging.debug(f"Consul ID: {self.__id}")
-        except aiohttp.ClientConnectorError:
+        except aiohttp.ClientConnectorError as err:
             logging.error("Failed to connect on Consul...")
+            raise err
+
+    async def leader_current_id(self):
+        consul_leader = await self.leader_ip()
+        consul_instances = await self.consul_healthy_instances()
+
+        current_id = [
+            instance.get("Node").get("ID")
+            for instance in consul_instances
+            if instance.get("Node").get("Address") == consul_leader
+        ]
+        if current_id is not None:
+            current_id = current_id[0]
+        return current_id
+
+    async def leader_ip(self):
+        leader_response = await self.status.leader()
+        leader_response = await self._get_response(leader_response)
+        try:
+            consul_leader, _ = leader_response.split(":")
+        except ValueError:
+            logging.error("Error to identify Consul's leader")
+        return consul_leader
+
+    async def _get_response(self, resp):
+        if asyncio.iscoroutinefunction(resp.json):
+            response = await resp.json()
+            return response
+        return resp.json()
+
+    async def consul_healthy_instances(self):
+        health_response = await self.health.service("consul")
+        consul_instances = await self._get_response(health_response)
+        return consul_instances
 
     async def deregister(self) -> None:
         for service, data in self.managed_services.items():
