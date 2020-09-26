@@ -33,7 +33,7 @@ class TestHttpxClient:
         resp = await httpx_engine.get("https://httpbin.org/html")
         content = await resp.text()
         assert isinstance(content, str)
-    
+
     @pytest.mark.asyncio
     async def test_content(self, httpx_engine):
         resp = await httpx_engine.get("https://httpbin.org/html")
@@ -51,7 +51,6 @@ class TestAioHttpClient:
     async def test_url(self, aiohttp_client):
         resp = await aiohttp_client.get("https://httpbin.org/status/200")
         assert resp.url == "https://httpbin.org/status/200"
-
 
     @pytest.mark.asyncio
     async def test_content_type(self, aiohttp_client):

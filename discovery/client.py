@@ -20,16 +20,19 @@ class Consul(BaseClient):
         response = await self.find_services(name)
         try:
             return fn(response)
-        except Exception as err:
-            log.error(err)
-            raise ServiceNotFoundException
+        except Exception:
+            raise ServiceNotFoundException(
+                f"service {name} not found in the Consul's catalog"
+            )
 
     async def find_services(self, name):
         resp = await self.catalog.service(name)
         response = await self._get_response(resp)
         return response
 
-    async def register(self, service_name: str, service_port: int, check=None) -> None:
+    async def register(
+        self, service_name: str, service_port: int, check=None, dump_service=True
+    ) -> None:
         svc = service(service_name, service_port, check=check)
         try:
             await self.agent.service.register(svc)
@@ -39,22 +42,23 @@ class Consul(BaseClient):
                 "check": check,
             }
             self.consul_current_leader_id = await self.leader_current_id()
-            with open(".service", "wb") as f:
-                f.write(pickle.dumps(self.managed_services))
+            if dump_service:
+                self._dump_registered_service
         except Exception as err:
-            log.error("Failed to connect on Consul...")
             raise err
+
+    def _dump_registered_service(self):
+        with open(".service", "wb") as f:
+            f.write(pickle.dumps(self.managed_services))
 
     async def check_consul_health(self):
         while True:
             try:
                 await asyncio.sleep(self.timeout)
                 current_id = await self.leader_current_id()
-                log.debug(f"Consul ID: {current_id}")
                 if current_id != self.consul_current_leader_id:
                     await self.reconnect()
-            except Exception as err:
-                log.error(err)
+            except Exception:
                 await asyncio.sleep(self.timeout)
                 await self.check_consul_health()
 

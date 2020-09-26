@@ -6,9 +6,10 @@ import sys
 from pathlib import Path
 
 from cleo import Command
+from dotenv import load_dotenv
+
 from discovery.client import Consul
 from discovery.engine import AioEngine, aiohttp_session
-from dotenv import load_dotenv
 
 logging.getLogger().addHandler(logging.NullHandler())
 

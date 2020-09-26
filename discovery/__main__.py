@@ -1,7 +1,8 @@
 from cleo import Application
+from dotenv import load_dotenv
+
 from discovery import __version__
 from discovery.cli.commands import CatalogCommand
-from dotenv import load_dotenv
 
 load_dotenv()
 
