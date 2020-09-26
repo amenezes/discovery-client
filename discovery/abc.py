@@ -2,12 +2,11 @@ import abc
 import os
 
 from discovery import api
-from discovery.engine import AioEngine
 
 
 class BaseClient(abc.ABC):
-    def __init__(self, session, timeout=30, **kwargs):
-        self.client = kwargs.get("client") or AioEngine(session)
+    def __init__(self, client, timeout=30, **kwargs):
+        self.client = client
         self._timeout = int(os.getenv("DEFAULT_TIMEOUT", timeout))
 
         # base api

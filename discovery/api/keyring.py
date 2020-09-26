@@ -6,17 +6,17 @@ class Keyring(Api):
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def list(self, **kwargs):
-        response = await self.client.get(f"{self.url}", params=kwargs)
+        response = await self.client.get(f"{self.url}", **kwargs)
         return response
 
     async def add(self, data, **kwargs):
-        response = await self.client.post(f"{self.url}", data=data, params=kwargs)
+        response = await self.client.post(f"{self.url}", data=data, **kwargs)
         return response
 
     async def change(self, data, **kwargs):
-        response = await self.client.put(f"{self.url}", data=data, params=kwargs)
+        response = await self.client.put(f"{self.url}", data=data, **kwargs)
         return response
 
     async def delete(self, data, **kwargs):
-        response = await self.client.delete(f"{self.url}", data=data, params=kwargs)
+        response = await self.client.delete(f"{self.url}", data=data, **kwargs)
         return response

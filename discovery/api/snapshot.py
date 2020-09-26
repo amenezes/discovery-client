@@ -6,9 +6,9 @@ class Snapshot(Api):
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def generate(self, **kwargs):
-        response = await self.client.get(f"{self.url}", params=kwargs)
+        response = await self.client.get(f"{self.url}", **kwargs)
         return response
 
     async def restore(self, data, **kwargs):
-        response = await self.client.put(f"{self.url}", data=data, params=kwargs)
+        response = await self.client.put(f"{self.url}", data=data, **kwargs)
         return response

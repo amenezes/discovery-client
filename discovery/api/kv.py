@@ -10,13 +10,13 @@ class Kv(Api):
         return response
 
     async def read(self, key, **kwargs):
-        response = await self.client.get(f"{self.url}/{key}", params=kwargs)
+        response = await self.client.get(f"{self.url}/{key}", **kwargs)
         return response
 
     async def update(self, key, data, **kwargs):
-        response = await self.client.put(f"{self.url}/{key}", params=kwargs, data=data)
+        response = await self.client.put(f"{self.url}/{key}", data=data, **kwargs)
         return response
 
     async def delete(self, key, **kwargs):
-        response = await self.client.delete(f"{self.url}/{key}", params=kwargs)
+        response = await self.client.delete(f"{self.url}/{key}", **kwargs)
         return response

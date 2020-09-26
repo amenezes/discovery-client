@@ -1,113 +1,111 @@
 import pytest
 
-import discovery
+from discovery.client import Consul
+from discovery.engine import aiohttp_session
 from discovery.exceptions import ServiceNotFoundException
+from discovery.model.agent import checks
 from discovery.utils import select_one_random
 
-
-def service_response():
-    return {
-        "ID": "154d3a48-e665-a22e-c75a-c093de56a188",
-        "Node": "6a4e48904f35",
-        "Address": "127.0.0.1",
-        "Datacenter": "dc1",
-        "TaggedAddresses": {
-            "lan": "127.0.0.1",
-            "lan_ipv4": "127.0.0.1",
-            "wan": "127.0.0.1",
-            "wan_ipv4": "127.0.0.1",
-        },
-        "NodeMeta": {"consul-network-segment": ""},
-        "ServiceKind": "",
-        "ServiceID": "consul",
-        "ServiceName": "consul",
-        "ServiceTags": [],
-        "ServiceAddress": "",
-        "ServiceWeights": {"Passing": 1, "Warning": 1},
-        "ServiceMeta": {
-            "raft_version": "3",
-            "serf_protocol_current": "2",
-            "serf_protocol_max": "5",
-            "serf_protocol_min": "1",
-            "version": "1.7.1",
-        },
-        "ServicePort": 8300,
-        "ServiceEnableTagOverride": False,
-        "ServiceProxy": {"MeshGateway": {}, "Expose": {}},
-        "ServiceConnect": {},
-        "CreateIndex": 10,
-        "ModifyIndex": 10,
-    }
+SERVICE_RESPONSE = {
+    "ID": "154d3a48-e665-a22e-c75a-c093de56a188",
+    "Node": "6a4e48904f35",
+    "Address": "127.0.0.1",
+    "Datacenter": "dc1",
+    "TaggedAddresses": {
+        "lan": "127.0.0.1",
+        "lan_ipv4": "127.0.0.1",
+        "wan": "127.0.0.1",
+        "wan_ipv4": "127.0.0.1",
+    },
+    "NodeMeta": {"consul-network-segment": ""},
+    "ServiceKind": "",
+    "ServiceID": "consul",
+    "ServiceName": "consul",
+    "ServiceTags": [],
+    "ServiceAddress": "",
+    "ServiceWeights": {"Passing": 1, "Warning": 1},
+    "ServiceMeta": {
+        "raft_version": "3",
+        "serf_protocol_current": "2",
+        "serf_protocol_max": "5",
+        "serf_protocol_min": "1",
+        "version": "1.7.1",
+    },
+    "ServicePort": 8300,
+    "ServiceEnableTagOverride": False,
+    "ServiceProxy": {"MeshGateway": {}, "Expose": {}},
+    "ServiceConnect": {},
+    "CreateIndex": 10,
+    "ModifyIndex": 10,
+}
 
 
-def services_response():
-    return [service_response()]
+SERVICES_RESPONSE = [SERVICE_RESPONSE]
 
 
-def healthy_instances_response():
-    return [
-        {
-            "Node": {
-                "ID": "620b350c-5384-7797-b6be-f51696e6afc8",
-                "Node": "8e195a8d9ed3",
-                "Address": "127.0.0.1",
-                "Datacenter": "dc1",
-                "TaggedAddresses": {
-                    "lan": "127.0.0.1",
-                    "lan_ipv4": "127.0.0.1",
-                    "wan": "127.0.0.1",
-                    "wan_ipv4": "127.0.0.1",
-                },
-                "Meta": {"consul-network-segment": ""},
-                "CreateIndex": 10,
-                "ModifyIndex": 11,
+HEALTHY_INSTANCES_RESPONSE = [
+    {
+        "Node": {
+            "ID": "620b350c-5384-7797-b6be-f51696e6afc8",
+            "Node": "8e195a8d9ed3",
+            "Address": "127.0.0.1",
+            "Datacenter": "dc1",
+            "TaggedAddresses": {
+                "lan": "127.0.0.1",
+                "lan_ipv4": "127.0.0.1",
+                "wan": "127.0.0.1",
+                "wan_ipv4": "127.0.0.1",
             },
-            "Service": {
-                "ID": "consul",
-                "Service": "consul",
-                "Tags": [],
-                "Address": "",
-                "Meta": {
-                    "raft_version": "3",
-                    "serf_protocol_current": "2",
-                    "serf_protocol_max": "5",
-                    "serf_protocol_min": "1",
-                    "version": "1.7.1",
-                },
-                "Port": 8300,
-                "Weights": {"Passing": 1, "Warning": 1},
-                "EnableTagOverride": False,
-                "Proxy": {"MeshGateway": {}, "Expose": {}},
-                "Connect": {},
+            "Meta": {"consul-network-segment": ""},
+            "CreateIndex": 10,
+            "ModifyIndex": 11,
+        },
+        "Service": {
+            "ID": "consul",
+            "Service": "consul",
+            "Tags": [],
+            "Address": "",
+            "Meta": {
+                "raft_version": "3",
+                "serf_protocol_current": "2",
+                "serf_protocol_max": "5",
+                "serf_protocol_min": "1",
+                "version": "1.7.1",
+            },
+            "Port": 8300,
+            "Weights": {"Passing": 1, "Warning": 1},
+            "EnableTagOverride": False,
+            "Proxy": {"MeshGateway": {}, "Expose": {}},
+            "Connect": {},
+            "CreateIndex": 10,
+            "ModifyIndex": 10,
+        },
+        "Checks": [
+            {
+                "Node": "8e195a8d9ed3",
+                "CheckID": "serfHealth",
+                "Name": "Serf Health Status",
+                "Status": "passing",
+                "Notes": "",
+                "Output": "Agent alive and reachable",
+                "ServiceID": "",
+                "ServiceName": "",
+                "ServiceTags": [],
+                "Type": "",
+                "Definition": {},
                 "CreateIndex": 10,
                 "ModifyIndex": 10,
-            },
-            "Checks": [
-                {
-                    "Node": "8e195a8d9ed3",
-                    "CheckID": "serfHealth",
-                    "Name": "Serf Health Status",
-                    "Status": "passing",
-                    "Notes": "",
-                    "Output": "Agent alive and reachable",
-                    "ServiceID": "",
-                    "ServiceName": "",
-                    "ServiceTags": [],
-                    "Type": "",
-                    "Definition": {},
-                    "CreateIndex": 10,
-                    "ModifyIndex": 10,
-                }
-            ],
-        }
-    ]
+            }
+        ],
+    }
+]
 
 
 @pytest.fixture
 @pytest.mark.asyncio
 async def client(consul_api):
-    session = await discovery.aiohttp_session()
-    yield discovery.Consul(session, client=consul_api)
+    session = await aiohttp_session()
+    yield Consul(consul_api)
     await session.close()
 
 
@@ -119,32 +117,32 @@ async def test_default_timeout(client):
 @pytest.mark.asyncio
 async def test_changing_default_timeout(aiohttp_client, monkeypatch):
     monkeypatch.setenv("DEFAULT_TIMEOUT", "5")
-    client = discovery.Consul(aiohttp_client)
+    client = Consul(aiohttp_client)
     assert client.timeout == 5
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [services_response()])
+@pytest.mark.parametrize("expected", [SERVICES_RESPONSE])
 async def test_find_services(client, expected):
     client.client.expected = expected
     response = await client.find_services("consul")
-    assert response == services_response()
+    assert response == SERVICES_RESPONSE
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [services_response()])
+@pytest.mark.parametrize("expected", [SERVICES_RESPONSE])
 async def test_find_service_rr(client, expected):
     client.client.expected = expected
     response = await client.find_service("consul")
-    assert response == service_response()
+    assert response == SERVICE_RESPONSE
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [services_response()])
+@pytest.mark.parametrize("expected", [SERVICES_RESPONSE])
 async def test_find_service_random(client, expected):
     client.client.expected = expected
     response = await client.find_service("consul", select_one_random)
-    assert response == service_response()
+    assert response == SERVICE_RESPONSE
 
 
 @pytest.mark.asyncio
@@ -162,16 +160,16 @@ async def test_leader_ip(client, expected):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [healthy_instances_response()])
+@pytest.mark.parametrize("expected", [HEALTHY_INSTANCES_RESPONSE])
 async def test_consul_healthy_instances(client, expected):
     client.client.expected = expected
     response = await client.consul_healthy_instances()
-    assert response == healthy_instances_response()
+    assert response == HEALTHY_INSTANCES_RESPONSE
 
 
 @pytest.mark.skip
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [healthy_instances_response()])
+@pytest.mark.parametrize("expected", [HEALTHY_INSTANCES_RESPONSE])
 async def test_leader_current_id(client, expected):
     client.client.expected = expected
     leader_id = await client.leader_current_id()
@@ -184,7 +182,7 @@ async def test_leader_current_id(client, expected):
 async def test_register(client, expected):
     client.client.expected = expected
     response = await client.register(
-        "myapp", 5000, discovery.http("http://myapp:5000/status")
+        "myapp", 5000, checks.http("http://myapp:5000/status")
     )
     assert response is None
 

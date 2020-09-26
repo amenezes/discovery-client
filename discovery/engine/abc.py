@@ -1,11 +1,12 @@
 import abc
+import os
 
 
 class Engine(abc.ABC):
-    def __init__(self, host="localhost", port=8500, scheme="http"):
-        self._host = host
-        self._port = port
-        self._scheme = scheme
+    def __init__(self, host: str = "localhost", port: int = 8500, scheme: str = "http"):
+        self._host = str(os.getenv("CONSUL_HOST", host))
+        self._port = int(os.getenv("CONSUL_PORT", port))
+        self._scheme = str(os.getenv("CONSUL_SCHEMA", scheme))
 
     @property
     def host(self):

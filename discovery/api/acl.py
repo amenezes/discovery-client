@@ -1,6 +1,4 @@
-import logging
-
-from discovery import api
+from discovery import api, logging
 from discovery.api.abc import Api
 
 
@@ -27,7 +25,7 @@ class Acl(Api):
         return response
 
     async def replication(self, **kwargs):
-        response = await self.client.get(f"{self.url}/replication", params=kwargs)
+        response = await self.client.get(f"{self.url}/replication", **kwargs)
         return response
 
     async def translate(self, data, **kwargs):
@@ -38,6 +36,6 @@ class Acl(Api):
             "version when support for legacy ACLs is removed."
         )
         response = await self.client.post(
-            f"{self.url}/rules/translate", data=data, params=kwargs
+            f"{self.url}/rules/translate", data=data, **kwargs
         )
         return response

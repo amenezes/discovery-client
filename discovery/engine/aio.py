@@ -1,10 +1,7 @@
-import logging
 from contextlib import suppress
 
 from discovery.engine.abc import Engine
-
-logging.getLogger(__name__).addHandler(logging.NullHandler())
-
+from discovery.engine.response import HttpResponse
 
 has_httpx = False
 has_aiohttp = False
@@ -25,19 +22,19 @@ class AioEngine(Engine):
 
     async def get(self, *args, **kwargs):
         response = await self._session.get(*args, **kwargs)
-        return response
+        return HttpResponse(response)
 
     async def put(self, *args, **kwargs):
         response = await self._session.put(*args, **kwargs)
-        return response
+        return HttpResponse(response)
 
     async def delete(self, *args, **kwargs):
         response = await self._session.delete(*args, **kwargs)
-        return response
+        return HttpResponse(response)
 
     async def post(self, *args, **kwargs):
         response = await self._session.post(*args, **kwargs)
-        return response
+        return HttpResponse(response)
 
     async def __aexit__(self, *args, **kwargs):
         await self._session.close()

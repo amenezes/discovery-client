@@ -4,3 +4,7 @@ class ServiceNotFoundException(Exception):
 
 class ClientOperationException(Exception):
     pass
+
+
+class NoConsulLeaderException(Exception):
+    pass

@@ -11,34 +11,34 @@ class Intentions(Api):
         return True
 
     async def create(self, data, **kwargs):
-        response = await self.client.post(f"{self.url}", params=kwargs, data=data)
+        response = await self.client.post(f"{self.url}", data=data, **kwargs)
         return response
 
     async def read(self, uuid, **kwargs):
-        response = await self.client.get(f"{self.url}/{uuid}", params=kwargs)
+        response = await self.client.get(f"{self.url}/{uuid}", **kwargs)
         return response
 
     async def list(self, **kwargs):
-        response = await self.client.get(f"{self.url}", params=kwargs)
+        response = await self.client.get(f"{self.url}", **kwargs)
         return response
 
     async def update(self, uuid, data, **kwargs):
-        response = await self.client.put(f"{self.url}/{uuid}", params=kwargs, data=data)
+        response = await self.client.put(f"{self.url}/{uuid}", data=data, **kwargs)
         return response
 
     async def delete(self, uuid, **kwargs):
-        response = await self.client.delete(f"{self.url}/{uuid}", params=kwargs)
+        response = await self.client.delete(f"{self.url}/{uuid}", **kwargs)
         return response
 
     async def check(self, source, destination, **kwargs):
         response = await self.client.get(
-            f"{self.url}/check?source={source}&destination={destination}", params=kwargs
+            f"{self.url}/check?source={source}&destination={destination}", **kwargs
         )
         return response
 
     async def match(self, by, name, **kwargs):
         if self.by_is_valid(by):
             response = await self.client.get(
-                f"{self.url}/match?by={by}&name={name}", params=kwargs
+                f"{self.url}/match?by={by}&name={name}", **kwargs
             )
             return response

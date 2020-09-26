@@ -31,9 +31,11 @@ setuptools.setup(
     extras_require={
         "aio": ["aiohttp<=3.6.2"],
         "httpx": ["httpx>=0.12.0"],
-        "all": ["aiohttp<=3.6.2", "httpx>=0.12.0"],
+        "cli": ["cleo"],
+        "all": ["aiohttp<=3.6.2", "httpx>=0.12.0", "cleo"],
     },
     setup_requires=["setuptools>=38.6.0"],
+    entry_points={"console_scripts": ["discovery=discovery.__main__:application.run [cli]"]},
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",

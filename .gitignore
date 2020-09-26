@@ -108,3 +108,4 @@ codeclimate.json
 cc-test-reporter
 coverage
 .vscode
+.service

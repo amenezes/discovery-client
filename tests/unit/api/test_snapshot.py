@@ -22,6 +22,6 @@ async def test_generate(snapshot, expected):
 async def test_restore(snapshot, expected):
     snapshot.client.expected = expected
     snap = await snapshot.generate()
-    data = await snap.read()
+    data = await snap.content()
     response = await snapshot.restore(data=data)
     assert response.status == 200

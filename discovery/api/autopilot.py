@@ -6,15 +6,15 @@ class AutoPilot(Api):
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def read_configuration(self, **kwargs):
-        response = await self.client.get(f"{self.url}/configuration", params=kwargs)
+        response = await self.client.get(f"{self.url}/configuration", **kwargs)
         return response
 
     async def update_configuration(self, data, **kwargs):
         response = await self.client.put(
-            f"{self.url}/configuration", data=data, params=kwargs
+            f"{self.url}/configuration", data=data, **kwargs
         )
         return response
 
     async def read_health(self, **kwargs):
-        response = await self.client.get(f"{self.url}/health", params=kwargs)
+        response = await self.client.get(f"{self.url}/health", **kwargs)
         return response

@@ -4,6 +4,7 @@ import aiohttp
 
 from discovery import api
 from discovery.engine import AioEngine
+from discovery.engine.aio import httpx_client
 
 
 @pytest.fixture
@@ -12,6 +13,13 @@ async def aiohttp_client():
     session = aiohttp.ClientSession()
     yield AioEngine(session)
     await session.close()
+
+
+@pytest.fixture
+@pytest.mark.asyncio
+async def httpx_engine():
+    client = await httpx_client()
+    return AioEngine(client)
 
 
 class ResponseMock:
@@ -25,7 +33,7 @@ class ResponseMock:
     async def text(self):
         return self.expected
 
-    async def read(self):
+    async def content(self):
         return self.expected
 
     def status(self):

@@ -6,5 +6,5 @@ class Segment(Api):
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def list(self, **kwargs):
-        response = await self.client.get(f"{self.url}", params=kwargs)
+        response = await self.client.get(f"{self.url}", **kwargs)
         return response

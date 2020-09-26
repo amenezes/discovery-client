@@ -6,9 +6,9 @@ class Status(Api):
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def leader(self, **kwargs):
-        response = await self.client.get(f"{self.url}/leader", params=kwargs)
+        response = await self.client.get(f"{self.url}/leader", **kwargs)
         return response
 
     async def peers(self, **kwargs):
-        response = await self.client.get(f"{self.url}/peers", params=kwargs)
+        response = await self.client.get(f"{self.url}/peers", **kwargs)
         return response

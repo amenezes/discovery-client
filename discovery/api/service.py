@@ -8,26 +8,24 @@ class Service(Api):
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def services(self, **kwargs):
-        response = await self.client.get(f"{self.url}s", params=kwargs)
+        response = await self.client.get(f"{self.url}s", **kwargs)
         return response
 
     async def service(self, service_id, **kwargs):
-        response = await self.client.get(f"{self.url}/{service_id}", params=kwargs)
+        response = await self.client.get(f"{self.url}/{service_id}", **kwargs)
         return response
 
     async def configuration(self, service_id, **kwargs):
-        response = await self.client.get(f"{self.url}/{service_id}", params=kwargs)
+        response = await self.client.get(f"{self.url}/{service_id}", **kwargs)
         return response
 
     async def register(self, data, **kwargs):
-        response = await self.client.put(
-            f"{self.url}/register", params=kwargs, data=data
-        )
+        response = await self.client.put(f"{self.url}/register", data=data, **kwargs)
         return response
 
     async def deregister(self, service_id, **kwargs):
         response = await self.client.put(
-            f"{self.url}/deregister/{service_id}", params=kwargs
+            f"{self.url}/deregister/{service_id}", **kwargs
         )
         return response
 
@@ -36,18 +34,18 @@ class Service(Api):
         enable = str(enable).lower()
         response = await self.client.put(
             f"{self.url}/maintenance/{service_id}?enable={enable}&reason={reason}",
-            params=kwargs,
+            **kwargs,
         )
         return response
 
     async def service_health_by_name(self, name, **kwargs):
         response = await self.client.get(
-            f"{self.url}/health/service/name/{name}", params=kwargs
+            f"{self.url}/health/service/name/{name}", **kwargs
         )
         return response
 
     async def service_health_by_id(self, name, **kwargs):
         response = await self.client.get(
-            f"{self.url}/health/service/id/{name}", params=kwargs
+            f"{self.url}/health/service/id/{name}", **kwargs
         )
         return response
