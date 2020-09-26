@@ -1,162 +1,114 @@
-"""Consul discovery client module."""
-import logging
-import socket
-import time
-import uuid
+import asyncio
+import json
+import pickle
 
-import consul
-
-from discovery.base_client import BaseClient
-from discovery.filter import Filter
-from discovery.utils import select_one_randomly, select_one_rr
-
-import requests
-
-
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+from discovery import log
+from discovery.abc import BaseClient
+from discovery.exceptions import NoConsulLeaderException, ServiceNotFoundException
+from discovery.model.agent.service import service
+from discovery.utils import select_one_rr
 
 
 class Consul(BaseClient):
-    """Consul Service Registry."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.managed_services = {}
+        self._leader_id = None
+        self.consul_current_leader_id = None
 
-    __service = {'application_ip': socket.gethostbyname(socket.gethostname())}
-
-    def __init__(self, host, port):
-        """Create a instance for standard consul client."""
-        super().__init__()
-        self.__discovery = consul.Consul(host, port)
-        self.__ensure_leader_connection(host, port)
-
-    def __ensure_leader_connection(self, host, port):
-        leader = self.__discovery.status.leader()
-        leader = leader.split(':')[0]
-        if leader in ['127.0.0.1', 'localhost', '127.0.1.1']:
-            leader = host
-        self.__discovery = consul.Consul(f"{leader}", port)
-
-    def __create_service(self, service_name, service_port, healthcheck_path):
-        """Adjust the data of the service to be managed."""
-        self.__service.update({'name': service_name})
-        self.__service.update({'port': int(service_port)})
-        self.__service.update({'id': f"{service_name}-{uuid.uuid4().hex}"})
-        self.__service.update({'healthcheck': {
-            "http": f"http://{service_name}:{service_port}{healthcheck_path}",
-            "DeregisterCriticalServiceAfter": "1m",
-            "interval": "10s",
-            "timeout": "5s"}})
-
-        logging.debug(f'Service data: {self.__service}')
-
-    def __reconnect(self):
-        """Service re-registration steps."""
-        logging.debug('Service reconnect fallback')
-
-        self.__discovery.agent.service.deregister(self.__service['id'])
-        self.__discovery.agent.service.register(
-            name=self.__service['name'],
-            service_id=self.__service['id'],
-            check=self.__service['healthcheck'],
-            address=self.__service['application_ip'],
-            port=self.__service['port']
-        )
-
-        self.__id = self.get_leader_current_id()
-
-        logging.info('Service successfully re-registered')
-
-    def get_leader_current_id(self):
-        """Retrieve current ID from consul leader."""
-        consul_leader = self.__discovery.status.leader()
-        consul_instances = self.__discovery.health.service('consul')[Filter.PAYLOAD.value]
-        current_id = [instance['Node']['ID']
-                      for instance in consul_instances
-                      if instance['Node']['Address'] == consul_leader.split(':')[0]]
-
-        if len(current_id) > 0:
-            current_id = current_id[Filter.FIRST_ITEM.value]
-
-        return current_id
-
-    def consul_is_healthy(self):
-        """Start a loop to monitor consul healthy.
-
-        Necessary to re-register service in case of consul fail.
-        """
-        while True:
-            try:
-                time.sleep(self.DEFAULT_TIMEOUT)
-
-                current_id = self.get_leader_current_id()
-                logging.debug(f"Consul ID: {current_id}")
-
-                if current_id != self.__id:
-                    self.__reconnect()
-
-            except requests.exceptions.ConnectionError:
-                logging.error("Failed to connect to discovery service...")
-                logging.error(
-                    f'Reconnect will occur in {self.DEFAULT_TIMEOUT} seconds.'
-                )
-
-    def find_service(self, service_name, method='rr'):
-        """Search for a service in the consul's catalog.
-
-        Return a specific service using: round robin (default) or random.
-        """
-        services = self.find_services(service_name)
-
-        if method == 'rr':
-            service = select_one_rr(service_name, services)
-        else:
-            service = select_one_randomly(services)
-        return service
-
-    def find_services(self, service_name):
-        """
-        Search for a service in the consul's catalog.
-
-        Return a list of services registered on consul catalog.
-        """
-        services = self.__discovery.catalog.service(service_name)
-        return self._format_catalog_service(services)
-
-    def deregister(self):
-        """Deregister a service registered."""
-        logging.debug(
-            f"Unregistering service id: {self.__service['id']}"
-        )
-        logging.info('Successfully unregistered application!')
-
-        self.__discovery.agent.service.deregister(self.__service['id'])
-
-    def register(self,
-                 service_name,
-                 service_port,
-                 healthcheck_path="/manage/health"):
-        """Register a new service.
-
-        Default values are:
-        healthcheck path: /mange/health
-        DeregisterCriticalServiceAfter: 1m,
-        interval: 10s,
-        timeout: 5s
-        """
+    async def find_service(self, name, fn=select_one_rr):
+        response = await self.find_services(name)
         try:
-            self.__create_service(service_name,
-                                  service_port,
-                                  healthcheck_path)
-            self.__discovery.agent.service.register(
-                name=self.__service['name'],
-                service_id=self.__service['id'],
-                check=self.__service['healthcheck'],
-                address=self.__service['application_ip'],
-                port=self.__service['port']
+            return fn(response)
+        except Exception:
+            raise ServiceNotFoundException(
+                f"service {name} not found in the Consul's catalog"
             )
 
-            self.__id = self.get_leader_current_id()
+    async def find_services(self, name):
+        resp = await self.catalog.service(name)
+        response = await self._get_response(resp)
+        return response
 
-            logging.info('Service successfully registered!')
-            logging.debug(f'Consul ID: {self.__id}')
+    async def register(
+        self, service_name: str, service_port: int, check=None, dump_service=True
+    ) -> None:
+        svc = service(service_name, service_port, check=check)
+        try:
+            await self.agent.service.register(svc)
+            self.managed_services[json.loads(svc).get("id")] = {
+                "service_name": service_name,
+                "port": service_port,
+                "check": check,
+            }
+            self.consul_current_leader_id = await self.leader_current_id()
+            if dump_service:
+                self._dump_registered_service
+        except Exception as err:
+            raise err
 
-        except requests.exceptions.ConnectionError:
-            logging.error("Failed to connect to discovery...")
+    def _dump_registered_service(self):
+        with open(".service", "wb") as f:
+            f.write(pickle.dumps(self.managed_services))
+
+    async def check_consul_health(self):
+        while True:
+            try:
+                await asyncio.sleep(self.timeout)
+                current_id = await self.leader_current_id()
+                if current_id != self.consul_current_leader_id:
+                    await self.reconnect()
+            except Exception:
+                await asyncio.sleep(self.timeout)
+                await self.check_consul_health()
+
+    async def reconnect(self):
+        old_service = self.managed_services.copy()
+        await self.deregister()
+        for key, value in old_service.items():
+            await self.register(
+                service_name=value.get("service_name"),
+                service_port=value.get("port"),
+                check=value.get("check"),
+            )
+        log.info("Service successfully re-registered")
+
+    async def leader_current_id(self):
+        consul_leader = await self.leader_ip()
+        consul_instances = await self.consul_healthy_instances()
+
+        current_id = [
+            instance.get("Node").get("ID")
+            for instance in consul_instances
+            if instance.get("Node").get("Address") == consul_leader
+        ]
+        if current_id is not None:
+            current_id = current_id[0]
+        return current_id
+
+    async def leader_ip(self):
+        leader_response = await self.status.leader()
+        leader_response = await self._get_response(leader_response)
+        try:
+            consul_leader, _ = leader_response.split(":")
+        except ValueError:
+            raise NoConsulLeaderException("Error to identify Consul's leader.")
+        return consul_leader
+
+    async def consul_healthy_instances(self):
+        health_response = await self.health.service("consul")
+        consul_instances = await self._get_response(health_response)
+        return consul_instances
+
+    async def _get_response(self, resp):
+        try:
+            response = await resp.json()
+            return response
+        except Exception:
+            response = await resp.text()
+            return response
+
+    async def deregister(self) -> None:
+        for service_id in self.managed_services.keys():
+            await self.agent.service.deregister(service_id)
+        self.managed_services.clear()

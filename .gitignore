@@ -107,4 +107,5 @@ venv.bak/
 codeclimate.json
 cc-test-reporter
 coverage
-*.swp
+.vscode
+.service

@@ -21,6 +21,10 @@ plugins:
     config:
       tests_patterns:
         - tests/**
+  bandit:
+    enabled: true
+    config:
+      python_version: 3
 exclude_patterns:
 - "venv"
 - "examples/"

@@ -1,0 +1,6 @@
+[tool.portray]
+modules = ["discovery"]
+
+[tool.portray.mkdocs.theme]
+name = "material"
+palette = {primary = "pink", accent = "gray"}
