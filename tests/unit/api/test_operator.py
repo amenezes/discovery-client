@@ -7,7 +7,13 @@ from discovery import api
 @pytest.mark.asyncio
 async def operator(consul_api, area, autopilot, keyring, license, raft, segment):
     return api.Operator(
-        area, autopilot, keyring, license, raft, segment, client=consul_api,
+        area,
+        autopilot,
+        keyring,
+        license,
+        raft,
+        segment,
+        client=consul_api,
     )
 
 

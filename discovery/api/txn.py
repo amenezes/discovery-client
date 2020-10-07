@@ -1,5 +1,5 @@
 from discovery.api.abc import Api
-from discovery.engine.response import HttpResponse
+from discovery.engine.response import Response
 
 
 class Txn(Api):
@@ -8,4 +8,4 @@ class Txn(Api):
 
     async def create(self, data, **kwargs):
         response = await self.client.put(f"{self.url}", data=data, **kwargs)
-        return HttpResponse(response)
+        return Response(response)

@@ -1,66 +1,23 @@
 import pytest
 
-import aiohttp
-
 from discovery import api
-from discovery.engine import AioEngine
-from discovery.engine.aio import httpx_client
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def aiohttp_client():
-    session = aiohttp.ClientSession()
-    yield AioEngine(session)
-    await session.close()
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-async def httpx_engine():
-    client = await httpx_client()
-    return AioEngine(client)
-
-
-class ResponseMock:
-    def __init__(self, expected=None):
-        self.expected = expected
-        self.status = expected
-
-    async def json(self):
-        return self.expected
-
-    async def text(self):
-        return self.expected
-
-    async def content(self):
-        return self.expected
-
-    def status(self):
-        return self.expected
-
-
-class ApiMock:
-    def __init__(self, expected=None):
-        self.url = ""
-        self.expected = expected
-
-    async def get(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
-
-    async def delete(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
-
-    async def put(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
-
-    async def post(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
+from discovery.client import Consul
+from discovery.engine.httpx import HTTPXEngine
 
 
 @pytest.fixture
 def consul_api(expected=None):
     return ApiMock(expected=expected)
+
+
+@pytest.fixture
+def consul(consul_api):
+    return Consul()
+
+
+@pytest.fixture
+def consul_httpx():
+    return Consul(client=HTTPXEngine())
 
 
 @pytest.fixture
@@ -97,3 +54,39 @@ async def autopilot(consul_api):
 @pytest.mark.asyncio
 def area(consul_api):
     return api.Area(client=consul_api)
+
+
+class ResponseMock:
+    def __init__(self, expected=None):
+        self.expected = expected
+        self.status = expected
+
+    async def json(self):
+        return self.expected
+
+    async def text(self):
+        return self.expected
+
+    async def content(self):
+        return self.expected
+
+    def status(self):
+        return self.expected
+
+
+class ApiMock:
+    def __init__(self, expected=None):
+        self.url = ""
+        self.expected = expected
+
+    async def get(self, *args, **kwargs):
+        return ResponseMock(expected=self.expected)
+
+    async def delete(self, *args, **kwargs):
+        return ResponseMock(expected=self.expected)
+
+    async def put(self, *args, **kwargs):
+        return ResponseMock(expected=self.expected)
+
+    async def post(self, *args, **kwargs):
+        return ResponseMock(expected=self.expected)

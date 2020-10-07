@@ -2,12 +2,13 @@ import json
 
 import pytest
 
-from discovery.model.agent import checks
-from discovery.model.agent.service import meta_is_valid, service, tags_is_valid
+from discovery import checks, utils
 
 
 def test_service_with_check():
-    resp = service("myapp", 5000, check=checks.http("http://localhost:5000/health"))
+    resp = utils.service(
+        "myapp", 5000, check=checks.http("http://localhost:5000/health")
+    )
     resp = json.loads(resp)
     assert tuple(["name", "id", "address", "port", "tags", "meta", "check"]) == tuple(
         resp
@@ -15,7 +16,7 @@ def test_service_with_check():
 
 
 def test_service_with_multi_check():
-    resp = service(
+    resp = utils.service(
         "myapp",
         5000,
         check=[
@@ -29,12 +30,12 @@ def test_service_with_multi_check():
 
 
 def test_create_service_without_check():
-    resp = service("myapp2", 5001)
+    resp = utils.service("myapp2", 5001)
     assert "check" not in resp
 
 
 def test_json():
-    resp = service("myapp2", 5001)
+    resp = utils.service("myapp2", 5001)
     assert tuple(["name", "id", "address", "port", "tags", "meta"]) == tuple(
         json.loads(resp)
     )
@@ -52,19 +53,22 @@ def test_script_check():
 
 def test_http_check():
     resp = checks.http("http://localhost:5000/manage/health")
-    assert tuple(
-        [
-            "http",
-            "tls_skip_verify",
-            "method",
-            "header",
-            "body",
-            "interval",
-            "timeout",
-            "deregister_critical_service_after",
-            "name",
-        ]
-    ) == tuple(json.loads(resp))
+    assert (
+        tuple(
+            [
+                "http",
+                "tls_skip_verify",
+                "method",
+                "header",
+                "body",
+                "interval",
+                "timeout",
+                "deregister_critical_service_after",
+                "name",
+            ]
+        )
+        == tuple(json.loads(resp))
+    )
 
 
 def test_tcp_check():
@@ -94,18 +98,18 @@ def test_grpc_check():
 
 
 def test_tags_validation():
-    tags_is_valid(["python", "ia"])
+    utils.tags_is_valid(["python", "ia"])
 
 
 def test_invalid_tags():
     with pytest.raises(ValueError):
-        tags_is_valid("python")
+        utils.tags_is_valid("python")
 
 
 def test_metadata_validation():
-    meta_is_valid({"lang": "python", "env": "production"})
+    utils.meta_is_valid({"lang": "python", "env": "production"})
 
 
 def test_invalid_metadata():
     with pytest.raises(ValueError):
-        meta_is_valid("python")
+        utils.meta_is_valid("python")

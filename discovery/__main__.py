@@ -2,7 +2,7 @@ from cleo import Application
 from dotenv import load_dotenv
 
 from discovery import __version__
-from discovery.cli.commands import CatalogCommand
+from discovery.commands import CatalogCommand
 
 load_dotenv()
 

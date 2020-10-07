@@ -35,3 +35,7 @@ class Engine(abc.ABC):
 
     async def post(self, *args, **kwargs):
         raise NotImplementedError
+
+    def __repr__(self):
+        *_, name = str(self.__class__).split(".")
+        return f"{name[:-2]}(host='{self._host}', port={self._port}, scheme='{self._scheme}')"

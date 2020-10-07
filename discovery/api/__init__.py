@@ -1,4 +1,3 @@
-# ACL
 from discovery.api.acl import Acl
 from discovery.api.agent import Agent
 from discovery.api.area import Area

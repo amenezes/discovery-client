@@ -12,8 +12,8 @@ class Api(abc.ABC):
         self.version = version
 
     def __repr__(self) -> str:
-        *_, name = str(self.__module__).split(".")
-        return f"{name.title()}(endpoint={self.url})"
+        *_, name = str(self.__class__).split(".")
+        return f"{name[:-2]}(endpoint={self.url})"
 
     @property
     def client(self) -> Engine:

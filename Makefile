@@ -4,8 +4,8 @@ DTYPE=server
 
 lint:
 	@echo "> running isort..."
-	isort -rc discovery
-	isort -rc tests
+	isort discovery
+	isort tests
 	@echo "> running black..."
 	black discovery
 	black tests

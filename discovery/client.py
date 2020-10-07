@@ -1,114 +1,112 @@
 import asyncio
 import json
+import os
 import pickle
 
-from discovery import log
-from discovery.abc import BaseClient
-from discovery.exceptions import NoConsulLeaderException, ServiceNotFoundException
-from discovery.model.agent.service import service
-from discovery.utils import select_one_rr
+from discovery import api, utils
+from discovery.engine.aiohttp import AIOHTTPEngine
+from discovery.exceptions import NoConsulLeaderException
 
 
-class Consul(BaseClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.managed_services = {}
-        self._leader_id = None
-        self.consul_current_leader_id = None
+class Consul:
+    def __init__(self, client=None, *args, **kwargs):
+        self.client = client or AIOHTTPEngine(*args, **kwargs)
+        self.catalog = api.Catalog(client=self.client)
+        self.config = api.Config(client=self.client)
+        self.coordinate = api.Coordinate(client=self.client)
+        self.events = api.Events(client=self.client)
+        self.health = api.Health(client=self.client)
+        self.kv = api.Kv(client=self.client)
+        self.query = api.Query(client=self.client)
+        self.session = api.Session(client=self.client)
+        self.snapshot = api.Snapshot(client=self.client)
+        self.status = api.Status(client=self.client)
+        self.txn = api.Txn(client=self.client)
+        self.agent = api.Agent(client=self.client)
+        self.connect = api.Connect(client=self.client)
+        self.acl = api.Acl(client=self.client)
+        self.operator = api.Operator(client=self.client)
+        self.timeout = int(os.getenv("DEFAULT_TIMEOUT", 30))
+        self.leader_active_id = None
 
-    async def find_service(self, name, fn=select_one_rr):
-        response = await self.find_services(name)
+    async def leader_ip(self):
+        response = await self.status.leader()
         try:
-            return fn(response)
+            current_leader = await response.json()
+            leader_ip, _ = current_leader.split(":")
         except Exception:
-            raise ServiceNotFoundException(
-                f"service {name} not found in the Consul's catalog"
-            )
+            raise NoConsulLeaderException("Error to identify Consul's leader.")
+        return leader_ip
 
-    async def find_services(self, name):
-        resp = await self.catalog.service(name)
-        response = await self._get_response(resp)
+    async def leader_id(self):
+        consul_leader_ip = await self.leader_ip()
+        consul_health_instances = await self.health.service("consul")
+        consul_health_instances = await consul_health_instances.json()
+        current_id = [
+            instance["Node"]["ID"]
+            for instance in consul_health_instances
+            if instance["Node"]["Address"] == consul_leader_ip
+        ]
+        try:
+            return current_id[0]
+        except Exception:
+            raise NoConsulLeaderException
+
+    async def find_services(self, name: str):
+        response = await self.catalog.service(name)
+        response = await response.json()
         return response
 
-    async def register(
-        self, service_name: str, service_port: int, check=None, dump_service=True
-    ) -> None:
-        svc = service(service_name, service_port, check=check)
+    async def find_service(self, name: str, fn=utils.select_one_rr):
+        response = await self.find_services(name)
+        return fn(response)
+
+    async def register(self, service, dump_service=True):
         try:
-            await self.agent.service.register(svc)
-            self.managed_services[json.loads(svc).get("id")] = {
-                "service_name": service_name,
-                "port": service_port,
-                "check": check,
-            }
-            self.consul_current_leader_id = await self.leader_current_id()
+            await self.agent.service.register(service)
+            self.leader_active_id = await self.leader_id()
             if dump_service:
-                self._dump_registered_service
+                with open(".service", "wb") as f:
+                    f.write(pickle.dumps(service))
         except Exception as err:
             raise err
 
-    def _dump_registered_service(self):
-        with open(".service", "wb") as f:
-            f.write(pickle.dumps(self.managed_services))
+    async def deregister(self, service):
+        service_id = json.loads(service)["id"]
+        await self.agent.service.deregister(service_id)
 
-    async def check_consul_health(self):
+    async def reconnect(self, service):
+        await self.deregister(service)
+        await self.register(service)
+
+    async def watch_connection(self, service):
         while True:
             try:
                 await asyncio.sleep(self.timeout)
-                current_id = await self.leader_current_id()
-                if current_id != self.consul_current_leader_id:
-                    await self.reconnect()
+                await self._remove_duplicate_services(service)
+                current_id = await self.leader_id()
+                if current_id != self.leader_active_id:
+                    await self.reconnect(service)
             except Exception:
                 await asyncio.sleep(self.timeout)
-                await self.check_consul_health()
+                await self.watch_connection(service)
 
-    async def reconnect(self):
-        old_service = self.managed_services.copy()
-        await self.deregister()
-        for key, value in old_service.items():
-            await self.register(
-                service_name=value.get("service_name"),
-                service_port=value.get("port"),
-                check=value.get("check"),
+    async def _remove_duplicate_services(self, service):
+        current_service = json.loads(service)
+        resp = await self.find_services(current_service["name"])
+        duplicate = [
+            self.deregister(
+                utils.service(
+                    name=registered_service["ServiceName"],
+                    port=registered_service["ServicePort"],
+                    service_id=registered_service["ServiceID"],
+                )
             )
-        log.info("Service successfully re-registered")
-
-    async def leader_current_id(self):
-        consul_leader = await self.leader_ip()
-        consul_instances = await self.consul_healthy_instances()
-
-        current_id = [
-            instance.get("Node").get("ID")
-            for instance in consul_instances
-            if instance.get("Node").get("Address") == consul_leader
+            for registered_service in resp
+            if (registered_service["ServiceAddress"] == current_service["address"])
+            and (registered_service["ServiceID"] != current_service["id"])
         ]
-        if current_id is not None:
-            current_id = current_id[0]
-        return current_id
+        await asyncio.gather(*duplicate)
 
-    async def leader_ip(self):
-        leader_response = await self.status.leader()
-        leader_response = await self._get_response(leader_response)
-        try:
-            consul_leader, _ = leader_response.split(":")
-        except ValueError:
-            raise NoConsulLeaderException("Error to identify Consul's leader.")
-        return consul_leader
-
-    async def consul_healthy_instances(self):
-        health_response = await self.health.service("consul")
-        consul_instances = await self._get_response(health_response)
-        return consul_instances
-
-    async def _get_response(self, resp):
-        try:
-            response = await resp.json()
-            return response
-        except Exception:
-            response = await resp.text()
-            return response
-
-    async def deregister(self) -> None:
-        for service_id in self.managed_services.keys():
-            await self.agent.service.deregister(service_id)
-        self.managed_services.clear()
+    def __repr__(self):
+        return f"Consul(timeout={self.timeout}, leader_active_id={self.leader_active_id}, engine={self.client})"

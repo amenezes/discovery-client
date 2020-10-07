@@ -125,7 +125,10 @@ async def test_delete(area, expected):
 @pytest.mark.parametrize("expected", [join_response()])
 async def test_join(area, expected):
     area.client.expected = expected
-    response = await area.join("8f246b77-f3e1-ff88-5b48-8ec93abf3e05", join_payload(),)
+    response = await area.join(
+        "8f246b77-f3e1-ff88-5b48-8ec93abf3e05",
+        join_payload(),
+    )
     response = await response.json()
     assert response == join_response()
 

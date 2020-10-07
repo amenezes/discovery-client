@@ -1,17 +1,17 @@
 # engines
-aiohttp==3.6.2
-httpx==0.12.0
+aiohttp
+httpx
 # dev dependencies
-mypy==0.770
-flake8==3.7.9
-pytest==5.4.1
-pytest-cov==2.8.1
-codecov==2.0.22
-pytest-asyncio==0.10.0
-pycodestyle==2.5.0
-isort==4.3.21
-black==19.10b0
-tox==3.14.5
-tox-asdf==0.1.0
+mypy
+flake8
+pytest
+pytest-cov
+codecov
+pytest-asyncio
+pycodestyle
+isort
+black
+tox
+tox-asdf
 # docs
-portray==1.3.1
+portray
