@@ -2,11 +2,8 @@ from discovery.engine.base_response import BaseResponse
 
 
 class HTTPXResponse(BaseResponse):
-    def __init__(self, response):
+    def __init__(self, response) -> None:
         self._response = response
-
-    def __repr__(self):
-        return f"Response(status={self.status}, url={self.url}, http_version={self.version})"
 
     @property
     def status(self) -> int:
@@ -35,5 +32,5 @@ class HTTPXResponse(BaseResponse):
     async def text(self):
         return self._response.text
 
-    async def content(self) -> bytes:
+    async def content(self, *args, **kwargs) -> bytes:
         return bytes(self._response.content)

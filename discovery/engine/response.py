@@ -1,12 +1,12 @@
 from discovery.engine.base_response import BaseResponse
 
 
-class Response:
-    def __init__(self, response: BaseResponse):
+class Response(BaseResponse):
+    def __init__(self, response: BaseResponse) -> None:
         self._strategy = response
 
     @property
-    def status(self):
+    def status(self) -> int:
         return self._strategy.status
 
     @property
@@ -33,6 +33,6 @@ class Response:
         resp = await self._strategy.text()
         return resp
 
-    async def content(self) -> bytes:
-        resp = await self._strategy.content()
+    async def content(self, *args, **kwargs) -> bytes:
+        resp = await self._strategy.content(*args, **kwargs)
         return resp

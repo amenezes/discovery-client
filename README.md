@@ -7,7 +7,7 @@
 
 # discovery-client
 
-async client [consul](https://consul.io).
+async client for [consul](https://consul.io).
 
 ## Installing
 
@@ -20,6 +20,6 @@ pip install -U discovery-client
 ## Links
 
 - License: [Apache License](https://choosealicense.com/licenses/apache-2.0/)
-- Code: https://github.com/amenezes/discovery-client
-- Issue tracker: https://github.com/amenezes/discovery-client/issues
-- Docs: https://discovery-client.amenezes.net
+- Code: [https://github.com/amenezes/discovery-client](https://github.com/amenezes/discovery-client)
+- Issue tracker: [https://github.com/amenezes/discovery-client/issues](https://github.com/amenezes/discovery-client/issues)
+- Docs: [https://discovery-client.amenezes.net](https://discovery-client.amenezes.net)

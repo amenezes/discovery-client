@@ -4,24 +4,17 @@
 
 ## client
 
-Using aiohttp client on the AioEngine. 
+Using aiohttp client on the AIOHTTPEngine. 
 
 ```python
-import asyncio
-from discovery import Consul, aiohttp_session
+from discovery.client import Consul
 
-loop = asyncio.get_event_loop()
-
-session = loop.run_until_complete(aiohttp_session())
-consul = Consul(session)
+consul = Consul()
 
 # query a service from catalog filtering by health status
-async def query(service_name):
-    resp = await consul.catalog.service('myapp')
-    resp = await resp.json()
-    return resp
-
-loop.run_until_complete(query('myapp'))
+resp = await consul.catalog.service('consul')
+resp = await resp.json()
+print(resp)
 ```
 
 ## aiohttp server + client
@@ -31,7 +24,7 @@ Using discovery-client to display some queries to Consul API.
 ```python
 from aiohttp import web
 
-from discovery import Consul, aiohttp_session
+from discovery import Consul
 
 
 app = web.Application()
@@ -39,8 +32,7 @@ routes = web.RouteTableDef()
 
 
 async def consul(app):
-    session = await aiohttp_session()
-    consul = Consul(session)
+    consul = Consul()
     app['consul'] = consul
 
 

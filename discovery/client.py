@@ -29,16 +29,16 @@ class Consul:
         self.timeout = int(os.getenv("DEFAULT_TIMEOUT", 30))
         self.leader_active_id = None
 
-    async def leader_ip(self):
+    async def leader_ip(self) -> str:
         response = await self.status.leader()
         try:
             current_leader = await response.json()
             leader_ip, _ = current_leader.split(":")
         except Exception:
             raise NoConsulLeaderException("Error to identify Consul's leader.")
-        return leader_ip
+        return str(leader_ip)
 
-    async def leader_id(self):
+    async def leader_id(self) -> str:
         consul_leader_ip = await self.leader_ip()
         consul_health_instances = await self.health.service("consul")
         consul_health_instances = await consul_health_instances.json()
@@ -48,20 +48,20 @@ class Consul:
             if instance["Node"]["Address"] == consul_leader_ip
         ]
         try:
-            return current_id[0]
+            return str(current_id[0])
         except Exception:
             raise NoConsulLeaderException
 
-    async def find_services(self, name: str):
+    async def find_services(self, name: str) -> dict:
         response = await self.catalog.service(name)
-        response = await response.json()
-        return response
+        resp: dict = await response.json()
+        return resp
 
-    async def find_service(self, name: str, fn=utils.select_one_rr):
+    async def find_service(self, name: str, fn=utils.select_one_rr) -> list:
         response = await self.find_services(name)
-        return fn(response)
+        return fn(response)  # type: ignore
 
-    async def register(self, service, dump_service=True):
+    async def register(self, service, dump_service=True) -> None:
         try:
             await self.agent.service.register(service)
             self.leader_active_id = await self.leader_id()
@@ -71,19 +71,18 @@ class Consul:
         except Exception as err:
             raise err
 
-    async def deregister(self, service):
+    async def deregister(self, service) -> None:
         service_id = json.loads(service)["id"]
         await self.agent.service.deregister(service_id)
 
-    async def reconnect(self, service):
+    async def reconnect(self, service) -> None:
         await self.deregister(service)
         await self.register(service)
 
-    async def watch_connection(self, service):
+    async def watch_connection(self, service) -> None:
         while True:
             try:
                 await asyncio.sleep(self.timeout)
-                await self._remove_duplicate_services(service)
                 current_id = await self.leader_id()
                 if current_id != self.leader_active_id:
                     await self.reconnect(service)
@@ -91,22 +90,5 @@ class Consul:
                 await asyncio.sleep(self.timeout)
                 await self.watch_connection(service)
 
-    async def _remove_duplicate_services(self, service):
-        current_service = json.loads(service)
-        resp = await self.find_services(current_service["name"])
-        duplicate = [
-            self.deregister(
-                utils.service(
-                    name=registered_service["ServiceName"],
-                    port=registered_service["ServicePort"],
-                    service_id=registered_service["ServiceID"],
-                )
-            )
-            for registered_service in resp
-            if (registered_service["ServiceAddress"] == current_service["address"])
-            and (registered_service["ServiceID"] != current_service["id"])
-        ]
-        await asyncio.gather(*duplicate)
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Consul(timeout={self.timeout}, leader_active_id={self.leader_active_id}, engine={self.client})"

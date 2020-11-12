@@ -2,7 +2,7 @@ from discovery.api.abc import Api
 
 
 class Token(Api):
-    def __init__(self, endpoint: str = "/acl/token", **kwargs):
+    def __init__(self, endpoint: str = "/acl/token", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
     async def create(self, data, **kwargs):
@@ -13,11 +13,11 @@ class Token(Api):
         response = await self.client.get(f"{self.url}/{role_id}", **kwargs)
         return response
 
-    async def read_by_name(self, name, **kwargs):
+    async def read_by_name(self, name: str, **kwargs):
         response = await self.client.get(f"{self.url}/name/{name}", **kwargs)
         return response
 
-    async def details(self, headers={}):
+    async def details(self, headers: dict = {}):
         response = await self.client.get(f"{self.url}/self", headers=headers)
         return response
 

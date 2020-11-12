@@ -2,11 +2,8 @@ from discovery.engine.base_response import BaseResponse
 
 
 class AIOHTTPResponse(BaseResponse):
-    def __init__(self, response):
+    def __init__(self, response) -> None:
         self._response = response
-
-    def __repr__(self):
-        return f"Response(status={self.status}, url={self.url}, http_version={self.version})"
 
     @property
     def status(self) -> int:
@@ -37,6 +34,6 @@ class AIOHTTPResponse(BaseResponse):
         response = await self._response.text()
         return response
 
-    async def content(self) -> bytes:
-        response = await self._response.content.read()
-        return bytes(response)
+    async def content(self, *args, **kwargs) -> bytes:
+        response: bytes = await self._response.content.read(*args, **kwargs)
+        return response

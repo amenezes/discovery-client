@@ -13,7 +13,7 @@ class Operator(Api):
         segment=None,
         endpoint: str = "/operator",
         **kwargs
-    ):
+    ) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
         self.area = area or api.Area(client=self.client)
         self.autopilot = autopilot or api.AutoPilot(client=self.client)

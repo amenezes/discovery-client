@@ -1,38 +1,47 @@
 from discovery.api.abc import Api
+from discovery.engine.response import Response
 
 
 class Catalog(Api):
-    def __init__(self, endpoint: str = "/catalog", **kwargs):
+    def __init__(self, endpoint: str = "/catalog", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def register(self, data: dict, **kwargs):
-        response = await self.client.put(f"{self.url}/register", data=data, **kwargs)
+    async def register(self, data: dict, **kwargs) -> Response:
+        response: Response = await self.client.put(
+            f"{self.url}/register", data=data, **kwargs
+        )
         return response
 
-    async def deregister(self, data, **kwargs):
-        response = await self.client.put(f"{self.url}/deregister", **kwargs, data=data)
+    async def deregister(self, data, **kwargs) -> Response:
+        response: Response = await self.client.put(
+            f"{self.url}/deregister", **kwargs, data=data
+        )
         return response
 
-    async def datacenters(self, **kwargs):
-        response = await self.client.get(f"{self.url}/datacenters", **kwargs)
+    async def datacenters(self, **kwargs) -> Response:
+        response: Response = await self.client.get(f"{self.url}/datacenters", **kwargs)
         return response
 
-    async def nodes(self, **kwargs):
-        response = await self.client.get(f"{self.url}/nodes", **kwargs)
+    async def nodes(self, **kwargs) -> Response:
+        response: Response = await self.client.get(f"{self.url}/nodes", **kwargs)
         return response
 
-    async def services(self, **kwargs):
-        response = await self.client.get(f"{self.url}/services", **kwargs)
+    async def services(self, **kwargs) -> Response:
+        response: Response = await self.client.get(f"{self.url}/services", **kwargs)
         return response
 
-    async def service(self, name, **kwargs):
-        response = await self.client.get(f"{self.url}/service/{name}", **kwargs)
+    async def service(self, name, **kwargs) -> Response:
+        response: Response = await self.client.get(
+            f"{self.url}/service/{name}", **kwargs
+        )
         return response
 
-    async def connect(self, service, **kwargs):
-        response = await self.client.get(f"{self.url}/connect/{service}", **kwargs)
+    async def connect(self, service, **kwargs) -> Response:
+        response: Response = await self.client.get(
+            f"{self.url}/connect/{service}", **kwargs
+        )
         return response
 
-    async def node(self, node, **kwargs):
-        response = await self.client.get(f"{self.url}/node/{node}", **kwargs)
+    async def node(self, node, **kwargs) -> Response:
+        response: Response = await self.client.get(f"{self.url}/node/{node}", **kwargs)
         return response

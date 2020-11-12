@@ -8,3 +8,7 @@ class ClientOperationException(Exception):
 
 class NoConsulLeaderException(Exception):
     pass
+
+
+class KeyNotFoundException(Exception):
+    pass

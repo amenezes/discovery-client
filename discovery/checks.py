@@ -1,8 +1,11 @@
 import json
+from typing import Optional
 from uuid import uuid4
 
 
-def script(args, name=None, interval="10s", timeout="5s"):
+def script(
+    args: str, name: Optional[str] = None, interval: str = "10s", timeout: str = "5s"
+) -> str:
     script_id = f"script-{uuid4().hex}"
     name = name or script_id
     return json.dumps(
@@ -13,14 +16,14 @@ def script(args, name=None, interval="10s", timeout="5s"):
 def http(
     url,
     name=None,
-    tls_skip_verify=True,
-    method="GET",
-    header={},
-    body="",
-    interval="10s",
-    timeout="5s",
-    deregister_after="1m",
-):
+    tls_skip_verify: bool = True,
+    method: str = "GET",
+    header: dict = {},
+    body: str = "",
+    interval: str = "10s",
+    timeout: str = "5s",
+    deregister_after: str = "1m",
+) -> str:
     http_id = f"http-{uuid4().hex}"
     name = name or http_id
     return json.dumps(
@@ -38,7 +41,9 @@ def http(
     )
 
 
-def tcp(tcp, name=None, interval="10s", timeout="5s"):
+def tcp(
+    tcp, name: Optional[str] = None, interval: str = "10s", timeout: str = "5s"
+) -> str:
     tcp_id = f"tcp-{uuid4().hex}"
     name = name or tcp_id
     return json.dumps(
@@ -46,13 +51,19 @@ def tcp(tcp, name=None, interval="10s", timeout="5s"):
     )
 
 
-def ttl(notes, name=None, ttl="30s"):
+def ttl(notes: str, name: Optional[str] = None, ttl: str = "30s") -> str:
     ttl_id = f"ttl-{uuid4().hex}"
     name = name or ttl_id
     return json.dumps({"notes": notes, "ttl": ttl, "name": name})
 
 
-def docker(container_id, args, shell=None, name=None, interval="10s"):
+def docker(
+    container_id: str,
+    args: str,
+    shell: Optional[str] = None,
+    name: Optional[str] = None,
+    interval: str = "10s",
+) -> str:
     docker_id = f"docker-{uuid4().hex}"
     name = name or docker_id
     return json.dumps(
@@ -66,7 +77,9 @@ def docker(container_id, args, shell=None, name=None, interval="10s"):
     )
 
 
-def grpc(grpc, name=None, tls=True, interval="10s"):
+def grpc(
+    grpc: str, name: Optional[str] = None, tls: bool = True, interval: str = "10s"
+) -> str:
     grpc_id = f"grpc-{uuid4().hex}"
     name = name or grpc_id
     return json.dumps(
@@ -74,7 +87,7 @@ def grpc(grpc, name=None, tls=True, interval="10s"):
     )
 
 
-def alias(service_id, alias_service, name=None):
+def alias(service_id: str, alias_service: str, name: Optional[str] = None) -> str:
     """Consul's alias check.
 
     alias_service: backend

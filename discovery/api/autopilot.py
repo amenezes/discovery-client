@@ -1,20 +1,23 @@
 from discovery.api.abc import Api
+from discovery.engine.response import Response
 
 
 class AutoPilot(Api):
-    def __init__(self, endpoint: str = "/operator/autopilot", **kwargs):
+    def __init__(self, endpoint: str = "/operator/autopilot", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def read_configuration(self, **kwargs):
-        response = await self.client.get(f"{self.url}/configuration", **kwargs)
+    async def read_configuration(self, **kwargs) -> Response:
+        response: Response = await self.client.get(
+            f"{self.url}/configuration", **kwargs
+        )
         return response
 
-    async def update_configuration(self, data, **kwargs):
-        response = await self.client.put(
+    async def update_configuration(self, data, **kwargs) -> Response:
+        response: Response = await self.client.put(
             f"{self.url}/configuration", data=data, **kwargs
         )
         return response
 
-    async def read_health(self, **kwargs):
-        response = await self.client.get(f"{self.url}/health", **kwargs)
+    async def read_health(self, **kwargs) -> Response:
+        response: Response = await self.client.get(f"{self.url}/health", **kwargs)
         return response

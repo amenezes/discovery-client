@@ -26,12 +26,12 @@ setuptools.setup(
         ('Issue tracker', 'https://github.com/amenezes/discovery-client/issues')
     )),
     install_requires=[
-        "aiohttp<=3.6.2"
+        "aiohttp>=3.6.2"
     ],
     extras_require={
-        "aio": ["aiohttp<=3.6.2"],
-        "cli": ["cleo"],
-        "all": ["aiohttp<=3.6.2", "cleo"],
+        "aio": ["aiohttp>=3.6.2"],
+        "cli": ["cleo>=0.7.6"],
+        "all": ["aiohttp>=3.6.2", "cleo>=0.7.6"],
     },
     setup_requires=["setuptools>=38.6.0"],
     entry_points={"console_scripts": ["discovery=discovery.__main__:application.run [cli]"]},
@@ -40,6 +40,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Framework :: AsyncIO",
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

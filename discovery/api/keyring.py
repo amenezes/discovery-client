@@ -1,22 +1,25 @@
 from discovery.api.abc import Api
+from discovery.engine.response import Response
 
 
 class Keyring(Api):
-    def __init__(self, endpoint: str = "/operator/keyring", **kwargs):
+    def __init__(self, endpoint: str = "/operator/keyring", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def list(self, **kwargs):
-        response = await self.client.get(f"{self.url}", **kwargs)
+    async def list(self, **kwargs) -> Response:
+        response: Response = await self.client.get(f"{self.url}", **kwargs)
         return response
 
-    async def add(self, data, **kwargs):
-        response = await self.client.post(f"{self.url}", data=data, **kwargs)
+    async def add(self, data, **kwargs) -> Response:
+        response: Response = await self.client.post(f"{self.url}", data=data, **kwargs)
         return response
 
-    async def change(self, data, **kwargs):
-        response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def change(self, data, **kwargs) -> Response:
+        response: Response = await self.client.put(f"{self.url}", data=data, **kwargs)
         return response
 
-    async def delete(self, data, **kwargs):
-        response = await self.client.delete(f"{self.url}", data=data, **kwargs)
+    async def delete(self, data, **kwargs) -> Response:
+        response: Response = await self.client.delete(
+            f"{self.url}", data=data, **kwargs
+        )
         return response
