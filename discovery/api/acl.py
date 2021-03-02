@@ -1,3 +1,5 @@
+import json
+
 from discovery import api, logging
 from discovery.api.abc import Api
 from discovery.engine.response import Response
@@ -29,7 +31,7 @@ class Acl(Api):
         response: Response = await self.client.get(f"{self.url}/replication", **kwargs)
         return response
 
-    async def translate(self, data, **kwargs) -> Response:
+    async def translate(self, data, dumps=json.dumps, **kwargs) -> Response:
         logging.warning(
             "Deprecated - This endpoint was introduced in Consul 1.4.0 "
             "for migration from the previous ACL system. "
@@ -37,6 +39,6 @@ class Acl(Api):
             "version when support for legacy ACLs is removed."
         )
         response: Response = await self.client.post(
-            f"{self.url}/rules/translate", data=data, **kwargs
+            f"{self.url}/rules/translate", data=dumps(data), **kwargs
         )
         return response

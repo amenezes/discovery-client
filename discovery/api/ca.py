@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -16,8 +18,8 @@ class CA(Api):
         )
         return response
 
-    async def update(self, data, **kwargs) -> Response:
+    async def update(self, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/configuration", data=data, **kwargs
+            f"{self.url}/configuration", data=dumps(data), **kwargs
         )
         return response

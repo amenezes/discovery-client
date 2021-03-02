@@ -1,3 +1,11 @@
 from discovery.engine.abc import Engine
-from discovery.engine.aiohttp import AIOHTTPEngine
-from discovery.engine.httpx import HTTPXEngine
+
+try:
+    from discovery.engine.aiohttp import AIOHTTPEngine
+except ImportError:
+    aiohttp = None
+
+try:
+    from discovery.engine.httpx import HTTPXEngine
+except ImportError:
+    httpx = None

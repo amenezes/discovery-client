@@ -4,7 +4,9 @@ from discovery.engine.abc import Engine
 
 
 class CustomEngine(Engine):
-    pass
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args)
+        self._session_kwargs = kwargs
 
 
 @pytest.fixture

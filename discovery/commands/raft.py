@@ -2,6 +2,9 @@ import asyncio
 import json
 
 from cleo import Command
+from pygments import highlight
+from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers import JsonLexer
 
 from discovery.client import Consul
 
@@ -24,7 +27,9 @@ class RaftCommand(Command):
                     consul.operator.raft.read_configuration()
                 )
                 resp = loop.run_until_complete(resp.json())
-                self.line(f"{json.dumps(resp, indent=4, sort_keys=True)}")
+                self.line(
+                    f"{highlight(json.dumps(resp, indent=4, sort_keys=True), JsonLexer(), TerminalFormatter())}"
+                )
             elif self.option("delete"):
                 resp = loop.run_until_complete(consul.operator.raft.delete_peer())
                 resp = loop.run_until_complete(resp.json())

@@ -7,7 +7,7 @@ from discovery.engine.response import Response
 @pytest.fixture
 async def response(consul):
     resp = await consul.client.get("https://httpbin.org/json")
-    return resp
+    yield resp
 
 
 def test_resp_instance(response):
@@ -26,6 +26,7 @@ def test_content_type(response):
     assert response.content_type == "application/json"
 
 
+@pytest.mark.asyncio
 async def test_version(response):
     assert response.version == "1.1"
 

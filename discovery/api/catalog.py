@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -6,15 +8,15 @@ class Catalog(Api):
     def __init__(self, endpoint: str = "/catalog", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def register(self, data: dict, **kwargs) -> Response:
+    async def register(self, data: dict, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/register", data=data, **kwargs
+            f"{self.url}/register", data=dumps(data), **kwargs
         )
         return response
 
-    async def deregister(self, data, **kwargs) -> Response:
+    async def deregister(self, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/deregister", **kwargs, data=data
+            f"{self.url}/deregister", **kwargs, data=dumps(data)
         )
         return response
 

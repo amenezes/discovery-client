@@ -1,9 +1,8 @@
 import asyncio
-import json
 import os
 import pickle
 
-from discovery import api, utils
+from discovery import api, log, utils
 from discovery.engine.aiohttp import AIOHTTPEngine
 from discovery.exceptions import NoConsulLeaderException
 
@@ -26,8 +25,8 @@ class Consul:
         self.connect = api.Connect(client=self.client)
         self.acl = api.Acl(client=self.client)
         self.operator = api.Operator(client=self.client)
-        self.timeout = int(os.getenv("DEFAULT_TIMEOUT", 30))
-        self.leader_active_id = None
+        self.timeout = float(os.getenv("DEFAULT_TIMEOUT", 30))
+        self._leader_id = None
 
     async def leader_ip(self) -> str:
         response = await self.status.leader()
@@ -64,7 +63,7 @@ class Consul:
     async def register(self, service, dump_service=True) -> None:
         try:
             await self.agent.service.register(service)
-            self.leader_active_id = await self.leader_id()
+            self._leader_id = await self.leader_id()
             if dump_service:
                 with open(".service", "wb") as f:
                     f.write(pickle.dumps(service))
@@ -72,8 +71,7 @@ class Consul:
             raise err
 
     async def deregister(self, service) -> None:
-        service_id = json.loads(service)["id"]
-        await self.agent.service.deregister(service_id)
+        await self.agent.service.deregister(service["id"])
 
     async def reconnect(self, service) -> None:
         await self.deregister(service)
@@ -84,11 +82,13 @@ class Consul:
             try:
                 await asyncio.sleep(self.timeout)
                 current_id = await self.leader_id()
-                if current_id != self.leader_active_id:
+                if current_id != self._leader_id:
                     await self.reconnect(service)
             except Exception:
-                await asyncio.sleep(self.timeout)
+                log.error(
+                    f"Failed to connect to Consul. Trying a new connection in {self.timeout} seconds."
+                )
                 await self.watch_connection(service)
 
     def __repr__(self) -> str:
-        return f"Consul(timeout={self.timeout}, leader_active_id={self.leader_active_id}, engine={self.client})"
+        return f"Consul(timeout={self.timeout}, leader_id={self._leader_id}, engine={self.client})"

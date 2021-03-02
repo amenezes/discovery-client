@@ -1,10 +1,11 @@
 import collections
-import json
 import random
 import socket
 import uuid
 from functools import singledispatch
-from typing import Optional
+from typing import List, Optional
+
+from discovery import exceptions
 
 
 class _InnerServices:
@@ -16,7 +17,12 @@ class _InnerServices:
             self.services.update({key: collections.deque(value)})
 
     def get(self, value):
-        return self.services.get(value).popleft()
+        try:
+            return self.services.get(value).popleft()
+        except IndexError:
+            raise exceptions.ServiceNotFoundException(
+                "Service not found in the Consul's catalog."
+            )
 
 
 rr_services = _InnerServices()
@@ -36,14 +42,16 @@ def select_one_rr(services: str):
 def service(
     name: str,
     port: int,
-    dc: str = "",
     service_id: Optional[str] = None,
     address: Optional[str] = None,
-    tags: Optional[list] = None,
+    tags: Optional[List[str]] = None,
     meta: Optional[dict] = None,
-    namespace: str = "default",
-    check: Optional[str] = None,
-) -> str:
+    proxy: Optional[str] = None,
+    connect: Optional[str] = None,
+    enable_tag_override: bool = False,
+    weights: Optional[dict] = None,
+    check: Optional[dict] = None,
+) -> dict:
     service_id = service_id or f"{name}-{uuid.uuid4().hex}"
     address = address or f"{socket.gethostbyname(socket.gethostname())}"
     meta = meta or {}
@@ -57,10 +65,12 @@ def service(
         "port": port,
         "tags": tags,
         "meta": meta,
+        "EnableTagOverride": enable_tag_override,
+        "Weights": weights,
     }
     if check:
         response.update(register_check(check))
-    return json.dumps(response)
+    return response
 
 
 def tags_is_valid(tags: Optional[list]) -> bool:
@@ -77,13 +87,9 @@ def meta_is_valid(meta: Optional[dict]) -> bool:
 
 @singledispatch
 def register_check(check) -> dict:
-    response = {"check": json.loads(check)}
-    return response
+    return {"check": check}
 
 
 @register_check.register(list)
 def _(check) -> dict:
-    response: dict = {"checks": []}
-    for chk in check:
-        response["checks"].append(json.loads(chk))
-    return response
+    return {"checks": check}

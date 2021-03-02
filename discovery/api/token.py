@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 
 
@@ -5,8 +7,8 @@ class Token(Api):
     def __init__(self, endpoint: str = "/acl/token", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def create(self, data, **kwargs):
-        response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def create(self, data, dumps=json.dumps, **kwargs):
+        response = await self.client.put(f"{self.url}", data=dumps(data), **kwargs)
         return response
 
     async def read_by_id(self, role_id, **kwargs):
@@ -25,8 +27,10 @@ class Token(Api):
         response = await self.client.put(f"{self.url}/{accessor_id}/clone", **kwargs)
         return response
 
-    async def update(self, role_id, data, **kwargs):
-        response = await self.client.put(f"{self.url}/{role_id}", data=data, **kwargs)
+    async def update(self, role_id, data, dumps=json.dumps, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/{role_id}", data=dumps(data), **kwargs
+        )
         return response
 
     async def delete(self, role_id, **kwargs):

@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -14,8 +16,10 @@ class Config(Api):
             )
         return True
 
-    async def apply(self, data, **kwargs) -> Response:
-        response: Response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def apply(self, data, dumps=json.dumps, **kwargs) -> Response:
+        response: Response = await self.client.put(
+            f"{self.url}", data=dumps(data), **kwargs
+        )
         return response
 
     async def get(self, kind, name, **kwargs) -> Response:

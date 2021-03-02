@@ -1,5 +1,6 @@
 import abc
 import os
+from functools import cached_property
 
 
 class Engine(abc.ABC):
@@ -20,7 +21,7 @@ class Engine(abc.ABC):
     def scheme(self) -> str:
         return self._scheme
 
-    @property
+    @cached_property
     def url(self) -> str:
         return f"{self.scheme}://{self.host}:{self.port}"
 
@@ -38,4 +39,6 @@ class Engine(abc.ABC):
 
     def __repr__(self) -> str:
         *_, name = str(self.__class__).split(".")
-        return f"{name[:-2]}(host='{self._host}', port={self._port}, scheme='{self._scheme}')"
+        return (
+            f"{name[:-2]}(host='{self.host}', port={self.port}, scheme='{self.scheme}')"
+        )

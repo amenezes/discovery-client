@@ -1,58 +1,47 @@
-import json
-
 import pytest
 
-from discovery import checks, utils
+from discovery import check, service, utils
 
 
 def test_service_with_check():
-    resp = utils.service(
-        "myapp", 5000, check=checks.http("http://localhost:5000/health")
-    )
-    resp = json.loads(resp)
-    assert tuple(["name", "id", "address", "port", "tags", "meta", "check"]) == tuple(
-        resp
-    )
+    resp = service("myapp", 5000, check=check.http("http://localhost:5000/health"))
+    assert resp["check"] is not None
 
 
 def test_service_with_multi_check():
-    resp = utils.service(
+    resp = service(
         "myapp",
         5000,
         check=[
-            checks.http("http://localhost:5000/health"),
-            checks.tcp("localhost:22"),
+            check.http("http://localhost:5000/health"),
+            check.tcp("localhost:22"),
         ],
     )
-    assert tuple(["name", "id", "address", "port", "tags", "meta", "checks"]) == tuple(
-        json.loads(resp)
-    )
+    assert len(resp["checks"]) == 2
 
 
 def test_create_service_without_check():
-    resp = utils.service("myapp2", 5001)
+    resp = service("myapp2", 5001)
     assert "check" not in resp
 
 
-def test_json():
-    resp = utils.service("myapp2", 5001)
-    assert tuple(["name", "id", "address", "port", "tags", "meta"]) == tuple(
-        json.loads(resp)
-    )
+def test_service_return():
+    resp = service("myapp2", 5001)
+    assert isinstance(resp, dict)
 
 
 def test_alias_check():
-    resp = checks.alias("myapp", "other_service_id")
-    assert tuple(["name", "service_id", "aliasservice"]) == tuple(json.loads(resp))
+    resp = check.alias("myapp", "other_service_id")
+    assert tuple(["name", "service_id", "aliasservice"]) == tuple(resp)
 
 
 def test_script_check():
-    resp = checks.script(["/usr/local/bin/check_mem.py", "-limit", "256MB"])
-    assert tuple(["args", "interval", "timeout", "name"]) == tuple(json.loads(resp))
+    resp = check.script(["/usr/local/bin/check_mem.py", "-limit", "256MB"])
+    assert tuple(["args", "interval", "timeout", "name"]) == tuple(resp)
 
 
 def test_http_check():
-    resp = checks.http("http://localhost:5000/manage/health")
+    resp = check.http("http://localhost:5000/manage/health")
     assert (
         tuple(
             [
@@ -67,34 +56,32 @@ def test_http_check():
                 "name",
             ]
         )
-        == tuple(json.loads(resp))
+        == tuple(resp)
     )
 
 
 def test_tcp_check():
-    resp = checks.tcp("localhost:22")
-    assert tuple(["tcp", "interval", "timeout", "name"]) == tuple(json.loads(resp))
+    resp = check.tcp("localhost:22")
+    assert tuple(["tcp", "interval", "timeout", "name"]) == tuple(resp)
 
 
 def test_ttl_check():
-    resp = checks.ttl("my custom ttl", "30s")
-    assert tuple(["notes", "ttl", "name"]) == tuple(json.loads(resp))
+    resp = check.ttl("my custom ttl", "30s")
+    assert tuple(["notes", "ttl", "name"]) == tuple(resp)
 
 
 def test_docker_check():
-    resp = checks.docker(
+    resp = check.docker(
         container_id="f972c95ebf0e", args=["/usr/local/bin/check_mem.py"]
     )
     assert tuple(["docker_container_id", "shell", "args", "interval", "name"]) == tuple(
-        json.loads(resp).keys()
+        resp.keys()
     )
 
 
 def test_grpc_check():
-    resp = checks.grpc("127.0.0.1:12345")
-    assert tuple(["grpc", "grpc_use_tls", "interval", "name"]) == tuple(
-        json.loads(resp)
-    )
+    resp = check.grpc("127.0.0.1:12345")
+    assert tuple(["grpc", "grpc_use_tls", "interval", "name"]) == tuple(resp)
 
 
 def test_tags_validation():

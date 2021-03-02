@@ -34,7 +34,7 @@ def test_url(consul):
 def test_repr(consul):
     assert (
         str(consul)
-        == "Consul(timeout=30, leader_active_id=None, engine=AIOHTTPEngine(host='localhost', port=8500, scheme='http'))"
+        == "Consul(timeout=30.0, leader_id=None, engine=AIOHTTPEngine(host='localhost', port=8500, scheme='http'))"
     )
 
 

@@ -1,7 +1,4 @@
-# engines
-aiohttp
-httpx
-# dev dependencies
+-r requirements.txt
 mypy
 flake8
 pytest
@@ -13,5 +10,3 @@ isort
 black
 tox
 tox-asdf
-# docs
-portray

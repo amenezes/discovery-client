@@ -10,17 +10,15 @@ async def snapshot(consul_api):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_generate(snapshot, expected):
-    snapshot.client.expected = expected
+async def test_generate(snapshot):
+    snapshot.client.expected = 200
     response = await snapshot.generate()
     assert response.status == 200
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_restore(snapshot, expected):
-    snapshot.client.expected = expected
+async def test_restore(snapshot):
+    snapshot.client.expected = 200
     snap = await snapshot.generate()
     data = await snap.content()
     response = await snapshot.restore(data=data)

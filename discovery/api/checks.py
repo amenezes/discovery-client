@@ -12,9 +12,9 @@ class Checks(Api):
         response: Response = await self.client.get(f"{self.url}s", **kwargs)
         return response
 
-    async def register(self, data, **kwargs) -> Response:
+    async def register(self, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/register", data=data, **kwargs
+            f"{self.url}/register", data=dumps(data), **kwargs
         )
         return response
 

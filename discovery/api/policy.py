@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -6,17 +8,19 @@ class Policy(Api):
     def __init__(self, endpoint: str = "/acl/policy", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def create(self, data, **kwargs) -> Response:
-        response: Response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def create(self, data, dumps=json.dumps, **kwargs) -> Response:
+        response: Response = await self.client.put(
+            f"{self.url}", data=dumps(data), **kwargs
+        )
         return response
 
     async def read(self, policy_id, **kwargs) -> Response:
         response: Response = await self.client.get(f"{self.url}/{policy_id}", **kwargs)
         return response
 
-    async def update(self, policy_id, data, **kwargs) -> Response:
+    async def update(self, policy_id, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/{policy_id}", data=data, **kwargs
+            f"{self.url}/{policy_id}", data=dumps(data), **kwargs
         )
         return response
 

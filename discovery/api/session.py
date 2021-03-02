@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 
 
@@ -5,8 +7,10 @@ class Session(Api):
     def __init__(self, endpoint: str = "/session", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def create(self, data, **kwargs):
-        response = await self.client.put(f"{self.url}/create", data=data, **kwargs)
+    async def create(self, data, dumps=json.dumps, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/create", data=dumps(data), **kwargs
+        )
         return response
 
     async def delete(self, uuid: str, **kwargs):

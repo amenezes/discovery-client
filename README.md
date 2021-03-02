@@ -13,8 +13,16 @@ async client for [consul](https://consul.io).
 
 Install and update using pip:
 
+### aiohttp client
+
 ````bash
 pip install -U discovery-client
+````
+
+### httpx client
+
+````bash
+pip install -U discovery-client[httpx]
 ````
 
 ## Links

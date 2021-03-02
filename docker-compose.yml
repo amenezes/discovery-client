@@ -8,13 +8,6 @@ services:
       - 8600:8600/tcp
       - 8600:8600/udp
       - 8300:8300
-        #  client:
-        #    image: consul
-        #    container_name: consul_client
-        #    ports:
-        #      - 8500:8500
-        #      - 8600:8600/tcp
-        #      - 8600:8600/udp
-        #      #- 8501:8501 # HTTP off by default
-        #      - 8502:8502
-        #
+    extra_hosts:
+      - "aio-client:<your-ip-here>"
+      - "httpx-client:<your-ip-here>"

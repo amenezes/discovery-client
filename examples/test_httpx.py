@@ -4,6 +4,7 @@ import logging
 from aiohttp import web
 
 from discovery.client import Consul
+from discovery.engine import HTTPXEngine
 from discovery import service, check
 
 
@@ -46,12 +47,14 @@ async def shutdown_server(app):
 
 logging.basicConfig(level=logging.INFO)
 app = web.Application()
-dc = Consul()
+dc = Consul(client=HTTPXEngine())
 app["service"] = service(
-    "aio-client",
+    "httpx-client",
     5000,
-    check=check.http("http://aio-client:8080/manage/health"),
-    service_id="aio-client-test-service",
+    check=[
+        check.http("http://httpx-client:5000/manage/health"),
+        check.alias("aio-client", "aio-client-test-service"),
+    ],
 )
 
 app.on_startup.append(service_discovery)
@@ -64,4 +67,4 @@ app.add_routes(
         web.get("/service/{service_name}", handle_service),
     ]
 )
-web.run_app(app, host="0.0.0.0", port=8080)
+web.run_app(app, host="0.0.0.0", port=5000)

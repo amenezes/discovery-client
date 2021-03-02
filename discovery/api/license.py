@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -10,8 +12,10 @@ class License(Api):
         resp: Response = await self.client.get(f"{self.url}", **kwargs)
         return resp
 
-    async def update(self, data, **kwargs) -> Response:
-        resp: Response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def update(self, data, dumps=json.dumps, **kwargs) -> Response:
+        resp: Response = await self.client.put(
+            f"{self.url}", data=dumps(data), **kwargs
+        )
         return resp
 
     async def reset(self, **kwargs) -> Response:

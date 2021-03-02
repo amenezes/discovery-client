@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -18,8 +20,8 @@ class Coordinate(Api):
         response: Response = await self.client.get(f"{self.url}/node/{node}", **kwargs)
         return response
 
-    async def update_lan_node(self, data, **kwargs) -> Response:
+    async def update_lan_node(self, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/update", data=data, **kwargs
+            f"{self.url}/update", data=dumps(data), **kwargs
         )
         return response

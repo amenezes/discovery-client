@@ -1,4 +1,5 @@
 import base64
+import json
 
 from discovery.api.abc import Api
 from discovery.engine.response import Response
@@ -9,10 +10,10 @@ class Kv(Api):
     def __init__(self, endpoint: str = "/kv", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def create(self, key, data, **kwargs) -> Response:
+    async def create(self, key, data, dumps=json.dumps, **kwargs) -> Response:
         """Create/Update key."""
         response: Response = await self.client.put(
-            f"{self.url}/{key}", data=data, **kwargs
+            f"{self.url}/{key}", data=dumps(data), **kwargs
         )
         return response
 

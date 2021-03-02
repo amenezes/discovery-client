@@ -1,6 +1,10 @@
 import asyncio
+import json
 
 from cleo import Command
+from pygments import highlight
+from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers import JsonLexer
 
 from discovery.client import Consul
 
@@ -10,10 +14,10 @@ class HealthCommand(Command):
     Health API
 
     health
-        {--n|node : List checks for node.}
-        {--s|service : List checks for service.}
-        {--o|nodes : List nodes for service}
-        {--a|state : List checks in state.}
+        {option : node or service name}
+        {--node : node name.}
+        {--service : service name.}
+        {--state : state name.}
     """
 
     def handle(self):
@@ -21,16 +25,23 @@ class HealthCommand(Command):
         consul = Consul()
         try:
             if self.option("node"):
-                resp = loop.run_until_complete(consul.health.node())
+                resp = loop.run_until_complete(
+                    consul.health.node(self.argument("option"))
+                )
                 resp = loop.run_until_complete(resp.json())
-                self.line(f"{resp}")
-            elif self.option("peers"):
-                resp = loop.run_until_complete(consul.health.service())
+            elif self.option("service"):
+                resp = loop.run_until_complete(
+                    consul.health.service(self.argument("option"))
+                )
                 resp = loop.run_until_complete(resp.json())
-                self.line(f"{resp}")
             elif self.option("state"):
-                pass
-            elif self.option("checks"):
-                pass
+                resp = loop.run_until_complete(
+                    consul.health.state(self.argument("option"))
+                )
+                resp = loop.run_until_complete(resp.json())
         except Exception:
             self.line("<error>[!]</error> Falha ao realizar a operação.")
+            raise SystemExit(1)
+        self.line(
+            f"{highlight(json.dumps(resp, indent=4, sort_keys=True), JsonLexer(), TerminalFormatter())}"
+        )

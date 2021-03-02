@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -10,6 +12,8 @@ class Snapshot(Api):
         response: Response = await self.client.get(f"{self.url}", **kwargs)
         return response
 
-    async def restore(self, data, **kwargs) -> Response:
-        response: Response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def restore(self, data, dumps=json.dumps, **kwargs) -> Response:
+        response: Response = await self.client.put(
+            f"{self.url}", data=dumps(data), **kwargs
+        )
         return response

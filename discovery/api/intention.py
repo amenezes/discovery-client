@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 
 
@@ -10,8 +12,8 @@ class Intentions(Api):
             raise ValueError('by must be: "source" or "destination"')
         return True
 
-    async def create(self, data, **kwargs):
-        response = await self.client.post(f"{self.url}", data=data, **kwargs)
+    async def create(self, data, dumps=json.dumps, **kwargs):
+        response = await self.client.post(f"{self.url}", data=dumps(data), **kwargs)
         return response
 
     async def read(self, uuid, **kwargs):
@@ -22,8 +24,10 @@ class Intentions(Api):
         response = await self.client.get(f"{self.url}", **kwargs)
         return response
 
-    async def update(self, uuid, data, **kwargs):
-        response = await self.client.put(f"{self.url}/{uuid}", data=data, **kwargs)
+    async def update(self, uuid, data, dumps=json.dumps, **kwargs):
+        response = await self.client.put(
+            f"{self.url}/{uuid}", data=dumps(data), **kwargs
+        )
         return response
 
     async def delete(self, uuid, **kwargs):

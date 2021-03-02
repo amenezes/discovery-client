@@ -1,3 +1,5 @@
+import json
+
 from discovery.api.abc import Api
 from discovery.engine.response import Response
 
@@ -6,8 +8,10 @@ class Role(Api):
     def __init__(self, endpoint: str = "/acl/role", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def create(self, data, **kwargs) -> Response:
-        response: Response = await self.client.put(f"{self.url}", data=data, **kwargs)
+    async def create(self, data, dumps=json.dumps, **kwargs) -> Response:
+        response: Response = await self.client.put(
+            f"{self.url}", data=dumps(data), **kwargs
+        )
         return response
 
     async def read_by_id(self, role_id, **kwargs) -> Response:
@@ -18,9 +22,9 @@ class Role(Api):
         response: Response = await self.client.put(f"{self.url}/name/{name}", **kwargs)
         return response
 
-    async def update(self, role_id, data, **kwargs) -> Response:
+    async def update(self, role_id, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/{role_id}", data=data, **kwargs
+            f"{self.url}/{role_id}", data=dumps(data), **kwargs
         )
         return response
 

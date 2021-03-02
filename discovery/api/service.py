@@ -1,3 +1,4 @@
+import json
 from urllib.parse import quote_plus
 
 from discovery.api.abc import Api
@@ -20,9 +21,9 @@ class Service(Api):
         response: Response = await self.client.get(f"{self.url}/{service_id}", **kwargs)
         return response
 
-    async def register(self, data, **kwargs) -> Response:
+    async def register(self, data, dumps=json.dumps, **kwargs) -> Response:
         response: Response = await self.client.put(
-            f"{self.url}/register", data=data, **kwargs
+            f"{self.url}/register", data=dumps(data), **kwargs
         )
         return response
 
