@@ -1,6 +1,7 @@
 import abc
 import os
-from functools import cached_property
+
+# from functools import cached_property
 
 
 class Engine(abc.ABC):
@@ -21,7 +22,8 @@ class Engine(abc.ABC):
     def scheme(self) -> str:
         return self._scheme
 
-    @cached_property
+    # @cached_property
+    @property
     def url(self) -> str:
         return f"{self.scheme}://{self.host}:{self.port}"
 

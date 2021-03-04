@@ -19,7 +19,7 @@ setuptools.setup(
     license="Apache-2.0",
     url="https://github.com/amenezes/discovery-client",
     packages=setuptools.find_packages(include=["discovery", "discovery.*"]),
-    python_requires=">=3.8.*",
+    python_requires=">=3.7.*",
     project_urls=OrderedDict((
         ('Documentation', 'https://discovery-client.amenezes.net'),
         ('Code', 'https://github.com/amenezes/discovery-client'),
@@ -37,6 +37,7 @@ setuptools.setup(
     keywords=['consul', 'service discovery', 'service catalog'],
     classifiers=[
         "Programming Language :: Python :: 3 :: Only",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Framework :: AsyncIO",
