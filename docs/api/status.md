@@ -1,23 +1,21 @@
-# Reference
+### [Status](https://developer.hashicorp.com/consul/api-docs/status)
 
-- [Status HTTP API](https://www.consul.io/api-docs/status)
+Category | Endpoint         | Status
+-------- |------------------| ------
+Get Raft Leader | `/status/leader` | ✅
+List Raft Peers | `/status/peers`  | ✅
 
-### Get Raft Leader
+## Examples
 
 ```python
 from discovery.client import Consul
 
 
 consul = Consul()
+
+# leader
 await consul.status.leader()
-```
 
-### List Raft Peers
-
-```python
-from discovery.client import Consul
-
-
-consul = Consul()
+# peers
 await consul.status.peers()
 ```

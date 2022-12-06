@@ -3,24 +3,6 @@ import pytest
 from discovery import api
 
 
-def sample_payload():
-    return {
-        "Name": "my-query",
-        "Session": "adf4238a-882b-9ddc-4a9d-5b6758e4159e",
-        "Token": "",
-        "Service": {
-            "Service": "redis",
-            "Failover": {"NearestN": 3, "Datacenters": ["dc1", "dc2"]},
-            "Near": "node1",
-            "OnlyPassing": False,
-            "Tags": ["primary", "!experimental"],
-            "NodeMeta": {"instance_type": "m3.large"},
-            "ServiceMeta": {"environment": "production"},
-        },
-        "DNS": {"TTL": "10s"},
-    }
-
-
 def sample_response():
     return {"ID": "8f246b77-f3e1-ff88-5b48-8ec93abf3e05"}
 
@@ -121,69 +103,71 @@ def sample_explain_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 def query(consul_api):
     return api.Query(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
 async def test_create(query, expected):
     query.client.expected = expected
-    response = await query.create(sample_payload())
-    response = await response.json()
+    response = await query.create(
+        "my-query",
+        {
+            "Service": "redis",
+            "Failover": {"NearestN": 3, "Datacenters": ["dc1", "dc2"]},
+            "Near": "node1",
+            "OnlyPassing": False,
+            "Tags": ["primary", "!experimental"],
+            "NodeMeta": {"instance_type": "m3.large"},
+            "ServiceMeta": {"environment": "production"},
+        },
+        session="adf4238a-882b-9ddc-4a9d-5b6758e4159e",
+        dns={"TTL": "10s"},
+    )
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_read_response()])
-async def test_read_without_uuid(query, expected):
-    query.client.expected = expected
-    response = await query.read()
-    response = await response.json()
-    assert response == sample_read_response()
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [sample_read_response()])
-async def test_read_with_uuid(query, expected):
+async def test_read(query, expected):
     query.client.expected = expected
     response = await query.read("8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
-    response = await response.json()
     assert response == sample_read_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete(query, expected):
-    query.client.expected = expected
-    response = await query.delete("8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
-    assert response.status == 200
+async def test_delete(query, mocker):
+    spy = mocker.spy(query.client, "delete")
+    await query.delete("8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
+    spy.assert_called_with("/v1/query/8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_update(query, expected):
-    query.client.expected = expected
-    response = await query.update(
-        "8f246b77-f3e1-ff88-5b48-8ec93abf3e05", sample_payload()
+async def test_update(query):
+    await query.update(
+        "8f246b77-f3e1-ff88-5b48-8ec93abf3e05",
+        name="my-query",
+        session="adf4238a-882b-9ddc-4a9d-5b6758e4159e",
+        token="",
+        service={
+            "Service": "redis",
+            "Failover": {"NearestN": 3, "Datacenters": ["dc1", "dc2"]},
+            "Near": "node1",
+            "OnlyPassing": False,
+            "Tags": ["primary", "!experimental"],
+            "NodeMeta": {"instance_type": "m3.large"},
+            "ServiceMeta": {"environment": "production"},
+        },
+        dns={"TTL": "10s"},
     )
-    assert response.status == 200
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_execute_response()])
 async def test_execute(query, expected):
     query.client.expected = expected
     response = await query.execute("8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
-    response = await response.json()
     assert response == sample_execute_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_explain_response()])
 async def test_explain(query, expected):
     query.client.expected = expected
     response = await query.explain("8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
-    response = await response.json()
     assert response == sample_explain_response()

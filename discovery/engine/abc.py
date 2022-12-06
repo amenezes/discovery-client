@@ -1,10 +1,10 @@
-import abc
 import os
+from abc import ABC
+from contextlib import asynccontextmanager
+from functools import cached_property
 
-# from functools import cached_property
 
-
-class Engine(abc.ABC):
+class Engine(ABC):
     def __init__(self, host: str = "localhost", port: int = 8500, scheme: str = "http"):
         self._host = os.getenv("CONSUL_HOST", host)
         self._port = int(os.getenv("CONSUL_PORT", port))
@@ -22,20 +22,23 @@ class Engine(abc.ABC):
     def scheme(self) -> str:
         return self._scheme
 
-    # @cached_property
-    @property
+    @cached_property
     def url(self) -> str:
         return f"{self.scheme}://{self.host}:{self.port}"
 
+    @asynccontextmanager
     async def get(self, *args, **kwargs):
         raise NotImplementedError
 
+    @asynccontextmanager
     async def put(self, *args, **kwargs):
         raise NotImplementedError
 
+    @asynccontextmanager
     async def delete(self, *args, **kwargs):
         raise NotImplementedError
 
+    @asynccontextmanager
     async def post(self, *args, **kwargs):
         raise NotImplementedError
 

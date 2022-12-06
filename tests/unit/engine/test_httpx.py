@@ -3,52 +3,45 @@ import pytest
 
 @pytest.fixture
 async def httpx_response(consul_httpx):
-    response = await consul_httpx.client.get("https://httpbin.org/json")
-    return response
+    async with consul_httpx.client.get("https://httpbin.org/json") as response:
+        yield response
 
 
-@pytest.mark.asyncio
-async def test_get(consul_httpx):
-    response = await consul_httpx.client.get("https://httpbin.org/json")
+async def test_get(httpx_response):
+    response = httpx_response
     assert response.status == 200
     assert response.content_type == "application/json"
 
 
-@pytest.mark.asyncio
 async def test_json(httpx_response):
     response = await httpx_response.json()
     assert isinstance(response, dict)
 
 
-@pytest.mark.asyncio
 async def test_text(httpx_response):
-    response = await httpx_response.text()
-    assert isinstance(response, str)
+    content = await httpx_response.text()
+    assert isinstance(content, str)
 
 
-@pytest.mark.asyncio
 async def test_content(httpx_response):
     response = await httpx_response.content()
     assert isinstance(response, bytes)
 
 
-@pytest.mark.asyncio
 async def test_put(consul_httpx):
-    response = await consul_httpx.client.put("https://httpbin.org/put")
-    assert response.status == 200
-    assert response.version == "1.1"
+    async with consul_httpx.client.put("https://httpbin.org/put") as response:
+        assert response.status == 200
+        assert response.version == "1.1"
 
 
-@pytest.mark.asyncio
 async def test_delete(consul_httpx):
-    response = await consul_httpx.client.delete("https://httpbin.org/delete")
-    assert response.status == 200
+    async with consul_httpx.client.delete("https://httpbin.org/delete") as response:
+        assert response.status == 200
 
 
-@pytest.mark.asyncio
 async def test_post(consul_httpx):
-    response = await consul_httpx.client.post("https://httpbin.org/post")
-    assert response.status == 200
+    async with consul_httpx.client.post("https://httpbin.org/post") as response:
+        assert response.status == 200
 
 
 def test_url(consul_httpx):
@@ -62,10 +55,9 @@ def test_repr(consul_httpx):
     )
 
 
-@pytest.mark.asyncio
 async def test_response_repr(consul_httpx):
-    response = await consul_httpx.client.get("https://httpbin.org/get")
-    assert (
-        str(response)
-        == "Response(status=200, http_version='1.1', url='https://httpbin.org/get')"
-    )
+    async with consul_httpx.client.get("https://httpbin.org/get") as response:
+        assert (
+            str(response)
+            == "Response(status=200, http_version='1.1', url='https://httpbin.org/get')"
+        )

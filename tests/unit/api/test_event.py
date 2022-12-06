@@ -25,24 +25,19 @@ def list_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def events(consul_api):
     return api.Events(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
 async def test_fire(events, expected):
     events.client.expected = expected
-    response = await events.fire("my-event", sample_payload())
-    response = await response.json()
+    response = await events.fire_event("my-event", sample_payload())
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_response()])
 async def test_list(events, expected):
     events.client.expected = expected
-    response = await events.list("my-event")
-    response = await response.json()
+    response = await events.list()
     assert response == list_response()

@@ -1,9 +1,9 @@
-import abc
+from abc import ABC
 
 from discovery.engine.abc import Engine
 
 
-class Api(abc.ABC):
+class Api(ABC):
     def __init__(
         self, client: Engine, endpoint: str = "/", version: str = "v1"
     ) -> None:
@@ -22,3 +22,13 @@ class Api(abc.ABC):
     @property
     def url(self) -> str:
         return f"{self._client.url}/{self.version}{self.endpoint}"
+
+    def _prepare_request_url(self, base_url: str, **kwargs) -> str:
+        params = [
+            f"{key.replace('_', '-')}={value}"
+            for key, value in kwargs.items()
+            if value is not None
+        ]
+        if len(params) > 0:
+            return f"{base_url}?{'&'.join(params)}"
+        return base_url

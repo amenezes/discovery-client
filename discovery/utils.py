@@ -2,10 +2,9 @@ import collections
 import random
 import socket
 import uuid
+from dataclasses import asdict, dataclass
 from functools import singledispatch
-from typing import List, Optional
-
-from discovery import exceptions
+from typing import List, Optional, Union
 
 
 class _InnerServices:
@@ -20,9 +19,7 @@ class _InnerServices:
         try:
             return self.services.get(value).popleft()
         except IndexError:
-            raise exceptions.ServiceNotFoundException(
-                "Service not found in the Consul's catalog."
-            )
+            return None
 
 
 rr_services = _InnerServices()
@@ -39,38 +36,34 @@ def select_one_rr(services: str):
     return rr_services.get(key_)
 
 
-def service(
-    name: str,
-    port: int,
-    service_id: Optional[str] = None,
-    address: Optional[str] = None,
-    tags: Optional[List[str]] = None,
-    meta: Optional[dict] = None,
-    proxy: Optional[str] = None,
-    connect: Optional[str] = None,
-    enable_tag_override: bool = False,
-    weights: Optional[dict] = None,
-    check: Optional[dict] = None,
-) -> dict:
-    service_id = service_id or f"{name}-{uuid.uuid4().hex}"
-    address = address or f"{socket.gethostbyname(socket.gethostname())}"
-    meta = meta or {}
-    tags = tags or []
-    tags_is_valid(tags)
-    meta_is_valid(meta)
-    response = {
-        "name": name,
-        "id": service_id,
-        "address": address,
-        "port": port,
-        "tags": tags,
-        "meta": meta,
-        "EnableTagOverride": enable_tag_override,
-        "Weights": weights,
-    }
-    if check:
-        response.update(register_check(check))
-    return response
+@dataclass
+class Service:
+    name: str
+    port: int
+    id: Optional[str] = None
+    address: Optional[str] = None
+    tags: Optional[List[str]] = None
+    meta: Optional[dict] = None
+    enable_tag_override: bool = False
+    weights: Optional[dict] = None
+    check: Optional[Union[dict, List[dict]]] = None
+
+    def __post_init__(self):
+        self.id = self.id or f"{self.name}-{uuid.uuid4().hex}"
+        self.address = self.address or f"{socket.gethostbyname(socket.gethostname())}"
+        self.meta = self.meta or {}
+        self.tags = self.tags or []
+        tags_is_valid(self.tags)
+        meta_is_valid(self.meta)
+
+    def dict(self) -> dict:
+        data = asdict(self)
+        if self.check:
+            data.update(register_check(self.check))
+        return data
+
+    def __getitem__(self, key: str):
+        return self.__dict__[key]
 
 
 def tags_is_valid(tags: Optional[list]) -> bool:

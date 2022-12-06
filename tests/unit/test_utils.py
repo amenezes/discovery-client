@@ -19,13 +19,15 @@ def test_select_one_rr(services):
         assert select_one_rr(service) == service
 
     # group 2: select alternate services
-    servicesB = ["d", "e"]
-    servicesC = ["f", "g", "h"]
+    servicesB = ["a", "b"]
+    servicesC = ["c", "d", "e"]
 
-    assert select_one_rr(servicesB) == "d"
-    assert select_one_rr(servicesC) == "f"
-    assert select_one_rr(servicesC) == "g"
-    assert select_one_rr(servicesB) == "e"
-    assert select_one_rr(servicesB) == "d"
-    assert select_one_rr(servicesC) == "h"
-    assert select_one_rr(servicesC) == "f"
+    # B service
+    assert select_one_rr(servicesB) == "a"
+    assert select_one_rr(servicesB) == "b"
+    assert select_one_rr(servicesB) == "a"
+    # C service
+    assert select_one_rr(servicesC) == "c"
+    assert select_one_rr(servicesC) == "d"
+    assert select_one_rr(servicesC) == "e"
+    assert select_one_rr(servicesC) == "c"

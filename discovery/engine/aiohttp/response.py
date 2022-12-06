@@ -27,13 +27,10 @@ class AIOHTTPResponse(BaseResponse):
         return self._response
 
     async def json(self):
-        response = await self._response.json()
-        return response
+        return await self._response.json()
 
     async def text(self):
-        response = await self._response.text()
-        return response
+        return await self._response.text()
 
     async def content(self, *args, **kwargs) -> bytes:
-        response: bytes = await self._response.content.read(*args, **kwargs)
-        return response
+        return await self._response.content.read(*args, **kwargs)  # type: ignore

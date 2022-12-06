@@ -1,5 +1,3 @@
-import pytest
-
 SAMPLE_PAYLOAD = {
     "CleanupDeadServers": True,
     "LastContactThreshold": "100ms",
@@ -61,25 +59,74 @@ HEALTH_RESPONSE = {
     ],
 }
 
+READ_AUTOPILOT_STATE_RESP = {
+    "Healthy": True,
+    "FailureTolerance": 1,
+    "OptimisticFailureTolerance": 4,
+    "Servers": {
+        "5e26a3af-f4fc-4104-a8bb-4da9f19cb278": {},
+        "10b71f14-4b08-4ae5-840c-f86d39e7d330": {},
+        "1fd52e5e-2f72-47d3-8cfc-2af760a0c8c2": {},
+        "63783741-abd7-48a9-895a-33d01bf7cb30": {},
+        "6cf04fd0-7582-474f-b408-a830b5471285": {},
+    },
+    "Leader": "5e26a3af-f4fc-4104-a8bb-4da9f19cb278",
+    "Voters": [
+        "5e26a3af-f4fc-4104-a8bb-4da9f19cb278",
+        "10b71f14-4b08-4ae5-840c-f86d39e7d330",
+        "1fd52e5e-2f72-47d3-8cfc-2af760a0c8c2",
+    ],
+    "RedundancyZones": {"az1": {}, "az2": {}, "az3": {}},
+    "ReadReplicas": [
+        "63783741-abd7-48a9-895a-33d01bf7cb30",
+        "6cf04fd0-7582-474f-b408-a830b5471285",
+    ],
+    "Upgrade": {},
+}
 
-@pytest.mark.asyncio
+
 async def test_read_configuration(autopilot):
     autopilot.client.expected = CONFIG_RESPONSE
     response = await autopilot.read_configuration()
-    response = await response.json()
     assert response == CONFIG_RESPONSE
 
 
-@pytest.mark.asyncio
-async def test_update_configuration(autopilot):
-    autopilot.client.expected = 200
-    response = await autopilot.update_configuration(SAMPLE_PAYLOAD)
-    assert response.status == 200
+async def test_update_configuration(autopilot, mocker):
+    spy = mocker.spy(autopilot.client, "put")
+    await autopilot.update_configuration(SAMPLE_PAYLOAD)
+    spy.assert_called_with(
+        "/v1/operator/autopilot/configuration",
+        json={
+            "CleanupDeadServers": {
+                "CleanupDeadServers": True,
+                "LastContactThreshold": "100ms",
+                "MaxTrailingLogs": 250,
+                "MinQuorum": 3,
+                "ServerStabilizationTime": "5s",
+                "RedundancyZoneTag": "",
+                "DisableUpgradeMigration": False,
+                "UpgradeVersionTag": "",
+                "CreateIndex": 4,
+                "ModifyIndex": 4,
+            },
+            "LastContactThreshold": "200ms",
+            "MaxTrailingLogs": 250,
+            "MinQuorum": 0,
+            "ServerStabilizationTime": "10s",
+            "RedundancyZoneTag": "",
+            "DisableUpgradeMigration": False,
+            "UpgradeVersionTag": "",
+        },
+    )
 
 
-@pytest.mark.asyncio
 async def test_read_health(autopilot):
     autopilot.client.expected = HEALTH_RESPONSE
     response = await autopilot.read_health()
-    response = await response.json()
     assert response == HEALTH_RESPONSE
+
+
+async def test_read_state(autopilot):
+    autopilot.client.expected = READ_AUTOPILOT_STATE_RESP
+    response = await autopilot.read_state()
+    assert response == READ_AUTOPILOT_STATE_RESP

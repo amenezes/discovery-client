@@ -1,48 +1,81 @@
-import json
+from typing import List, Optional
 
 from discovery.api.abc import Api
+from discovery.api.intention_by import IntentionBy
+from discovery.api.intention_filter import IntentionFilter
+from discovery.api.intentions_action import IntentionsAction
 
 
 class Intentions(Api):
     def __init__(self, endpoint: str = "/connect/intentions", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    def by_is_valid(self, by):
-        if by.lower() not in ["source", "destination"]:
-            raise ValueError('by must be: "source" or "destination"')
-        return True
+    async def upsert_by_name(
+        self,
+        source: str,
+        destination: str,
+        ns: Optional[str] = None,
+        source_type: str = "consul",
+        action: IntentionsAction = IntentionsAction.ALLOW,
+        permissions: Optional[List[str]] = None,
+        description: str = "",
+        **kwargs,
+    ) -> bool:
+        payload = dict(SourceType=source_type, Action=action, Description=description)
 
-    async def create(self, data, dumps=json.dumps, **kwargs):
-        response = await self.client.post(f"{self.url}", data=dumps(data), **kwargs)
-        return response
+        if permissions:
+            payload.update({"Permissions": permissions})  # type: ignore
 
-    async def read(self, uuid, **kwargs):
-        response = await self.client.get(f"{self.url}/{uuid}", **kwargs)
-        return response
-
-    async def list(self, **kwargs):
-        response = await self.client.get(f"{self.url}", **kwargs)
-        return response
-
-    async def update(self, uuid, data, dumps=json.dumps, **kwargs):
-        response = await self.client.put(
-            f"{self.url}/{uuid}", data=dumps(data), **kwargs
+        url = self._prepare_request_url(
+            f"{self.url}/exact", source=source, destination=destination, ns=ns
         )
-        return response
+        async with self.client.put(url, json=payload, **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def delete(self, uuid, **kwargs):
-        response = await self.client.delete(f"{self.url}/{uuid}", **kwargs)
-        return response
-
-    async def check(self, source, destination, **kwargs):
-        response = await self.client.get(
-            f"{self.url}/check?source={source}&destination={destination}", **kwargs
+    async def read_by_name(
+        self, source: str, destination: str, ns: Optional[str] = None, **kwargs
+    ):
+        url = self._prepare_request_url(
+            f"{self.url}/exact", source=source, destination=destination, ns=ns
         )
-        return response
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()
 
-    async def match(self, by, name, **kwargs):
-        if self.by_is_valid(by):
-            response = await self.client.get(
-                f"{self.url}/match?by={by}&name={name}", **kwargs
-            )
-            return response
+    async def list(
+        self,
+        filter: IntentionFilter = IntentionFilter.SOURCE_NAME,
+        ns: Optional[str] = None,
+        **kwargs,
+    ) -> dict:
+        url = self._prepare_request_url(f"{self.url}", filter=filter, ns=ns)
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
+
+    async def delete_by_name(
+        self, source: str, destination: str, ns: Optional[str] = None, **kwargs
+    ) -> None:
+        url = self._prepare_request_url(
+            f"{self.url}/exact", source=source, destination=destination, ns=ns
+        )
+        async with self.client.delete(url, **kwargs):
+            pass
+
+    async def check(
+        self, source: str, destination: str, ns: Optional[str] = None, **kwargs
+    ) -> dict:
+        url = self._prepare_request_url(
+            f"{self.url}/check", source=source, destination=destination, ns=ns
+        )
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
+
+    async def list_match(
+        self,
+        name: str,
+        by: IntentionBy = IntentionBy.NAME,
+        ns: Optional[str] = None,
+        **kwargs,
+    ) -> dict:
+        url = self._prepare_request_url(f"{self.url}/match", by=by, name=name, ns=ns)
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore

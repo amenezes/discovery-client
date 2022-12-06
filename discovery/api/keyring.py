@@ -1,31 +1,41 @@
-import json
+from typing import Optional
 
 from discovery.api.abc import Api
-from discovery.engine.response import Response
 
 
 class Keyring(Api):
     def __init__(self, endpoint: str = "/operator/keyring", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def list(self, **kwargs) -> Response:
-        response: Response = await self.client.get(f"{self.url}", **kwargs)
-        return response
-
-    async def add(self, data, dumps=json.dumps, **kwargs) -> Response:
-        response: Response = await self.client.post(
-            f"{self.url}", data=dumps(data), **kwargs
+    async def list_keys(
+        self,
+        relay_factor: Optional[int] = None,
+        local_only: Optional[bool] = None,
+        **kwargs,
+    ) -> dict:
+        url = self._prepare_request_url(
+            f"{self.url}", relay_factor=relay_factor, local_only=local_only
         )
-        return response
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def change(self, data, dumps=json.dumps, **kwargs) -> Response:
-        response: Response = await self.client.put(
-            f"{self.url}", data=dumps(data), **kwargs
-        )
-        return response
+    async def add_encryption_key(
+        self, key: str, relay_factor: Optional[int] = None, **kwargs
+    ) -> None:
+        url = self._prepare_request_url(f"{self.url}", relay_factor=relay_factor)
+        async with self.client.post(url, json=dict(Key=key), **kwargs):
+            pass
 
-    async def delete(self, data, dumps=json.dumps, **kwargs) -> Response:
-        response: Response = await self.client.delete(
-            f"{self.url}", data=dumps(data), **kwargs
-        )
-        return response
+    async def change_encryption_key(
+        self, key: str, relay_factor: Optional[int] = None, **kwargs
+    ) -> None:
+        url = self._prepare_request_url(f"{self.url}", relay_factor=relay_factor)
+        async with self.client.put(url, json=dict(Key=key), **kwargs):
+            pass
+
+    async def delete_encryption_key(
+        self, key: str, relay_factor: Optional[int] = None, **kwargs
+    ) -> None:
+        url = self._prepare_request_url(f"{self.url}", relay_factor=relay_factor)
+        async with self.client.delete(url, json=dict(Key=key), **kwargs):
+            pass

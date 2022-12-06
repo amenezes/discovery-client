@@ -1,5 +1,3 @@
-import pytest
-
 SERVICE_RESPONSE = {
     "ID": "154d3a48-e665-a22e-c75a-c093de56a188",
     "Node": "6a4e48904f35",
@@ -95,6 +93,5 @@ HEALTHY_INSTANCES_RESPONSE = [
 ]
 
 
-@pytest.mark.asyncio
 async def test_default_timeout(consul):
     assert consul.timeout == 30

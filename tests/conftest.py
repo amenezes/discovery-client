@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import pytest
 
 from discovery import api
@@ -5,55 +7,49 @@ from discovery.client import Consul
 from discovery.engine.httpx import HTTPXEngine
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
+def area(consul_api):
+    return api.Area(client=consul_api)
+
+
+@pytest.fixture(scope="session")
 def consul_api(expected=None):
-    return ApiMock(expected=expected)
+    yield ApiMock(expected=expected)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def consul(consul_api):
     return Consul()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def consul_httpx():
     return Consul(client=HTTPXEngine())
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def segment(consul_api):
     return api.Segment(client=consul_api)
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def raft(consul_api):
     return api.Raft(client=consul_api)
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def license(consul_api):
     return api.License(client=consul_api)
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def keyring(consul_api):
     return api.Keyring(client=consul_api)
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def autopilot(consul_api):
     return api.AutoPilot(client=consul_api)
-
-
-@pytest.fixture
-@pytest.mark.asyncio
-def area(consul_api):
-    return api.Area(client=consul_api)
 
 
 class ResponseMock:
@@ -79,14 +75,18 @@ class ApiMock:
         self.url = ""
         self.expected = expected
 
+    @asynccontextmanager
     async def get(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
+        yield ResponseMock(expected=self.expected)
 
+    @asynccontextmanager
     async def delete(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
+        yield ResponseMock(expected=self.expected)
 
+    @asynccontextmanager
     async def put(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
+        yield ResponseMock(expected=self.expected)
 
+    @asynccontextmanager
     async def post(self, *args, **kwargs):
-        return ResponseMock(expected=self.expected)
+        yield ResponseMock(expected=self.expected)

@@ -3,25 +3,6 @@ import pytest
 from discovery import api
 
 
-def sample_payload():
-    return {
-        "Description": "example rule",
-        "AuthMethod": "minikube",
-        "Selector": "serviceaccount.namespace==default",
-        "BindType": "service",
-        "BindName": "{{ serviceaccount.name }}",
-    }
-
-
-def update_payload():
-    return {
-        "Description": "updated rule",
-        "Selector": "serviceaccount.namespace=dev",
-        "BindType": "role",
-        "BindName": "{{ serviceaccount.name }}",
-    }
-
-
 def update_response():
     return {
         "ID": "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d",
@@ -72,52 +53,46 @@ def list_binding_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def binding_rule(consul_api):
     return api.BindingRule(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
 async def test_create(binding_rule, expected):
     binding_rule.client.expected = expected
-    response = await binding_rule.create(sample_payload())
-    response = await response.json()
+    response = await binding_rule.create(
+        "minikube", "service", r"{{ serviceaccount.name }}"
+    )
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
 async def test_read(binding_rule, expected):
     binding_rule.client.expected = expected
     response = await binding_rule.read("000ed53c-e2d3-e7e6-31a5-c19bc3518a3d")
-    response = await response.json()
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [update_response()])
 async def test_update(binding_rule, expected):
     binding_rule.client.expected = expected
     response = await binding_rule.update(
-        "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d", update_payload()
+        "000ed53c-e2d3-e7e6-31a5-c19bc3518a3d",
+        "minikube",
+        "role",
+        r"{{ serviceaccount.name }}",
     )
-    response = await response.json()
     assert response == update_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete(binding_rule, expected):
-    binding_rule.client.expected = expected
+async def test_delete(binding_rule):
+    binding_rule.client.expected = True
     response = await binding_rule.delete("000ed53c-e2d3-e7e6-31a5-c19bc3518a3d")
-    assert response.status == 200
+    assert response
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_binding_response()])
 async def test_list(binding_rule, expected):
     binding_rule.client.expected = expected
     response = await binding_rule.list()
-    response = await response.json()
     assert response == list_binding_response()

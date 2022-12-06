@@ -1,19 +1,20 @@
-import json
+from typing import Optional
 
 from discovery.api.abc import Api
-from discovery.engine.response import Response
 
 
 class Snapshot(Api):
     def __init__(self, endpoint: str = "/snapshot", **kwargs):
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def generate(self, **kwargs) -> Response:
-        response: Response = await self.client.get(f"{self.url}", **kwargs)
-        return response
+    async def generate(
+        self, dc: Optional[str] = None, stale: Optional[bool] = None, **kwargs
+    ) -> bytes:
+        url = self._prepare_request_url(f"{self.url}", dc=dc, stale=stale)
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.content()  # type: ignore
 
-    async def restore(self, data, dumps=json.dumps, **kwargs) -> Response:
-        response: Response = await self.client.put(
-            f"{self.url}", data=dumps(data), **kwargs
-        )
-        return response
+    async def restore(self, data: bytes, dc: Optional[str] = None, **kwargs) -> None:
+        url = self._prepare_request_url(f"{self.url}", dc=dc)
+        async with self.client.put(url, data=data, **kwargs):
+            pass

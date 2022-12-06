@@ -22,10 +22,10 @@ class BaseResponse(ABC):
     def raw_response(self):
         raise NotImplementedError
 
-    async def json(self):
+    async def json(self) -> dict:
         raise NotImplementedError
 
-    async def text(self):
+    async def text(self) -> str:
         raise NotImplementedError
 
     async def content(self, *args, **kwargs) -> bytes:

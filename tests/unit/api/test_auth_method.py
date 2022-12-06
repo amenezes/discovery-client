@@ -1,23 +1,6 @@
-import json
-
 import pytest
 
 from discovery import api
-
-
-def create_payload():
-    return json.dumps(
-        {
-            "Name": "minikube",
-            "Type": "kubernetes",
-            "Description": "dev minikube cluster",
-            "Config": {
-                "Host": "https://192.0.2.42:8443",
-                "CACert": "-----BEGIN CERTIFICATE-----\n...-----END CERTIFICATE-----\n",
-                "ServiceAccountJWT": "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9...",
-            },
-        }
-    )
 
 
 def create_response():
@@ -47,18 +30,6 @@ def read_response():
         },
         "CreateIndex": 15,
         "ModifyIndex": 224,
-    }
-
-
-def update_payload():
-    return {
-        "Name": "minikube",
-        "Description": "updated name",
-        "Config": {
-            "Host": "https://192.0.2.42:8443",
-            "CACert": "-----BEGIN CERTIFICATE-----\n...-----END CERTIFICATE-----\n",
-            "ServiceAccountJWT": "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9...",
-        },
     }
 
 
@@ -97,50 +68,57 @@ def list_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def auth_method(consul_api):
     return api.AuthMethod(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [create_response()])
 async def test_create(auth_method, expected):
     auth_method.client.expected = expected
-    response = await auth_method.create(create_payload())
-    response = await response.json()
+    response = await auth_method.create(
+        "minikube",
+        "kubernetes",
+        "dev minikube cluster",
+        {
+            "Host": "https://192.0.2.42:8443",
+            "CACert": "-----BEGIN CERTIFICATE-----\n...-----END CERTIFICATE-----\n",
+            "ServiceAccountJWT": "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9...",
+        },
+    )
     assert response == create_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [read_response()])
 async def test_read(auth_method, expected):
     auth_method.client.expected = expected
     response = await auth_method.read("minikube")
-    response = await response.json()
     assert response == read_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [update_response()])
 async def test_update(auth_method, expected):
     auth_method.client.expected = expected
-    response = await auth_method.update("minikube", update_payload())
-    response = await response.json()
+    response = await auth_method.update(
+        "minikube",
+        "kubernetes",
+        "updated name",
+        {
+            "Host": "https://192.0.2.42:8443",
+            "CACert": "-----BEGIN CERTIFICATE-----\n...-----END CERTIFICATE-----\n",
+            "ServiceAccountJWT": "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9...",
+        },
+    )
     assert response == update_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete(auth_method, expected):
-    auth_method.client.expected = expected
+async def test_delete(auth_method):
+    auth_method.client.expected = True
     response = await auth_method.delete("minikube")
-    assert response.status == 200
+    assert response
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_response()])
 async def test_list(auth_method, expected):
     auth_method.client.expected = expected
     response = await auth_method.list()
-    response = await response.json()
     assert response == list_response()

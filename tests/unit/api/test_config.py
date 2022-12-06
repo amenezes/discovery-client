@@ -1,6 +1,7 @@
 import pytest
 
 from discovery import api
+from discovery.api.kind import Kind
 
 
 def sample_payload():
@@ -41,58 +42,34 @@ def list_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 def config(consul_api):
     return api.Config(client=consul_api)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_apply(config, expected):
-    config.client.expected = expected
-    response = await config.apply(sample_payload())
-    assert response.status == 200
+async def test_apply(config, mocker):
+    spy = mocker.spy(config.client, "put")
+    await config.apply(sample_payload())
+    spy.assert_called_with(
+        "/v1/config",
+        json={"Kind": "service-defaults", "Name": "web", "Protocol": "http"},
+    )
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [config_response()])
-async def test_get_success(config, expected):
+async def test_get(config, expected):
     config.client.expected = expected
-    response = await config.get("service-defaults", "web")
-    response = await response.json()
+    response = await config.get(Kind.SERVICE_DEFAULTS, "web")
     assert response == config_response()
 
 
-@pytest.mark.asyncio
-async def test_get_value_error(config):
-    with pytest.raises(ValueError):
-        await config.get("service", "web")
-
-
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_response()])
-async def test_list_success(config, expected):
+async def test_list(config, expected):
     config.client.expected = expected
-    response = await config.list("service-defaults")
-    response = await response.json()
+    response = await config.list(Kind.SERVICE_DEFAULTS)
     assert response == list_response()
 
 
-@pytest.mark.asyncio
-async def test_list_value_error(config):
-    with pytest.raises(ValueError):
-        await config.list("service")
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete_success(config, expected):
-    config.client.expected = expected
-    response = await config.delete("service-defaults", "web")
-    assert response.status == 200
-
-
-@pytest.mark.asyncio
-async def test_delete_value_error(config):
-    with pytest.raises(ValueError):
-        await config.delete("service", "web")
+async def test_delete(config, mocker):
+    spy = mocker.spy(config.client, "delete")
+    await config.delete(Kind.SERVICE_DEFAULTS, "web")
+    spy.assert_called_with("/v1/config/service-defaults/web")

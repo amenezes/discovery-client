@@ -26,13 +26,10 @@ class Response(BaseResponse):
         return self._strategy.raw_response
 
     async def json(self):
-        resp = await self._strategy.json()
-        return resp
+        return await self._strategy.json()
 
-    async def text(self):
-        resp = await self._strategy.text()
-        return resp
+    async def text(self) -> str:
+        return await self._strategy.text()
 
     async def content(self, *args, **kwargs) -> bytes:
-        resp = await self._strategy.content(*args, **kwargs)
-        return resp
+        return await self._strategy.content(*args, **kwargs)

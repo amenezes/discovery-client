@@ -34,34 +34,32 @@ def sample_response():
     ]
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
-async def test_list(keyring, expected):
+async def test_list_keys(keyring, expected):
     keyring.client.expected = expected
-    response = await keyring.list()
-    response = await response.json()
+    response = await keyring.list_keys()
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_add(keyring, expected):
-    keyring.client.expected = expected
-    response = await keyring.add(sample_payload())
-    assert response.status == 200
+async def test_add_encryption_key(keyring, mocker):
+    spy = mocker.spy(keyring.client, "post")
+    await keyring.add_encryption_key(sample_payload())
+    spy.assert_called_with(
+        "/v1/operator/keyring", json={"Key": '{"Key": "3lg9DxVfKNzI8O+IQ5Ek+Q=="}'}
+    )
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_change(keyring, expected):
-    keyring.client.expected = expected
-    response = await keyring.change(sample_payload())
-    assert response.status == 200
+async def test_change_encryption_key(keyring, mocker):
+    spy = mocker.spy(keyring.client, "put")
+    await keyring.change_encryption_key(sample_payload())
+    spy.assert_called_with(
+        "/v1/operator/keyring", json={"Key": '{"Key": "3lg9DxVfKNzI8O+IQ5Ek+Q=="}'}
+    )
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete(keyring, expected):
-    keyring.client.expected = expected
-    response = await keyring.delete(sample_payload())
-    assert response.status == 200
+async def test_delete_encryption_key(keyring, mocker):
+    spy = mocker.spy(keyring.client, "delete")
+    await keyring.delete_encryption_key(sample_payload())
+    spy.assert_called_with(
+        "/v1/operator/keyring", json={"Key": '{"Key": "3lg9DxVfKNzI8O+IQ5Ek+Q=="}'}
+    )

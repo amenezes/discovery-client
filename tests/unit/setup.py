@@ -6,7 +6,6 @@ from discovery.engine import AIOHTTPEngine
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def aiohttp_client():
     session = aiohttp.ClientSession()
     yield AIOHTTPEngine(session)

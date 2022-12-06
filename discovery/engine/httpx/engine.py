@@ -1,4 +1,9 @@
-from httpx import AsyncClient
+from contextlib import asynccontextmanager
+
+try:
+    from httpx import AsyncClient
+except ModuleNotFoundError:
+    AsyncClient = None  # type: ignore
 
 from discovery.engine.abc import Engine
 from discovery.engine.httpx.response import HTTPXResponse
@@ -15,22 +20,26 @@ class HTTPXEngine(Engine):
         super().__init__(*args)
         self._session_kwargs = kwargs
 
-    async def get(self, *args, **kwargs) -> Response:
+    @asynccontextmanager
+    async def get(self, *args, **kwargs):
         async with AsyncClient(**self._session_kwargs) as session:
             response = await session.get(*args, **kwargs)
-            return Response(HTTPXResponse(response))
+            yield Response(HTTPXResponse(response))
 
-    async def put(self, *args, **kwargs) -> Response:
+    @asynccontextmanager
+    async def put(self, *args, **kwargs):
         async with AsyncClient(**self._session_kwargs) as session:
             response = await session.put(*args, **kwargs)
-            return Response(HTTPXResponse(response))
+            yield Response(HTTPXResponse(response))
 
-    async def delete(self, *args, **kwargs) -> Response:
+    @asynccontextmanager
+    async def delete(self, *args, **kwargs):
         async with AsyncClient(**self._session_kwargs) as session:
             response = await session.delete(*args, **kwargs)
-            return Response(HTTPXResponse(response))
+            yield Response(HTTPXResponse(response))
 
-    async def post(self, *args, **kwargs) -> Response:
+    @asynccontextmanager
+    async def post(self, *args, **kwargs):
         async with AsyncClient(**self._session_kwargs) as session:
             response = await session.post(*args, **kwargs)
-            return Response(HTTPXResponse(response))
+            yield Response(HTTPXResponse(response))

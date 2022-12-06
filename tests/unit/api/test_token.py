@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from discovery import api
@@ -50,73 +48,50 @@ def sample_token_response(*args, **kwargs):
     }
 
 
-def sample_payload(*args, **kwargs):
-    return json.dumps(
-        {
-            "ID": "8bec74a4-5ced-45ed-9c9d-bca6153490bb",
-            "Name": "example-two",
-            "Policies": [{"Name": "node-read"}],
-            "ServiceIdentities": [{"ServiceName": "db"}],
-        }
-    )
-
-
 @pytest.fixture
-@pytest.mark.asyncio
 async def token(consul_api):
     return api.Token(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_token_response()])
 async def test_create(token, expected):
     token.client.expected = expected
-    response = await token.create(sample_payload())
-    response = await response.json()
+    response = await token.create(
+        "Agent token for 'node1",
+        [{"ID": "165d4317-e379-f732-ce70-86278c4558f7"}, {"Name": "node-read"}],
+    )
     assert response == sample_token_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_token_response()])
-async def test_read_by_id(token, expected):
+async def test_read(token, expected):
     token.client.expected = expected
-    response = await token.read_by_id("8bec74a4-5ced-45ed-9c9d-bca6153490bb")
-    response = await response.json()
+    response = await token.read("6a1253d2-1785-24fd-91c2-f8e78c745511")
     assert response == sample_token_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [sample_token_response()])
-async def test_read_by_name(token, expected):
-    token.client.expected = expected
-    response = await token.read_by_name("example-two")
-    response = await response.json()
-    assert response == sample_token_response()
-
-
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_token_response()])
 async def test_update(token, expected):
     token.client.expected = expected
     response = await token.update(
-        "8f246b77-f3e1-ff88-5b48-8ec93abf3e05", sample_payload()
+        "Agent token for 'node1'",
+        [
+            {"ID": "165d4317-e379-f732-ce70-86278c4558f7"},
+            {"Name": "node-read"},
+            {"Name": "service-read"},
+        ],
     )
-    response = await response.json()
     assert response == sample_token_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete(token, expected):
-    token.client.expected = expected
+async def test_delete(token):
+    token.client.expected = True
     response = await token.delete("8f246b77-f3e1-ff88-5b48-8ec93abf3e05")
-    assert response.status == 200
+    assert response
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_list_response()])
 async def test_list(token, expected):
     token.client.expected = expected
     response = await token.list()
-    response = await response.json()
     assert response == sample_list_response()

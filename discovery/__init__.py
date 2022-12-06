@@ -1,10 +1,7 @@
-import logging
+from . import checks, utils
+from ._logger import log
+from .api import HealthState, LogLevel, TokenType
+from .client import Consul
 
-from discovery import check, utils
-from discovery.__version__ import __version__
-from discovery.utils import service
-
-log = logging.getLogger("discovery-client")
-log.addHandler(logging.NullHandler())
-
-__all__ = ["check", "service"]
+__version__ = "1.0.0b7"
+__all__ = ["Consul", "HealthState", "LogLevel", "TokenType", "checks", "utils"]

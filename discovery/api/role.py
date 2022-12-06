@@ -1,37 +1,84 @@
-import json
+from typing import List, Optional
 
 from discovery.api.abc import Api
-from discovery.engine.response import Response
 
 
 class Role(Api):
     def __init__(self, endpoint: str = "/acl/role", **kwargs) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
 
-    async def create(self, data, dumps=json.dumps, **kwargs) -> Response:
-        response: Response = await self.client.put(
-            f"{self.url}", data=dumps(data), **kwargs
-        )
-        return response
+    async def create(
+        self,
+        name: str,
+        description: str,
+        policies: List[dict],
+        service_identities: Optional[List[dict]] = None,
+        node_identities: Optional[List[dict]] = None,
+        namespace: Optional[str] = None,
+        ns: Optional[str] = None,
+        **kwargs,
+    ) -> dict:
+        url = self._prepare_request_url(f"{self.url}", ns=ns)
+        payload = dict(Name=name, Description=description, Policies=policies)
 
-    async def read_by_id(self, role_id, **kwargs) -> Response:
-        response: Response = await self.client.put(f"{self.url}/{role_id}", **kwargs)
-        return response
+        if service_identities:
+            payload.update({"ServiceIdentities": service_identities})
 
-    async def read_by_name(self, name, **kwargs) -> Response:
-        response: Response = await self.client.put(f"{self.url}/name/{name}", **kwargs)
-        return response
+        if node_identities:
+            payload.update({"NodeIdentities": node_identities})
 
-    async def update(self, role_id, data, dumps=json.dumps, **kwargs) -> Response:
-        response: Response = await self.client.put(
-            f"{self.url}/{role_id}", data=dumps(data), **kwargs
-        )
-        return response
+        if namespace:
+            payload.update({"Namespace": namespace})
 
-    async def delete(self, role_id, **kwargs) -> Response:
-        response: Response = await self.client.delete(f"{self.url}/{role_id}", **kwargs)
-        return response
+        async with self.client.put(url, json=payload, **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def list(self, **kwargs) -> Response:
-        response: Response = await self.client.get(f"{self.url}s", **kwargs)
-        return response
+    async def read_by_id(
+        self, role_id: str, ns: Optional[str] = None, **kwargs
+    ) -> dict:
+        url = self._prepare_request_url(f"{self.url}/{role_id}", ns=ns)
+        async with self.client.put(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
+
+    async def read_by_name(self, name: str, ns: Optional[str] = None, **kwargs) -> dict:
+        url = self._prepare_request_url(f"{self.url}/name/{name}", ns=ns)
+        async with self.client.put(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
+
+    async def update(
+        self,
+        role_id: str,
+        name: str,
+        description: str,
+        policies: List[dict],
+        service_identities: Optional[List[dict]] = None,
+        node_identities: Optional[List[dict]] = None,
+        namespace: Optional[str] = None,
+        ns: Optional[str] = None,
+        **kwargs,
+    ) -> dict:
+        url = self._prepare_request_url(f"{self.url}/{role_id}", ns=ns)
+        payload = dict(Name=name, Description=description, Policies=policies)
+
+        if service_identities:
+            payload.update({"ServiceIdentities": service_identities})
+
+        if node_identities:
+            payload.update({"NodeIdentities": node_identities})
+
+        if namespace:
+            payload.update({"Namespace": namespace})
+        async with self.client.put(url, json=payload, **kwargs) as resp:
+            return await resp.json()  # type: ignore
+
+    async def delete(self, role_id: str, ns: Optional[str] = None, **kwargs) -> bool:
+        url = self._prepare_request_url(f"{self.url}/{role_id}", ns=ns)
+        async with self.client.delete(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
+
+    async def list(
+        self, policy: Optional[str] = None, ns: Optional[str] = None, **kwargs
+    ) -> List[dict]:
+        url = self._prepare_request_url(f"{self.url}s", policy=policy, ns=ns)
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore

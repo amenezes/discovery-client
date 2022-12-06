@@ -42,33 +42,26 @@ def translate_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def acl(consul_api):
     return api.Acl(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [bootstrap_response()])
 async def test_bootstrap(acl, expected):
     acl.client.expected = expected
     response = await acl.bootstrap()
-    response = await response.json()
     assert response == bootstrap_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [replication_response()])
 async def test_replication(acl, expected):
     acl.client.expected = expected
     response = await acl.replication()
-    response = await response.json()
     assert response == replication_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [translate_response()])
 async def test_translate(acl, expected):
     acl.client.expected = expected
     response = await acl.translate(translate_payload())
-    response = await response.text()
     assert response == translate_response()
