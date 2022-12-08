@@ -47,7 +47,7 @@ nav:
     - Policies: api/acl/policies.md
     - Roles: api/acl/roles.md
     - Tokens: api/acl/tokens.md
-  - Admin Partitions: admin-partitions.md
+  - Admin Partitions: api/admin-partitions.md
   - Agent:
     - Overview: api/agent/overview.md
     - Checks: api/agent/checks.md
@@ -79,6 +79,6 @@ nav:
   - Snapshots: api/snapshots.md
   - Status: api/status.md
   - Transactions: api/transactions.md
-- Examples:
-  - AIOHTTP: examples/aiohttp.md
-  - httpx: examples/httpx.md
+- Engine:
+  - AIOHTTP: engine/aiohttp.md
+  - httpx: engine/httpx.md

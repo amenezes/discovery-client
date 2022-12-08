@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Services](https://developer.hashicorp.com/consul/api-docs/agent/service)
+## [Services](https://developer.hashicorp.com/consul/api-docs/agent/service)
 
 | Category                       | Endpoint                                   | Status 
 |--------------------------------| ------------------------------------------ | ------ 
@@ -12,7 +10,7 @@
 | Deregister Service             | `/agent/service/deregister/:service_id`    | ✅ 
 | Enable Maintenance Mode        | `/agent/service/maintenance/:service_id`   | ✅ 
 
-## Examples
+## Usage
 
 ```python
 from discovery import Consul

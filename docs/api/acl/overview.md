@@ -1,4 +1,4 @@
-### [ACL](https://developer.hashicorp.com/consul/api-docs/acl)
+## [ACL](https://developer.hashicorp.com/consul/api-docs/acl)
 
 Category | Endpoint | Status 
 -------- | ------|-------- 
@@ -11,7 +11,7 @@ Logout from Auth Method | `/acl/logout` | ❌
 OIDC Authorization URL Request | `/acl/logout` | ❌
 OIDC Callback | `/acl/logout` | ❌
 
-## Example
+## Usage
 
 ```python
 from discovery import Consul

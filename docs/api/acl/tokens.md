@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Tokens](https://developer.hashicorp.com/consul/api-docs/acl/tokens)
+## [Tokens](https://developer.hashicorp.com/consul/api-docs/acl/tokens)
 
 | Category        | Endpoint                       | Status
 | --------------- |--------------------------------| ------
@@ -12,7 +10,7 @@
 | Delete a Token  | `/acl/token/:AccessorID`       | ✅ 
 | List Tokens     | `/acl/tokens`                  | ✅ 
 
-### [Legacy Tokens](https://developer.hashicorp.com/consul/api-docs/acl/legacy)
+## [Legacy Tokens](https://developer.hashicorp.com/consul/api-docs/acl/legacy)
 
 | Category         | Endpoint             | Status |
 | ---------------- | -------------------- | ------ |
@@ -23,7 +21,7 @@
 | Clone ACL Token  | `/acl/clone/:uuid`   | ❌     |
 | List ACLs        | `/acl/list`          | ❌     |
 
-## Example
+## Usage
 
 ```python
 from discovery import Consul

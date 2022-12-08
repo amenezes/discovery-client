@@ -1,4 +1,4 @@
-### [Snapshots](https://developer.hashicorp.com/consul/api-docs/snapshot)
+## [Snapshots](https://developer.hashicorp.com/consul/api-docs/snapshot)
 
 Category | Endpoint | Status
 -------- | -------- | ------

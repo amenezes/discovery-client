@@ -1,6 +1,6 @@
 import asyncio
 import os
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 from discovery import api, log, utils
 
@@ -25,6 +25,7 @@ class Consul:
         self.events = api.Events(client=self.client)
         self.health = api.Health(client=self.client)
         self.kv = api.Kv(client=self.client)
+        self.namespace = api.Namespace(client=self.client)
         self.query = api.Query(client=self.client)
         self.session = api.Session(client=self.client)
         self.snapshot = api.Snapshot(client=self.client)
@@ -34,8 +35,19 @@ class Consul:
         self.connect = api.Connect(client=self.client)
         self.acl = api.Acl(client=self.client)
         self.operator = api.Operator(client=self.client)
+        self.binding_rule = api.BindingRule(client=self.client)
+        self.policy = api.Policy(client=self.client)
+        self.role = api.Role(client=self.client)
+        self.token = api.Token(client=self.client)
+        self.check = api.Checks(client=self.client)
+        self.services = api.Service(client=self.client)
+        self.ca = api.CA(client=self.client)
+        self.intentions = api.Intentions(client=self.client)
+        self.event = api.Events(client=self.client)
 
-        self.timeout = float(os.getenv("DEFAULT_TIMEOUT", 30))
+        self.reconnect_timeout = float(
+            os.getenv("DISCOVERY_CLIENT_DEFAULT_TIMEOUT", 30)
+        )
         self._leader_id: Optional[str] = None
 
     async def leader_ip(self, *args, **kwargs) -> str:
@@ -65,7 +77,7 @@ class Consul:
         return await self.catalog.list_nodes_for_service(name)  # type: ignore
 
     async def find_service(
-        self, name: str, fn=utils.select_one_rr, *args, **kwargs
+        self, name: str, fn: Callable = utils.select_one_rr, *args, **kwargs
     ) -> Optional[dict]:
         response = await self.find_services(name, *args, **kwargs)
         return fn(response)  # type: ignore
@@ -99,14 +111,14 @@ class Consul:
     async def _watch_connection(self, service: Service, *args, **kwargs) -> None:
         while True:
             try:
-                await asyncio.sleep(self.timeout)
+                await asyncio.sleep(self.reconnect_timeout)
                 current_id = await self.leader_id()
                 if current_id != self._leader_id:
                     await self.reconnect(service, *args, **kwargs)
             except Exception:
                 log.error(
-                    f"Failed to connect to Consul, trying again at {self.timeout}/s"
+                    f"Failed to connect to Consul, trying again at {self.reconnect_timeout}/s"
                 )
 
     def __repr__(self) -> str:
-        return f"Consul(timeout={self.timeout}, leader_id={self._leader_id}, engine={self.client})"
+        return f"Consul(engine={self.client})"

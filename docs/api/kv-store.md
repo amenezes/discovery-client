@@ -1,4 +1,4 @@
-### [KV Store](https://developer.hashicorp.com/consul/api-docs/kv)
+## [KV](https://developer.hashicorp.com/consul/api-docs/kv)
 
 Category | Endpoint | Status
 -------- | -------- | ------
@@ -6,7 +6,7 @@ Read Key | `/kv/:key` | ✅
 Create/Update Key | `/kv/:key` | ✅
 Delete Key | `/kv/:key` | ✅
 
-## Examples
+## Usage
 
 ```python
 from discovery.client import Consul

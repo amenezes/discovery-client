@@ -1,3 +1,3 @@
-### [Cluster Peering - HTTP API](https://developer.hashicorp.com/consul/api-docs-docs/peering)
+## [Cluster Perring](https://developer.hashicorp.com/consul/api-docs/peering)
 
 Not implemented

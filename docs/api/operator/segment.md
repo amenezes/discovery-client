@@ -1,4 +1,4 @@
-### [Segment](https://developer.hashicorp.com/consul/api-docs-docs/operator/segment)
+## 🚨 [Segment](https://developer.hashicorp.com/consul/api-docs/operator/segment)
 
 | Category              | Endpoint            | Status 
 | --------------------- | ------------------- | ------ 

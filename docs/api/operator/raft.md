@@ -1,11 +1,11 @@
-### [Raft](https://developer.hashicorp.com/consul/api-docs-docs/operator/raft)
+## [Raft](https://developer.hashicorp.com/consul/api-docs/operator/raft)
 
 | Category           | Endpoint                       | Status 
 | ------------------ | ------------------------------ | ------ 
 | Read Configuration | `/operator/raft/configuration` | ✅ 
 | Delete Raft Peer   | `/operator/raft/peer`          | ✅ 
 
-## Examples
+## Usage
 
 ```python
 from discovery.client import Consul

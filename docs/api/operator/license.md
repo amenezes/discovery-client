@@ -1,4 +1,4 @@
-### [License](https://developer.hashicorp.com/consul/api-docs-docs/operator/license)
+## 🚨 [License](https://developer.hashicorp.com/consul/api-docs/operator/license)
 
 Category | Endpoint | Status
 -------- | -------- | ------
@@ -6,7 +6,7 @@ Getting the Consul License | `/operator/license` | ✅
 Update the Consul License | `/operator/license` | ✅
 Resetting the Consul License | `/operator/license` | ✅
 
-## Examples
+## Usage
 
 ```python
 from discovery import Consul

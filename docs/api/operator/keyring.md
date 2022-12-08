@@ -1,4 +1,4 @@
-### [Keyring](https://developer.hashicorp.com/consul/api-docs-docs/operator/keyring)
+## [Keyring](https://developer.hashicorp.com/consul/api-docs/operator/keyring)
 
 | Category                             | Endpoint            | Status 
 | ------------------------------------ | ------------------- | ------ 

@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Roles](https://developer.hashicorp.com/consul/api-docs/acl/roles)
+## [Roles](https://developer.hashicorp.com/consul/api-docs/acl/roles)
 
 | Category            | Endpoint               | Status 
 |---------------------| ---------------------- | ------

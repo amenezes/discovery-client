@@ -3,9 +3,11 @@ from .agent import Agent
 from .area import Area
 from .auth_method import AuthMethod
 from .autopilot import AutoPilot
+from .behavior import Behavior
 from .binding_rule import BindingRule
 from .ca import CA
 from .catalog import Catalog
+from .check_status import CheckStatus
 from .checks import Checks
 from .config import Config
 from .connect import Connect
@@ -14,6 +16,9 @@ from .events import Events
 from .health import Health
 from .health_state import HealthState
 from .intention import Intentions
+from .intention_by import IntentionBy
+from .intention_filter import IntentionFilter
+from .intentions_action import IntentionsAction
 from .keyring import Keyring
 from .kv import Kv
 from .license import License
@@ -30,5 +35,6 @@ from .session import Session
 from .snapshot import Snapshot
 from .status import Status
 from .token import Token
+from .token_locality import TokenLocality
 from .token_type import TokenType
 from .txn import Txn

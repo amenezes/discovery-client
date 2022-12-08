@@ -1,4 +1,4 @@
-### [Discovery Chain](https://developer.hashicorp.com/consul/api-docs/discovery-chain)
+## [Discovery Chain](https://developer.hashicorp.com/consul/api-docs/discovery-chain)
 
 Category | Endpoint | Status
 -------- | -------- | ------

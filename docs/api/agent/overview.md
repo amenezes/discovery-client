@@ -1,4 +1,4 @@
-### [Agent](https://developer.hashicorp.com/consul/api-docs/agent)
+## [Agent](https://developer.hashicorp.com/consul/api-docs/agent)
 
 | Category                    | Endpoint                   | Status 
 |-----------------------------|----------------------------| ------ 

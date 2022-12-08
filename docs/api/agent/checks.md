@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Checks](https://developer.hashicorp.com/consul/api-docs/agent/check)
+## [Checks](https://developer.hashicorp.com/consul/api-docs/agent/check)
 
 | Category                | Endpoint               | Status 
 | ----------------------- | ---------------------- | ------ 
@@ -12,7 +10,7 @@
 | TTL Check Fail          | `/agent/check/fail/:check_id`   | ✅ 
 | TTL Check Update        | `/agent/check/update/:check_id` | ✅ 
 
-## Examples
+## Usage
 
 ```python
 from discovery import Consul

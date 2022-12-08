@@ -1,4 +1,4 @@
-### [Events](https://developer.hashicorp.com/consul/api-docs/event)
+## [Events](https://developer.hashicorp.com/consul/api-docs/event)
 
 | Category    | Endpoint                    | Status 
 | ----------- | --------------------------- | ------ 

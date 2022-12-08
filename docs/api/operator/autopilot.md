@@ -1,4 +1,4 @@
-### [Autopilot](https://developer.hashicorp.com/consul/api-docs-docs/operator/autopilot)
+## [Autopilot](https://developer.hashicorp.com/consul/api-docs/operator/autopilot)
 
 | Category             | Endpoint                            | Status 
 | -------------------- | ----------------------------------- | ------ 
@@ -7,7 +7,7 @@
 | Read Health          | `/operator/autopilot/health`        | ✅ 
 | Read the Autopilot State | `/operator/autopilot/state` | ✅ 
 
-## Examples
+## Usage
 
 ```python
 from discovery import Consul

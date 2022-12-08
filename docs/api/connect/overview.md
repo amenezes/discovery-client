@@ -1,1 +1,1 @@
-### [Connect](https://developer.hashicorp.com/consul/api-docs/connect)
+## [Connect](https://developer.hashicorp.com/consul/api-docs/connect)

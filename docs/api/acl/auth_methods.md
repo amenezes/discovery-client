@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Auth Methods](https://developer.hashicorp.com/consul/api-docs/acl/auth-methods)
+## [Auth Methods](https://developer.hashicorp.com/consul/api-docs/acl/auth-methods)
 
 | Category              | Endpoint                 | Status 
 | --------------------- | ------------------------ | ------ 

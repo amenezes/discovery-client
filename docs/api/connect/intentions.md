@@ -1,4 +1,4 @@
-### [Intentions](https://developer.hashicorp.com/consul/api-docs/connect/intentions)
+## [Intentions](https://developer.hashicorp.com/consul/api-docs/connect/intentions)
 
 | Category                        | Endpoint                   | Status 
 |---------------------------------|----------------------------| ----- 

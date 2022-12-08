@@ -1,3 +1,3 @@
-### [Admin Partition - HTTP API](https://developer.hashicorp.com/consul/api-docs-docs/admin-partitions)
+## 🚨 [Admin Partitions](https://developer.hashicorp.com/consul/api-docs/admin-partitions)
 
 Not implemented.

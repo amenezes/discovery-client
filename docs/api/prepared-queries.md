@@ -1,4 +1,4 @@
-### [Prepared Queries](https://developer.hashicorp.com/consul/api-docs/query)
+## [Prepared Queries](https://developer.hashicorp.com/consul/api-docs/query)
 
 | Category | Endpoint | Status 
 | -------- |-------- | ------ 

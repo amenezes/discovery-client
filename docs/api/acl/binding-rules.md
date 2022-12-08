@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Binding Rules](https://developer.hashicorp.com/consul/api-docs/acl/binding-rules)
+## [Binding Rules](https://developer.hashicorp.com/consul/api-docs/acl/binding-rules)
 
 | Category              | Endpoint                | Status 
 | --------------------- | ----------------------- | ------ 

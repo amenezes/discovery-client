@@ -1,4 +1,4 @@
-### [Health](https://developer.hashicorp.com/consul/api-docs/health)
+## [Health](https://developer.hashicorp.com/consul/api-docs/health)
 
 Category | Endpoint                   | Status
 -------- |----------------------------| ------
@@ -9,7 +9,7 @@ List Service Instances for Connect-enabled Service  | `/health/connect/:service`
 List Service Instances for Ingress Gateways Associated with a Service  | `/health/ingress/:service` | ✅
 List Checks in State  | `/health/state/:state` | ✅
 
-## Examples
+## Usage
 
 ```python
 from discovery import Consul, HealthState

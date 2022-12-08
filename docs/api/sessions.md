@@ -1,4 +1,4 @@
-### [Sessions](https://developer.hashicorp.com/consul/api-docs/session)
+## [Sessions](https://developer.hashicorp.com/consul/api-docs/session)
 
 Category | Endpoint | Status
 -------- | -------- | ------

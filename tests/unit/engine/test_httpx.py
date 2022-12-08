@@ -51,7 +51,7 @@ def test_url(consul_httpx):
 def test_repr(consul_httpx):
     assert (
         str(consul_httpx)
-        == "Consul(timeout=30.0, leader_id=None, engine=HTTPXEngine(host='localhost', port=8500, scheme='http'))"
+        == "Consul(engine=HTTPXEngine(host='localhost', port=8500, scheme='http'))"
     )
 
 

@@ -1,4 +1,4 @@
-### [Area](https://developer.hashicorp.com/consul/api-docs-docs/operator/area)
+## 🚨 [Area](https://developer.hashicorp.com/consul/api-docs/operator/area)
 
 | Category                   | Endpoint                       | Status 
 | -------------------------- | ------------------------------ | ------ 

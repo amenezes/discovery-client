@@ -1,4 +1,4 @@
-### [Catalog](https://developer.hashicorp.com/consul/api-docs/catalog)
+## [Catalog](https://developer.hashicorp.com/consul/api-docs/catalog)
 
 | Category                               | Endpoint                             | Status 
 |----------------------------------------|--------------------------------------| ----- 
@@ -13,7 +13,7 @@
 | List Services for Node                 | `/catalog/node-services/:node`       | ✅ 
 | List Services for Gateway              | `/catalog/gateway-services/:gateway` | ✅ 
 
-## Examples
+## Usage
 
 ```python
 from discovery import Consul
@@ -36,10 +36,12 @@ await consul.catalog.list_nodes()
 await consul.catalog.list_services()
 
 # list_nodes_for_service
+await c.catalog.list_nodes_for_service('consul')
 
 # list_nodes_for_connect
 
 # services_for_node
+await c.catalog.services_for_node('localhost')
 
 # list_services_for_node
 

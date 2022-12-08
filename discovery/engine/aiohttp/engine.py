@@ -23,29 +23,37 @@ class AIOHTTPEngine(Engine):
         log.debug(f"args: {args}")
         log.debug(f"kwargs: {kwargs}")
         async with ClientSession(**self._session_kwargs) as session:
-            resp = await session.get(*args, **kwargs)
-            yield Response(AIOHTTPResponse(resp))
+            log.debug(f"session_kwargs: {self._session_kwargs}")
+            response = await session.get(*args, **kwargs)
+            response.raise_for_status()
+            yield Response(AIOHTTPResponse(response))
 
     @asynccontextmanager
     async def put(self, *args, **kwargs):
         log.debug(f"args: {args}")
         log.debug(f"kwargs: {kwargs}")
         async with ClientSession(**self._session_kwargs) as session:
-            resp = await session.put(*args, **kwargs)
-            yield Response(AIOHTTPResponse(resp))
+            log.debug(f"session_kwargs: {self._session_kwargs}")
+            response = await session.put(*args, **kwargs)
+            response.raise_for_status()
+            yield Response(AIOHTTPResponse(response))
 
     @asynccontextmanager
     async def delete(self, *args, **kwargs):
         log.debug(f"args: {args}")
         log.debug(f"kwargs: {kwargs}")
         async with ClientSession(**self._session_kwargs) as session:
-            resp = await session.delete(*args, **kwargs)
-            yield Response(AIOHTTPResponse(resp))
+            log.debug(f"session_kwargs: {self._session_kwargs}")
+            response = await session.delete(*args, **kwargs)
+            response.raise_for_status()
+            yield Response(AIOHTTPResponse(response))
 
     @asynccontextmanager
     async def post(self, *args, **kwargs):
         log.debug(f"args: {args}")
         log.debug(f"kwargs: {kwargs}")
         async with ClientSession(**self._session_kwargs) as session:
-            resp = await session.post(*args, **kwargs)
-            yield Response(AIOHTTPResponse(resp))
+            log.debug(f"session_kwargs: {self._session_kwargs}")
+            response = await session.post(*args, **kwargs)
+            response.raise_for_status()
+            yield Response(AIOHTTPResponse(response))

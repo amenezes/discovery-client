@@ -1,6 +1,4 @@
-## Compability Matrix
-
-#### [Connect](https://developer.hashicorp.com/consul/api-docs/agent/connect)
+## [Connect](https://developer.hashicorp.com/consul/api-docs/agent/connect)
 
 | Category                         | Endpoint                          | Status 
 | -------------------------------- | --------------------------------- | ------ 

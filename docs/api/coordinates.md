@@ -1,4 +1,4 @@
-### [Coordinates](https://developer.hashicorp.com/consul/api-docs/coordinate)
+## [Coordinates](https://developer.hashicorp.com/consul/api-docs/coordinate)
 
 Category | Endpoint | Status
 -------- | -------- | ------

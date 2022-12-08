@@ -1,6 +1,4 @@
-## Compability Matrix
-
-### [Policies](https://developer.hashicorp.com/consul/api-docs/acl/policies)
+## [Policies](https://developer.hashicorp.com/consul/api-docs/acl/policies)
 
 | Category              | Endpoint          | Status
 |-----------------------| ----------------- | ------
