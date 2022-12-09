@@ -13,7 +13,7 @@ from .api import (
 )
 from .client import Consul
 
-__version__ = "1.0.0b7"
+__version__ = "1.0.0"
 __all__ = [
     "Consul",
     "HealthState",

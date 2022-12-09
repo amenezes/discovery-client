@@ -17,7 +17,7 @@ HTTP engine options available:
 
 Install and update using pip:
 
-### default (aiohttp) client
+### default client
 
 ````bash
 pip install -U discovery-client

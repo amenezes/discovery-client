@@ -40,6 +40,11 @@ tox:
 	@echo "> running tox..."
 	tox -r -p all
 
+install-deps:
+	@echo "> installing dependencies..."
+	pip install -r requirements-dev.txt
+	pre-commit install
+
 about:
 	@echo "> discovery-client $(VERSION)"
 	@echo ""
@@ -48,6 +53,7 @@ about:
 	@echo "make ci           - Runs: [make lint > make tests]"
 	@echo "make tox          - Runs tox"
 	@echo "make docs         - Generate project documentation"
+	@echo "make install-deps - Install development dependencies."
 	@echo ""
 	@echo "mailto: alexandre.fmenezes@gmail.com"
 
