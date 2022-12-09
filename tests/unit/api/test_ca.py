@@ -58,32 +58,44 @@ def update_payload():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def ca(consul_api):
     return api.CA(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [ca_roots_response()])
-async def test_roots(ca, expected):
+async def test_list_root_certificates(ca, expected):
     ca.client.expected = expected
-    response = await ca.roots()
-    response = await response.json()
+    response = await ca.list_root_certificates()
     assert response == ca_roots_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [ca_configuration_response()])
 async def test_configuration(ca, expected):
     ca.client.expected = expected
     response = await ca.configuration()
-    response = await response.json()
     assert response == ca_configuration_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_update(ca, expected):
-    ca.client.expected = expected
-    response = await ca.update(update_payload())
-    response.status == 200
+async def test_update_configuration(ca, mocker):
+    spy = mocker.spy(ca.client, "put")
+    await ca.update_configuration(
+        "consul",
+        {
+            "LeafCertTTL": "72h",
+            "PrivateKey": "-----BEGIN RSA PRIVATE KEY-----...",
+            "RootCert": "-----BEGIN CERTIFICATE-----...",
+            "IntermediateCertTTL": "8760h",
+        },
+    )
+    spy.assert_called_with(
+        "/v1/connect/ca/configuration",
+        json={
+            "Provider": "consul",
+            "Config": {
+                "LeafCertTTL": "72h",
+                "PrivateKey": "-----BEGIN RSA PRIVATE KEY-----...",
+                "RootCert": "-----BEGIN CERTIFICATE-----...",
+                "IntermediateCertTTL": "8760h",
+            },
+        },
+    )

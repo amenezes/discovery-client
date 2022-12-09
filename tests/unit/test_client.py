@@ -1,11 +1,3 @@
-import pytest
-
-from discovery.client import Consul
-from discovery.engine import aiohttp_session
-from discovery.exceptions import ServiceNotFoundException
-from discovery.model.agent import checks
-from discovery.utils import select_one_random
-
 SERVICE_RESPONSE = {
     "ID": "154d3a48-e665-a22e-c75a-c093de56a188",
     "Node": "6a4e48904f35",
@@ -101,122 +93,39 @@ HEALTHY_INSTANCES_RESPONSE = [
 ]
 
 
-@pytest.fixture
-@pytest.mark.asyncio
-async def client(consul_api):
-    session = await aiohttp_session()
-    yield Consul(consul_api)
-    await session.close()
+async def test_default_timeout(consul):
+    assert consul.reconnect_timeout == 30
 
 
-@pytest.mark.asyncio
-async def test_default_timeout(client):
-    assert client.timeout == 30
-
-
-@pytest.mark.asyncio
-async def test_changing_default_timeout(aiohttp_client, monkeypatch):
-    monkeypatch.setenv("DEFAULT_TIMEOUT", "5")
-    client = Consul(aiohttp_client)
-    assert client.timeout == 5
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [SERVICES_RESPONSE])
-async def test_find_services(client, expected):
-    client.client.expected = expected
-    response = await client.find_services("consul")
-    assert response == SERVICES_RESPONSE
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [SERVICES_RESPONSE])
-async def test_find_service_rr(client, expected):
-    client.client.expected = expected
-    response = await client.find_service("consul")
-    assert response == SERVICE_RESPONSE
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [SERVICES_RESPONSE])
-async def test_find_service_random(client, expected):
-    client.client.expected = expected
-    response = await client.find_service("consul", select_one_random)
-    assert response == SERVICE_RESPONSE
-
-
-@pytest.mark.asyncio
-async def test_service_not_found(client):
-    with pytest.raises(ServiceNotFoundException):
-        await client.find_service("myapp")
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", ["127.0.0.1:8300"])
-async def test_leader_ip(client, expected):
-    client.client.expected = expected
-    leader_ip = await client.leader_ip()
-    assert leader_ip == "127.0.0.1"
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [HEALTHY_INSTANCES_RESPONSE])
-async def test_consul_healthy_instances(client, expected):
-    client.client.expected = expected
-    response = await client.consul_healthy_instances()
-    assert response == HEALTHY_INSTANCES_RESPONSE
-
-
-@pytest.mark.skip
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [HEALTHY_INSTANCES_RESPONSE])
-async def test_leader_current_id(client, expected):
-    client.client.expected = expected
-    leader_id = await client.leader_current_id()
-    assert leader_id == "620b350c-5384-7797-b6be-f51696e6afc8"
-
-
-@pytest.mark.skip
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_register(client, expected):
-    client.client.expected = expected
-    response = await client.register(
-        "myapp", 5000, checks.http("http://myapp:5000/status")
-    )
-    assert response is None
-
-
-@pytest.mark.skip
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_deregister(client, expected):
-    client.client.expected = expected
-    response = await client.deregister("myapp")
-    assert response is None
-
-    # async def test_register_additional_check(client):
-    #     """Test the registration of an additional check for a service registered."""
-    #     await self.dc.register_additional_check(
-    #         check.Check(
-    #             name='additional-check',
-    #             check=check.alias('consul')
-    #         )
-    #     )
-
-    # async def test_register_additional_check_failed(client):
-    #     with pytest.raises(TypeError):
-    #         await self.dc.register_additional_check('invalid-check')
-
-    # async def test_deregister_additional_check(client):
-    #     """Test the registration of an additional check for a service registered."""
-    #     await self.dc.deregister_additional_check(
-    #         check.Check(
-    #             name='additional-check',
-    #             check=check.alias('consul')
-    #         )
-    #     )
-
-    # async def test_deregister_additional_check_failed(client):
-    #     with pytest.raises(TypeError):
-    #         await self.dc.deregister_additional_check('invalid-check')
+def test_client_props(consul):
+    assert hasattr(consul, "catalog")
+    assert hasattr(consul, "config")
+    assert hasattr(consul, "coordinate")
+    assert hasattr(consul, "events")
+    assert hasattr(consul, "health")
+    assert hasattr(consul, "kv")
+    assert hasattr(consul, "namespace")
+    assert hasattr(consul, "query")
+    assert hasattr(consul, "session")
+    assert hasattr(consul, "snapshot")
+    assert hasattr(consul, "status")
+    assert hasattr(consul, "txn")
+    assert hasattr(consul, "agent")
+    assert hasattr(consul, "connect")
+    assert hasattr(consul, "acl")
+    assert hasattr(consul, "operator")
+    assert hasattr(consul.operator, "area")
+    assert hasattr(consul.operator, "autopilot")
+    assert hasattr(consul.operator, "keyring")
+    assert hasattr(consul.operator, "license")
+    assert hasattr(consul.operator, "raft")
+    assert hasattr(consul.operator, "segment")
+    assert hasattr(consul, "binding_rule")
+    assert hasattr(consul, "policy")
+    assert hasattr(consul, "role")
+    assert hasattr(consul, "token")
+    assert hasattr(consul, "check")
+    assert hasattr(consul, "services")
+    assert hasattr(consul, "ca")
+    assert hasattr(consul, "intentions")
+    assert hasattr(consul, "event")

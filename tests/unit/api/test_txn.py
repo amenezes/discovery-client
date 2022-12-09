@@ -54,15 +54,63 @@ def sample_payload():
     )
 
 
+SAMPLE_RESPONSE = {
+    "Results": [
+        {
+            "KV": {
+                "LockIndex": "<lock index>",
+                "Key": "<key>",
+                "Flags": "<flags>",
+                "Value": "<Base64-encoded blob of data, or null>",
+                "CreateIndex": "<index>",
+                "ModifyIndex": "<index>",
+            }
+        },
+        {
+            "Node": {
+                "ID": "67539c9d-b948-ba67-edd4-d07a676d6673",
+                "Node": "bar",
+                "Address": "192.168.0.1",
+                "Datacenter": "dc1",
+                "TaggedAddresses": None,
+                "Meta": {"instance_type": "m2.large"},
+                "CreateIndex": 32,
+                "ModifyIndex": 32,
+            }
+        },
+        {
+            "Check": {
+                "Node": "bar",
+                "CheckID": "service:web1",
+                "Name": "Web HTTP Check",
+                "Status": "critical",
+                "Notes": "",
+                "Output": "",
+                "ServiceID": "web1",
+                "ServiceName": "web",
+                "ServiceTags": None,
+                "Definition": {"HTTP": "http://localhost:8080", "Interval": "10s"},
+                "CreateIndex": 22,
+                "ModifyIndex": 35,
+            }
+        },
+    ],
+    "Errors": [
+        {
+            "OpIndex": "<index of failed operation>",
+            "What": "<error message for failed operation>",
+        },
+        ...,
+    ],
+}
+
+
 @pytest.fixture
-@pytest.mark.asyncio
 async def txn(consul_api):
     return api.Txn(client=consul_api)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_create(txn, expected):
-    txn.client.expected = expected
+async def test_create(txn):
+    txn.client.expected = SAMPLE_RESPONSE
     response = await txn.create(sample_payload())
-    assert response.status == 200
+    assert response == SAMPLE_RESPONSE

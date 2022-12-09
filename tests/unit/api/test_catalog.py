@@ -5,50 +5,6 @@ import pytest
 from discovery import api
 
 
-def sample_payload():
-    return json.dumps(
-        {
-            "Datacenter": "dc1",
-            "ID": "40e4a748-2192-161a-0510-9bf59fe950b5",
-            "Node": "foobar",
-            "Address": "192.168.10.10",
-            "TaggedAddresses": {"lan": "192.168.10.10", "wan": "10.0.10.10"},
-            "NodeMeta": {"somekey": "somevalue"},
-            "Service": {
-                "ID": "redis1",
-                "Service": "redis",
-                "Tags": ["primary", "v1"],
-                "Address": "127.0.0.1",
-                "TaggedAddresses": {
-                    "lan": {"address": "127.0.0.1", "port": 8000},
-                    "wan": {"address": "198.18.0.1", "port": 80},
-                },
-                "Meta": {"redis_version": "4.0"},
-                "Port": 8000,
-            },
-            "Check": {
-                "Node": "foobar",
-                "CheckID": "service:redis1",
-                "Name": "Redis health check",
-                "Notes": "Script based health check",
-                "Status": "passing",
-                "ServiceID": "redis1",
-                "Definition": {
-                    "TCP": "localhost:8888",
-                    "Interval": "5s",
-                    "Timeout": "1s",
-                    "DeregisterCriticalServiceAfter": "30s",
-                },
-            },
-            "SkipNodeUpdate": False,
-        }
-    )
-
-
-def deregister_payload():
-    return {"Datacenter": "dc1", "Node": "foobar"}
-
-
 def list_nodes_response():
     return [
         {
@@ -153,71 +109,67 @@ async def catalog(consul_api):
     return api.Catalog(client=consul_api)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_register(catalog, expected):
-    catalog.client.expected = expected
-    response = await catalog.register(sample_payload())
-    assert response.status == 200
+async def test_register_entity(catalog, mocker):
+    spy = mocker.spy(catalog.client, "put")
+    await catalog.register_entity(
+        "192.168.10.10", "dc1", "t2.320", "40e4a748-2192-161a-0510-9bf59fe950b5"
+    )
+    spy.assert_called_with(
+        "/v1/catalog/register",
+        json={
+            "Datacenter": "dc1",
+            "ID": "40e4a748-2192-161a-0510-9bf59fe950b5",
+            "Node": "t2.320",
+            "Address": "192.168.10.10",
+        },
+    )
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_deregister(catalog, expected):
-    catalog.client.expected = expected
-    response = await catalog.deregister(deregister_payload())
-    assert response.status == 200
+async def test_deregister_entity(catalog, mocker):
+    spy = mocker.spy(catalog.client, "put")
+    await catalog.deregister_entity("t2.320", "dc1")
+    spy.assert_called_with(
+        "/v1/catalog/deregister", json={"Datacenter": "dc1", "Node": "t2.320"}
+    )
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_datacenters_response()])
 async def test_datacenters(catalog, expected):
     catalog.client.expected = expected
-    response = await catalog.datacenters()
-    response = await response.json()
+    response = await catalog.list_datacenters()
     assert response == list_datacenters_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_nodes_response()])
-async def test_nodes(catalog, expected):
+async def test_list_nodes(catalog, expected):
     catalog.client.expected = expected
-    response = await catalog.nodes()
-    response = await response.json()
+    response = await catalog.list_nodes()
     assert response == list_nodes_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [services_response()])
-async def test_services(catalog, expected):
+async def test_list_services(catalog, expected):
     catalog.client.expected = expected
-    response = await catalog.services()
-    response = await response.json()
+    response = await catalog.list_services()
     assert response == services_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [service_response()])
-async def test_service(catalog, expected):
+async def test_list_nodes_for_service(catalog, expected):
     catalog.client.expected = expected
-    response = await catalog.service("my-service")
-    response = await response.json()
+    response = await catalog.list_nodes_for_service("my-service")
     assert response == service_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [service_response()])
-async def test_connect(catalog, expected):
+async def test_list_nodes_for_connect(catalog, expected):
     catalog.client.expected = expected
-    response = await catalog.connect("my-service")
-    response = await response.json()
+    response = await catalog.list_nodes_for_connect("my-service")
     assert response == service_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [map_services_node_response()])
-async def test_node(catalog, expected):
+async def test_services_for_node(catalog, expected):
     catalog.client.expected = expected
-    response = await catalog.node("my-node")
-    response = await response.json()
+    response = await catalog.services_for_node("my-node")
     assert response == map_services_node_response()

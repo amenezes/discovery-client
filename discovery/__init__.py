@@ -1,6 +1,31 @@
-import logging
+from . import checks, utils
+from ._logger import log
+from .api import (
+    Behavior,
+    CheckStatus,
+    HealthState,
+    IntentionFilter,
+    IntentionsAction,
+    LogLevel,
+    TokenLocality,
+    TokenType,
+    kind,
+)
+from .client import Consul
 
-from discovery.__version__ import __version__
-
-log = logging.getLogger("discovery-client")
-log.addHandler(logging.NullHandler())
+__version__ = "1.0.0"
+__all__ = [
+    "Consul",
+    "HealthState",
+    "LogLevel",
+    "TokenType",
+    "checks",
+    "utils",
+    "Kind",
+    "TokenLocality",
+    "IntentionsAction",
+    "IntentionFilter",
+    "IntentionBy",
+    "CheckStatus",
+    "Behavior",
+]

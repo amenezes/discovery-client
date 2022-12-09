@@ -1,6 +1,6 @@
 import pytest
 
-from discovery import api
+from discovery import TokenType, api
 
 
 def stream_logs_sample():
@@ -142,7 +142,6 @@ token_payload = {"Token": "adf4238a-882b-9ddc-4a9d-5b6758e4159e"}
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def agent(consul_api):
     return api.Agent(
         api.Checks(client=consul_api),
@@ -155,90 +154,70 @@ async def agent(consul_api):
     )
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [members_response()])
 async def test_members(agent, expected):
     agent.client.expected = expected
     response = await agent.members()
-    response = await response.json()
     assert response == members_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [configuration_response()])
 async def test_read_configuration(agent, expected):
     agent.client.expected = expected
     response = await agent.read_configuration()
-    response = await response.json()
     assert response == configuration_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_reload(agent, expected):
-    agent.client.expected = expected
-    response = await agent.reload()
-    assert response.status == 200
+async def test_reload(agent, mocker):
+    spy = mocker.spy(agent.client, "put")
+    await agent.reload()
+    spy.assert_called_with("/v1/agent/reload")
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_maintenance(agent, expected):
-    agent.client.expected = expected
-    response = await agent.maintenance()
-    assert response.status == 200
+async def test_maintenance(agent, mocker):
+    spy = mocker.spy(agent.client, "put")
+    await agent.maintenance()
+    spy.assert_called_with("/v1/agent/maintenance?enable=True")
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [metrics_response()])
 async def test_metrics(agent, expected):
     agent.client.expected = expected
     response = await agent.metrics()
-    response = await response.json()
     assert response == metrics_response()
 
 
-# @pytest.mark.skip
-# @pytest.mark.asyncio
-# @pytest.mark.parametrize("expected", [metrics_response()])
-# async def test_stream_logs(agent, expected):
-#     response = await agent.stream_logs(stream=True)
-#     assert response
+async def test_join(agent, mocker):
+    spy = mocker.spy(agent.client, "put")
+    await agent.join("1.2.3.4")
+    spy.assert_called_with("/v1/agent/join/1.2.3.4")
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_join(agent, expected):
-    agent.client.expected = expected
-    response = await agent.join("1.2.3.4")
-    assert response.status == 200
+async def test_leave(agent, mocker):
+    spy = mocker.spy(agent.client, "put")
+    await agent.leave()
+    spy.assert_called_with("/v1/agent/leave")
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_leave(agent, expected):
-    agent.client.expected = expected
-    response = await agent.leave()
-    assert response.status == 200
+async def test_force_leave(agent, mocker):
+    spy = mocker.spy(agent.client, "put")
+    await agent.force_leave("agent-one")
+    spy.assert_called_with("/v1/agent/force-leave/agent-one")
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_force_leave(agent, expected):
-    agent.client.expected = expected
-    response = await agent.force_leave("agent-one")
-    assert response.status == 200
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_update_acl_token(agent, expected):
-    agent.client.expected = expected
-    response = await agent.update_acl_token("default")
-    assert response.status == 200
-
-
-@pytest.mark.asyncio
-async def test_update_acl_token_invalid(agent):
-    with pytest.raises(ValueError):
-        await agent.update_acl_token("invalid")
+@pytest.mark.parametrize(
+    "token_type",
+    [
+        TokenType.DEFAULT,
+        TokenType.AGENT,
+        TokenType.AGENT_RECOVERY,
+        TokenType.REPLICATION,
+        TokenType.AGENT_MASTER,
+        TokenType.ACL_TOKEN,
+        TokenType.ACL_AGENT_TOKEN,
+        TokenType.ACL_AGENT_MASTER_TOKEN,
+        TokenType.ACL_REPLICATION_TOKEN,
+    ],
+)
+async def test_update_acl_token(agent, token_type):
+    await agent.update_acl_token("token", token_type)

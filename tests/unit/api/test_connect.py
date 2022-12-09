@@ -49,12 +49,10 @@ leaf_certificate_response = {
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def connect(consul_api):
     return api.Connect(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [authorize_response])
 async def test_authorize(connect, expected):
     connect.client.expected = expected
@@ -63,11 +61,9 @@ async def test_authorize(connect, expected):
         "spiffe://dc1-7e567ac2-551d-463f-8497-f78972856fc1.consul/ns/default/dc/dc1/svc/web",
         "04:00:00:00:00:01:15:4b:5a:c3:94",
     )
-    response = await response.json()
     assert response == authorize_response
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [authorize_response])
 async def test_authorize_with_namespace(connect, expected):
     connect.client.expected = expected
@@ -77,23 +73,18 @@ async def test_authorize_with_namespace(connect, expected):
         "04:00:00:00:00:01:15:4b:5a:c3:94",
         "default",
     )
-    response = await response.json()
     assert response == authorize_response
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [ca_roots_response])
 async def test_ca_roots(connect, expected):
     connect.client.expected = expected
     response = await connect.ca_roots()
-    response = await response.json()
     assert response == ca_roots_response
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [leaf_certificate_response])
 async def test_leaf_certificate(connect, expected):
     connect.client.expected = expected
     response = await connect.leaf_certificate("web")
-    response = await response.json()
     assert response == leaf_certificate_response

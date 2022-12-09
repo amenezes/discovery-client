@@ -31,28 +31,22 @@ def sample_payload(*args, **kwargs):
     )
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_payload()])
 async def test_current(license, expected):
     license.client.expected = expected
     response = await license.current()
-    response = await response.json()
     assert response == sample_payload()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_payload()])
 async def test_update(license, expected):
     license.client.expected = expected
     response = await license.update(data={})
-    data = await response.json()
-    assert data == sample_payload()
+    assert response == sample_payload()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_payload()])
 async def test_reset(license, expected):
     license.client.expected = expected
     response = await license.reset()
-    data = await response.json()
-    assert data == sample_payload()
+    assert response == sample_payload()

@@ -136,57 +136,40 @@ def sample_state_response():
 
 
 @pytest.fixture
-@pytest.mark.asyncio
 async def health(consul_api):
     return api.Health(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
-async def test_node(health, expected):
+async def test_checks_for_node(health, expected):
     health.client.expected = expected
-    response = await health.node("my-node")
-    response = await response.json()
+    response = await health.checks_for_node("my-node")
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [service_response()])
-async def test_checks(health, expected):
+async def test_checks_for_service(health, expected):
     health.client.expected = expected
-    response = await health.checks("my-service")
-    response = await response.json()
+    response = await health.checks_for_service("my-service")
     assert response == service_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [nodes_for_service_response()])
-async def test_service(health, expected):
+async def test_service_instances(health, expected):
     health.client.expected = expected
-    response = await health.service("my-service")
-    response = await response.json()
+    response = await health.service_instances("my-service")
     assert response == nodes_for_service_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [service_response()])
-async def test_connect(health, expected):
+async def test_service_instances_for_connect(health, expected):
     health.client.expected = expected
-    response = await health.connect("consul")
-    response = await response.json()
+    response = await health.service_instances_for_connect("consul")
     assert response == service_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_state_response()])
-async def test_state_success(health, expected):
+async def test_checks_in_state(health, expected):
     health.client.expected = expected
-    response = await health.state("passing")
-    response = await response.json()
+    response = await health.checks_in_state()
     assert response == sample_state_response()
-
-
-@pytest.mark.asyncio
-async def test_state_value_error(health):
-    with pytest.raises(ValueError):
-        await health.state("ok")

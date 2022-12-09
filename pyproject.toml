@@ -1,6 +1,3 @@
-[tool.portray]
-modules = ["discovery"]
-
-[tool.portray.mkdocs.theme]
-name = "material"
-palette = {primary = "pink", accent = "gray"}
+[build-system]
+requires = ["setuptools >= 46.4.0"]
+build-backend = "setuptools.build_meta"

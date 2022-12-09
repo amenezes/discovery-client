@@ -1,19 +1,6 @@
-import json
-
 import pytest
 
 from discovery import api
-
-
-def sample_payload():
-    return json.dumps(
-        {
-            "SourceName": "web",
-            "DestinationName": "db",
-            "SourceType": "consul",
-            "Action": "allow",
-        }
-    )
 
 
 def sample_response():
@@ -90,87 +77,47 @@ def check_response():
     return {"Allowed": True}
 
 
-def update_payload():
-    return json.dumps(
-        {
-            "SourceName": "web",
-            "DestinationName": "other-db",
-            "SourceType": "consul",
-            "Action": "allow",
-        }
-    )
-
-
 @pytest.fixture
-@pytest.mark.asyncio
 async def intention(consul_api):
     return api.Intentions(client=consul_api)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_response()])
-async def test_create_intention(intention, expected):
+async def test_upsert_by_name(intention, expected):
     intention.client.expected = expected
-    response = await intention.create(sample_payload())
-    response = await response.json()
+    response = await intention.upsert_by_name("web", "db")
     assert response == sample_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_intent_response()])
-async def test_read(intention, expected):
+async def test_read_by_name(intention, expected):
     intention.client.expected = expected
-    response = await intention.read("e9ebc19f-d481-42b1-4871-4d298d3acd5c")
-    response = await response.json()
+    response = await intention.read_by_name("web", "db")
     assert response == sample_intent_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [sample_intentions_response()])
 async def test_list(intention, expected):
     intention.client.expected = expected
     response = await intention.list()
-    response = await response.json()
     assert response == sample_intentions_response()
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_update(intention, expected):
-    intention.client.expected = expected
-    response = await intention.update(
-        "e9ebc19f-d481-42b1-4871-4d298d3acd5c", update_payload()
-    )
-    assert response.status == 200
+async def test_delete_by_name(intention, mocker):
+    spy = mocker.spy(intention.client, "delete")
+    await intention.delete_by_name("web", "db")
+    spy.assert_called_with("/v1/connect/intentions/exact?source=web&destination=db")
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("expected", [200])
-async def test_delete(intention, expected):
-    intention.client.expected = expected
-    response = await intention.delete("e9ebc19f-d481-42b1-4871-4d298d3acd5c")
-    assert response.status == 200
-
-
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [check_response()])
 async def test_check(intention, expected):
     intention.client.expected = expected
     response = await intention.check("web", "db")
-    response = await response.json()
     assert response == check_response()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize("expected", [list_match_response()])
-async def test_match_success(intention, expected):
+async def test_list_match(intention, expected):
     intention.client.expected = expected
-    response = await intention.match("source", "web")
-    response = await response.json()
+    response = await intention.list_match("web")
     assert response == list_match_response()
-
-
-@pytest.mark.asyncio
-async def test_match_invalid(intention):
-    with pytest.raises(ValueError):
-        await intention.match("origin", "web")

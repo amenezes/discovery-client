@@ -1,7 +1,11 @@
+from contextlib import asynccontextmanager
+from typing import AsyncIterator, Optional
 from urllib.parse import quote_plus
 
-from discovery import api
+from discovery import api, log
 from discovery.api.abc import Api
+from discovery.api.loglevel import LogLevel
+from discovery.api.token_type import TokenType
 
 
 class Agent(Api):
@@ -12,7 +16,7 @@ class Agent(Api):
         service=None,
         endpoint: str = "/agent",
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(endpoint=endpoint, **kwargs)
         self.checks = checks or api.Checks(client=self.client)
         self.connect = connect or api.Connect(
@@ -22,67 +26,87 @@ class Agent(Api):
         )
         self.service = service or api.Service(client=self.client)
 
-    async def members(self, **kwargs):
-        response = await self.client.get(f"{self.url}/members", **kwargs)
-        return response
+    async def host_information(self, **kwargs) -> dict:
+        async with self.client.get(f"{self.url}/host", **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def read_configuration(self, **kwargs):
-        response = await self.client.get(f"{self.url}/self", **kwargs)
-        return response
+    async def members(
+        self, wan: Optional[bool] = None, segment: Optional[str] = None, **kwargs
+    ) -> dict:
+        url = self._prepare_request_url(f"{self.url}/members", wan=wan, segment=segment)
+        async with self.client.get(url, **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def reload(self, **kwargs):
-        response = await self.client.put(f"{self.url}/reload", **kwargs)
-        return response
+    async def read_configuration(self, **kwargs) -> dict:
+        async with self.client.get(f"{self.url}/self", **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def maintenance(self, enable=True, reason=None, **kwargs):
-        reason = reason or ""
-        response = await self.client.put(
-            f"{self.url}/maintenance?enable={enable}&reason={quote_plus(reason)}",
-            **kwargs,
+    async def reload(self, **kwargs) -> None:
+        async with self.client.put(f"{self.url}/reload", **kwargs):
+            pass
+
+    async def maintenance(
+        self, enable: bool = True, reason: Optional[str] = None, **kwargs
+    ) -> None:
+        if reason:
+            reason = quote_plus(reason)
+        url = self._prepare_request_url(
+            f"{self.url}/maintenance", enable=enable, reason=reason
         )
-        return response
+        async with self.client.put(url, **kwargs):
+            pass
 
-    async def metrics(self, **kwargs):
-        response = await self.client.get(f"{self.url}/metrics", **kwargs)
-        return response
+    async def metrics(self, **kwargs) -> dict:
+        async with self.client.get(f"{self.url}/metrics", **kwargs) as resp:
+            return await resp.json()  # type: ignore
 
-    async def stream_logs(self, chunk_size=20, **kwargs):
-        async with self.client.session.get(f"{self.url}/monitor", **kwargs) as resp:
-            with open("/tmp/teste", "wb") as fd:
-                while True:
-                    chunk = await resp.content.read(chunk_size)
-                    if not chunk:
-                        break
-                    fd.write(chunk)
-        # response = await self.client.get(f"{self.url}/monitor", **kwargs)
-        # return response
+    @asynccontextmanager
+    async def stream_logs(
+        self,
+        loglevel: LogLevel = LogLevel.INFO,
+        logjson: bool = False,
+        chunk_size: int = 1000,
+        **kwargs,
+    ) -> AsyncIterator:
+        url = self._prepare_request_url(
+            f"{self.url}/monitor", loglevel=loglevel, logjson=logjson
+        )
+        async with self.client.get(url, **kwargs) as resp:
+            yield await resp.content(chunk_size)
 
-    async def join(self, address, **kwargs):
-        response = await self.client.put(f"{self.url}/join/{address}", **kwargs)
-        return response
+    async def join(self, address: str, wan: Optional[bool] = None, **kwargs) -> None:
+        url = self._prepare_request_url(f"{self.url}/join/{address}", wan=wan)
+        async with self.client.put(url, **kwargs):
+            pass
 
-    async def leave(self, **kwargs):
-        response = await self.client.put(f"{self.url}/leave", **kwargs)
-        return response
+    async def leave(self, **kwargs) -> None:
+        async with self.client.put(f"{self.url}/leave", **kwargs):
+            pass
 
-    async def force_leave(self, node, **kwargs):
-        response = await self.client.put(f"{self.url}/force-leave/{node}", **kwargs)
-        return response
+    async def force_leave(
+        self,
+        node_name: str,
+        prune: Optional[bool] = None,
+        wan: Optional[bool] = None,
+        **kwargs,
+    ) -> None:
+        url = self._prepare_request_url(
+            f"{self.url}/force-leave/{node_name}", prune=prune, wan=wan
+        )
+        async with self.client.put(url, **kwargs):
+            pass
 
-    async def update_acl_token(self, token_type: str):
-        if token_type not in [
-            "default",
-            "agent",
-            "agent_master",
-            "replication",
-            "acl_token",  # legacy
-            "acl_agent_token",
-            "acl_agent_master_token",
-            "acl_replication_token",
+    async def update_acl_token(self, token: str, token_type: TokenType) -> dict:
+        if token_type == TokenType.AGENT_MASTER:
+            log.warning("Deprecated in version 1.11")
+        elif token_type in [
+            TokenType.ACL_TOKEN,
+            TokenType.ACL_AGENT_TOKEN,
+            TokenType.ACL_AGENT_MASTER_TOKEN,
+            TokenType.ACL_REPLICATION_TOKEN,
         ]:
-            raise ValueError(
-                "token_type invalid. See the valid values in: "
-                "https://www.consul.io/api/agent.html#update-acl-tokens"
-            )
-        response = await self.client.put(f"{self.url}/token/{token_type}")
-        return response
+            log.warning("Deprecated in version 1.4.3")
+        async with self.client.put(
+            f"{self.url}/token/{token_type}", json={"Token": token}
+        ) as resp:
+            return await resp.json()  # type: ignore

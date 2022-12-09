@@ -1,114 +1,124 @@
 import asyncio
-import json
-import pickle
+import os
+from typing import Callable, List, Optional, Union
 
-from discovery import log
-from discovery.abc import BaseClient
-from discovery.exceptions import NoConsulLeaderException, ServiceNotFoundException
-from discovery.model.agent.service import service
-from discovery.utils import select_one_rr
+from discovery import api, log, utils
+
+from .engine.aiohttp import AIOHTTPEngine
+from .engine.httpx import HTTPXEngine
+from .exceptions import NoConsulLeaderException
+from .utils import Service
 
 
-class Consul(BaseClient):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.managed_services = {}
-        self._leader_id = None
-        self.consul_current_leader_id = None
+class Consul:
+    def __init__(
+        self,
+        client: Optional[Union[AIOHTTPEngine, HTTPXEngine]] = None,
+        *args,
+        **kwargs,
+    ):
+        self.client = client or AIOHTTPEngine(*args, **kwargs)
 
-    async def find_service(self, name, fn=select_one_rr):
-        response = await self.find_services(name)
+        self.catalog = api.Catalog(client=self.client)
+        self.config = api.Config(client=self.client)
+        self.coordinate = api.Coordinate(client=self.client)
+        self.events = api.Events(client=self.client)
+        self.health = api.Health(client=self.client)
+        self.kv = api.Kv(client=self.client)
+        self.namespace = api.Namespace(client=self.client)
+        self.query = api.Query(client=self.client)
+        self.session = api.Session(client=self.client)
+        self.snapshot = api.Snapshot(client=self.client)
+        self.status = api.Status(client=self.client)
+        self.txn = api.Txn(client=self.client)
+        self.agent = api.Agent(client=self.client)
+        self.connect = api.Connect(client=self.client)
+        self.acl = api.Acl(client=self.client)
+        self.operator = api.Operator(client=self.client)
+        self.binding_rule = api.BindingRule(client=self.client)
+        self.policy = api.Policy(client=self.client)
+        self.role = api.Role(client=self.client)
+        self.token = api.Token(client=self.client)
+        self.check = api.Checks(client=self.client)
+        self.services = api.Service(client=self.client)
+        self.ca = api.CA(client=self.client)
+        self.intentions = api.Intentions(client=self.client)
+        self.event = api.Events(client=self.client)
+
+        self.reconnect_timeout = float(
+            os.getenv("DISCOVERY_CLIENT_DEFAULT_TIMEOUT", 30)
+        )
+        self._leader_id: Optional[str] = None
+
+    async def leader_ip(self, *args, **kwargs) -> str:
         try:
-            return fn(response)
+            current_leader = await self.status.leader(*args, **kwargs)
+            leader_ip, _ = current_leader.split(":")
         except Exception:
-            raise ServiceNotFoundException(
-                f"service {name} not found in the Consul's catalog"
-            )
+            raise NoConsulLeaderException
+        return leader_ip
 
-    async def find_services(self, name):
-        resp = await self.catalog.service(name)
-        response = await self._get_response(resp)
-        return response
+    async def leader_id(self, **kwargs) -> str:
+        leader_ip = await self.leader_ip(**kwargs.get("leader_options", {}))
+        instances = await self.health.service_instances(
+            "consul", **kwargs.get("instance_options", {})
+        )
+        current_id = [
+            instance["Node"]["ID"]
+            for instance in instances
+            if instance["Node"]["Address"] == leader_ip
+        ][0]
+        try:
+            return str(current_id)
+        except Exception:
+            raise NoConsulLeaderException
+
+    async def find_services(self, name: str) -> List[dict]:
+        return await self.catalog.list_nodes_for_service(name)  # type: ignore
+
+    async def find_service(
+        self, name: str, fn: Callable = utils.select_one_rr, *args, **kwargs
+    ) -> Optional[dict]:
+        response = await self.find_services(name, *args, **kwargs)
+        return fn(response)  # type: ignore
 
     async def register(
-        self, service_name: str, service_port: int, check=None, dump_service=True
+        self,
+        service: Service,
+        enable_watch: bool = False,
+        **kwargs,
     ) -> None:
-        svc = service(service_name, service_port, check=check)
+        self._leader_id = await self.leader_id(**kwargs)
         try:
-            await self.agent.service.register(svc)
-            self.managed_services[json.loads(svc).get("id")] = {
-                "service_name": service_name,
-                "port": service_port,
-                "check": check,
-            }
-            self.consul_current_leader_id = await self.leader_current_id()
-            if dump_service:
-                self._dump_registered_service
+            await self.agent.service.register(service.dict(), **kwargs)
         except Exception as err:
             raise err
 
-    def _dump_registered_service(self):
-        with open(".service", "wb") as f:
-            f.write(pickle.dumps(self.managed_services))
+        if enable_watch:
+            loop = asyncio.get_running_loop()
+            loop.create_task(
+                self._watch_connection(service, enable_watch, **kwargs),
+                name="discovery-client-watch-connection",
+            )
 
-    async def check_consul_health(self):
+    async def deregister(self, service_id: str, ns: Optional[str] = None) -> None:
+        await self.agent.service.deregister(service_id, ns)
+
+    async def reconnect(self, service: Service, *args, **kwargs) -> None:
+        await self.deregister(service.id)  # type: ignore
+        await self.register(service, *args, **kwargs)
+
+    async def _watch_connection(self, service: Service, *args, **kwargs) -> None:
         while True:
             try:
-                await asyncio.sleep(self.timeout)
-                current_id = await self.leader_current_id()
-                if current_id != self.consul_current_leader_id:
-                    await self.reconnect()
+                await asyncio.sleep(self.reconnect_timeout)
+                current_id = await self.leader_id()
+                if current_id != self._leader_id:
+                    await self.reconnect(service, *args, **kwargs)
             except Exception:
-                await asyncio.sleep(self.timeout)
-                await self.check_consul_health()
+                log.error(
+                    f"Failed to connect to Consul, trying again at {self.reconnect_timeout}/s"
+                )
 
-    async def reconnect(self):
-        old_service = self.managed_services.copy()
-        await self.deregister()
-        for key, value in old_service.items():
-            await self.register(
-                service_name=value.get("service_name"),
-                service_port=value.get("port"),
-                check=value.get("check"),
-            )
-        log.info("Service successfully re-registered")
-
-    async def leader_current_id(self):
-        consul_leader = await self.leader_ip()
-        consul_instances = await self.consul_healthy_instances()
-
-        current_id = [
-            instance.get("Node").get("ID")
-            for instance in consul_instances
-            if instance.get("Node").get("Address") == consul_leader
-        ]
-        if current_id is not None:
-            current_id = current_id[0]
-        return current_id
-
-    async def leader_ip(self):
-        leader_response = await self.status.leader()
-        leader_response = await self._get_response(leader_response)
-        try:
-            consul_leader, _ = leader_response.split(":")
-        except ValueError:
-            raise NoConsulLeaderException("Error to identify Consul's leader.")
-        return consul_leader
-
-    async def consul_healthy_instances(self):
-        health_response = await self.health.service("consul")
-        consul_instances = await self._get_response(health_response)
-        return consul_instances
-
-    async def _get_response(self, resp):
-        try:
-            response = await resp.json()
-            return response
-        except Exception:
-            response = await resp.text()
-            return response
-
-    async def deregister(self) -> None:
-        for service_id in self.managed_services.keys():
-            await self.agent.service.deregister(service_id)
-        self.managed_services.clear()
+    def __repr__(self) -> str:
+        return f"Consul(engine={self.client})"

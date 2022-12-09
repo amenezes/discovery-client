@@ -1,0 +1,84 @@
+site_name: discovery-client
+repo_url: https://github.com/amenezes/discovery-client
+repo_name: amenezes/discovery-client
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.top
+    - navigation.prune
+    - navigation.sections
+    - toc.integrate
+    - search.highlight
+    - search.suggest
+    - search.share
+    - content.code.annotate
+    - content.tooltips
+    - toc.follow
+  palette:
+    - scheme: default
+      primary: pink
+      accent: red
+      toggle:
+        icon: material/lightbulb-on
+        name: Switch to dark mode
+    - scheme: slate
+      primary: pink
+      accent: red
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github-alt
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/amenezes/discovery-client
+    - icon: fontawesome/solid/bug
+      link: https://github.com/amenezes/discovery-client/issues
+    - icon: fontawesome/solid/envelope
+      link: mailto:alexandre.fmenezes@gmail.com
+nav:
+- API:
+  - ACLs:
+    - Overview: api/acl/overview.md
+    - Auth Methods: api/acl/auth_methods.md
+    - Binding Rules: api/acl/binding-rules.md
+    - Policies: api/acl/policies.md
+    - Roles: api/acl/roles.md
+    - Tokens: api/acl/tokens.md
+  - Admin Partitions: api/admin-partitions.md
+  - Agent:
+    - Overview: api/agent/overview.md
+    - Checks: api/agent/checks.md
+    - Services: api/agent/services.md
+    - Connect: api/agent/connect.md
+  - Catalog: api/catalog.md
+  - Cluster Peering: api/cluster-peering.md
+  - Config: api/config.md
+  - Connect:
+    - Overview: api/connect/overview.md
+    - CA: api/connect/ca.md
+    - Intentions: api/connect/intentions.md
+  - Coordinates: api/coordinates.md
+  - Discovery Chain: api/discovery-chain.md
+  - Events: api/events.md
+  - Health: api/health.md
+  - KV Store: api/kv-store.md
+  - Operator:
+    - Overview: api/operator/overview.md
+    - Area: api/operator/area.md
+    - Autopilot: api/operator/autopilot.md
+    - Keyring: api/operator/keyring.md
+    - License: api/operator/license.md
+    - Raft: api/operator/raft.md
+    - Segment: api/operator/segment.md
+  - Namespaces: api/namespaces.md
+  - Prepared Queries: api/prepared-queries.md
+  - Sessions: api/sessions.md
+  - Snapshots: api/snapshots.md
+  - Status: api/status.md
+  - Transactions: api/transactions.md
+- Engine:
+  - AIOHTTP: engine/aiohttp.md
+  - httpx: engine/httpx.md
