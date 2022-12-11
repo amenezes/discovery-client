@@ -50,6 +50,10 @@ class Consul:
         )
         self._leader_id: Optional[str] = None
 
+    @property
+    def current_leader_id(self) -> Optional[str]:
+        return self._leader_id
+
     async def leader_ip(self, *args, **kwargs) -> str:
         try:
             current_leader = await self.status.leader(*args, **kwargs)
@@ -89,6 +93,7 @@ class Consul:
         **kwargs,
     ) -> None:
         self._leader_id = await self.leader_id(**kwargs)
+        log.debug(f"Consul leader id: [current='{self.current_leader_id}']")
         try:
             await self.agent.service.register(service.dict(), **kwargs)
         except Exception as err:
@@ -97,7 +102,7 @@ class Consul:
         if enable_watch:
             loop = asyncio.get_running_loop()
             loop.create_task(
-                self._watch_connection(service, enable_watch, **kwargs),
+                self._watch_connection(service, **kwargs),
                 name="discovery-client-watch-connection",
             )
 
@@ -108,15 +113,18 @@ class Consul:
         await self.deregister(service.id)  # type: ignore
         await self.register(service, *args, **kwargs)
 
-    async def _watch_connection(self, service: Service, *args, **kwargs) -> None:
+    async def _watch_connection(self, service: Service, **kwargs) -> None:
         while True:
+            await asyncio.sleep(self.reconnect_timeout)
             try:
-                await asyncio.sleep(self.reconnect_timeout)
                 current_id = await self.leader_id()
-                if current_id != self._leader_id:
-                    await self.reconnect(service, *args, **kwargs)
+                if current_id != self.current_leader_id:
+                    log.debug(
+                        f"Consul leader id changed: [current='{self.current_leader_id}', new='{current_id}']"
+                    )
+                    await self.reconnect(service, **kwargs)
             except Exception:
-                log.error(
+                log.info(
                     f"Failed to connect to Consul, trying again at {self.reconnect_timeout}/s"
                 )
 
