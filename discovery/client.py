@@ -109,9 +109,9 @@ class Consul:
     async def deregister(self, service_id: str, ns: Optional[str] = None) -> None:
         await self.agent.service.deregister(service_id, ns)
 
-    async def reconnect(self, service: Service, **kwargs) -> None:
+    async def reconnect(self, service: Service, *args, **kwargs) -> None:
         await self.deregister(service.id)  # type: ignore
-        await self.register(service, **kwargs)
+        await self.register(service, *args, **kwargs)
 
     async def _watch_connection(self, service: Service, **kwargs) -> None:
         while True:
