@@ -58,8 +58,8 @@ class Consul:
         try:
             current_leader = await self.status.leader(*args, **kwargs)
             leader_ip, _ = current_leader.split(":")
-        except Exception:
-            raise NoConsulLeaderException
+        except Exception as err:
+            raise NoConsulLeaderException(details=str(err))
         return leader_ip
 
     async def leader_id(self, **kwargs) -> str:
@@ -74,8 +74,8 @@ class Consul:
         ][0]
         try:
             return str(current_id)
-        except Exception:
-            raise NoConsulLeaderException
+        except Exception as err:
+            raise NoConsulLeaderException(details=str(err))
 
     async def find_services(self, name: str) -> List[dict]:
         return await self.catalog.list_nodes_for_service(name)  # type: ignore

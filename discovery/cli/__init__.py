@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import click
 from rich.console import Console
@@ -24,27 +25,36 @@ def cli():
 @cli.command()
 @click.option("-l", "--leader", is_flag=True, help="Get Raft Leader.")
 @click.option("-p", "--peers", is_flag=True, help="List Raft Peers.")
-def status(leader, peers):
+@click.option("-v", "--verbose", is_flag=True, help="Extend output info.")
+def status(leader, peers, verbose):
     """Status API."""
+    if verbose:
+        _show_verbose()
+
     try:
         if leader:
             resp = loop.run_until_complete(consul.status.leader())
         elif peers:
             resp = loop.run_until_complete(consul.status.leader())
-    except Exception:
-        click.echo("<error>[!]</error> Falha ao realizar a operação.")
-    click.echo(resp)
+    except Exception as err:
+        console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
+        raise SystemExit
+    console.print(resp)
 
 
 @cli.command()
 @click.option("-s", "--services", is_flag=True, help="List services catalog.")
 @click.option("-d", "--datacenters", is_flag=True, help="List datacenters.")
 @click.option("-n", "--nodes", is_flag=True, help="List nodes.")
-def catalog(services, datacenters, nodes):
+@click.option("-v", "--verbose", is_flag=True, help="Extend output info.")
+def catalog(services, datacenters, nodes, verbose):
     """Catalog API."""
     table = Table.grid(padding=(0, 1))
     table.add_column(style="cyan", justify="right")
     table.add_column(style="magenta")
+
+    if verbose:
+        _show_verbose()
 
     try:
         if services:
@@ -70,8 +80,9 @@ def catalog(services, datacenters, nodes):
                     table.add_row(
                         f"{i}[yellow]:[/yellow]", node["Node"], node["Address"]
                     )
-    except Exception:
-        click.echo("<error>[!]</error> Falha ao realizar a operação.")
+    except Exception as err:
+        console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
+        raise SystemExit
     console.print(
         Panel(
             table,
@@ -85,8 +96,12 @@ def catalog(services, datacenters, nodes):
 @click.option("-n", "--node", help="Node name.")
 @click.option("-s", "--service", help="Service name.")
 @click.option("--state", help="State name.")
-def health(node, service, state):
+@click.option("-v", "--verbose", is_flag=True, help="Extend output info.")
+def health(node, service, state, verbose):
     """Health API."""
+    if verbose:
+        _show_verbose()
+
     try:
         if node:
             resp = loop.run_until_complete(consul.health.checks_for_node(node))
@@ -94,10 +109,10 @@ def health(node, service, state):
             resp = loop.run_until_complete(consul.health.checks_for_service(service))
         elif state:
             resp = loop.run_until_complete(consul.health.checks_in_state(state))
-    except Exception:
-        click.echo("<error>[!]</error> Falha ao realizar a operação.")
-        raise SystemExit(1)
-    click.echo(
+    except Exception as err:
+        console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
+        raise SystemExit
+    console.print(
         resp
         # f"{highlight(json.dumps(resp, indent=4, sort_keys=True), JsonLexer(), TerminalFormatter())}"
     )
@@ -106,14 +121,42 @@ def health(node, service, state):
 @cli.command()
 @click.option("-r", "--read", is_flag=True, help="Read configuration.")
 @click.option("-d", "--delete", help="Delete raft peer.")
-def raft(read, delete):
+@click.option("-v", "--verbose", is_flag=True, help="Extend output info.")
+def raft(read, delete, verbose):
     """Raft API."""
+    if verbose:
+        _show_verbose()
+
     try:
         if read:
             resp = loop.run_until_complete(consul.operator.raft.read_configuration())
-            click.echo(resp)
+            console.print(resp)
         elif delete:
             resp = loop.run_until_complete(consul.operator.raft.delete_peer())
-            click.echo(resp)
-    except Exception:
-        click.echo("<error>[!]</error> Falha ao realizar a operação.")
+            console.print(resp)
+    except Exception as err:
+        console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
+        raise SystemExit
+
+
+def _show_verbose():
+    engine, *_ = repr(consul.client).split("(")
+
+    table = Table.grid(padding=(0, 1))
+    table.add_column(style="cyan", justify="right")
+    table.add_column(style="magenta")
+
+    table.add_row("engine[yellow]:[/yellow] ", f"{engine}")
+    table.add_row("scheme[yellow]:[/yellow] ", f"{consul.client.scheme}")
+    table.add_row("host[yellow]:[/yellow] ", f"{consul.client.host}")
+    table.add_row("port[yellow]:[/yellow] ", f"{consul.client.port}")
+    table.add_row("URL[yellow]:[/yellow] ", f"{consul.client.url}")
+    table.add_row("reconnect timeout[yellow]:[/yellow] ", f"{consul.reconnect_timeout}")
+    console.print(
+        Panel(
+            table,
+            title="[bold yellow]client details[/bold yellow]",
+            border_style="yellow",
+            expand=True,
+        )
+    )

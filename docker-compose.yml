@@ -1,7 +1,7 @@
 version: '3'
 services:
   consul:
-    image: consul
+    image: consul:1.15
     container_name: consul
     ports:
       - 8500:8500
@@ -9,5 +9,5 @@ services:
       - 8600:8600/udp
       - 8300:8300
     extra_hosts:
-      - "aio-client:<your-ip-here>"
-      - "httpx-client:<your-ip-here>"
+      - "aio-client:${HOST_ADDRESS}"
+      - "httpx-client:${HOST_ADDRESS}"
