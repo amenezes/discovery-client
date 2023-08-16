@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 try:
     from httpx import AsyncClient
 except ModuleNotFoundError:
-    AsyncClient = None
+    AsyncClient = None  # type: ignore
 
 from discovery import log
 from discovery.engine.abc import Engine
