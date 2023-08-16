@@ -1,7 +1,7 @@
 try:
     from httpx import Response
 except ModuleNotFoundError:
-    Response = None  # type: ignore
+    Response = None
 
 from discovery.engine.base_response import BaseResponse
 
@@ -12,7 +12,7 @@ class HTTPXResponse(BaseResponse):
 
     @property
     def status(self) -> int:
-        return self._strategy.status_code
+        return self._strategy.status_code  # type: ignore
 
     @property
     def url(self) -> str:
@@ -35,7 +35,7 @@ class HTTPXResponse(BaseResponse):
         return self._strategy.json()
 
     async def text(self) -> str:
-        return self._strategy.text
+        return self._strategy.text  # type: ignore
 
     async def content(self, *args, **kwargs) -> bytes:
         return bytes(self._strategy.content)
