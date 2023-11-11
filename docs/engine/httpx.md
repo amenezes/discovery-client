@@ -2,7 +2,7 @@
 
 Using httpx [**async client**](https://www.python-httpx.org/async/). 
 
-```python
+``` py linenums="1"
 import logging
 
 from discovery import Consul

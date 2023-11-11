@@ -14,6 +14,8 @@ theme:
     - search.share
     - content.code.annotate
     - content.tooltips
+    - content.code.select
+    - content.code.copy
     - toc.follow
   palette:
     - scheme: default
@@ -38,6 +40,14 @@ extra:
       link: https://github.com/amenezes/discovery-client/issues
     - icon: fontawesome/solid/envelope
       link: mailto:alexandre.fmenezes@gmail.com
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
 nav:
 - API:
   - ACLs:
