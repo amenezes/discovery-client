@@ -23,8 +23,8 @@ class HTTPXEngine(Engine):
 
     @asynccontextmanager
     async def get(self, *args, **kwargs):
-        log.debug(f"args: {args}")
-        log.debug(f"kwargs: {kwargs}")
+        log.debug(f"GET: {args}")
+        log.debug(f"get_kwargs: {kwargs}")
         async with AsyncClient(**self._session_kwargs) as session:
             log.debug(f"session_kwargs: {self._session_kwargs}")
             response = await session.get(*args, **kwargs)
@@ -33,8 +33,8 @@ class HTTPXEngine(Engine):
 
     @asynccontextmanager
     async def put(self, *args, **kwargs):
-        log.debug(f"args: {args}")
-        log.debug(f"kwargs: {kwargs}")
+        log.debug(f"PUT: {args}")
+        log.debug(f"put_kwargs: {kwargs}")
         async with AsyncClient(**self._session_kwargs) as session:
             log.debug(f"session_kwargs: {self._session_kwargs}")
             response = await session.put(*args, **kwargs)
@@ -43,8 +43,8 @@ class HTTPXEngine(Engine):
 
     @asynccontextmanager
     async def delete(self, *args, **kwargs):
-        log.debug(f"args: {args}")
-        log.debug(f"kwargs: {kwargs}")
+        log.debug(f"DELETE: {args}")
+        log.debug(f"delete_kwargs: {kwargs}")
         async with AsyncClient(**self._session_kwargs) as session:
             log.debug(f"session_kwargs: {self._session_kwargs}")
             response = await session.delete(*args, **kwargs)
@@ -53,8 +53,8 @@ class HTTPXEngine(Engine):
 
     @asynccontextmanager
     async def post(self, *args, **kwargs):
-        log.debug(f"args: {args}")
-        log.debug(f"kwargs: {kwargs}")
+        log.debug(f"POST: {args}")
+        log.debug(f"post_kwargs: {kwargs}")
         async with AsyncClient(**self._session_kwargs) as session:
             log.debug(f"session_kwargs: {self._session_kwargs}")
             response = await session.post(*args, **kwargs)
