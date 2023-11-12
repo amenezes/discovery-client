@@ -58,7 +58,6 @@ def test_h2ping_check(prop):
         "interval",
         "timeout",
         "deregister_critical_service_after",
-        "disable_redirects",
         "name",
     ],
 )

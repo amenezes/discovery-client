@@ -23,7 +23,6 @@ def http(
     interval: str = "10s",
     timeout: str = "5s",
     deregister_after: str = "1m",
-    disable_redirects: bool = True,
 ) -> dict:
     name = name or f"http-{uuid4().hex}"
     header = header or {}
@@ -35,7 +34,6 @@ def http(
         method=method,
         header=header,
         body=body,
-        disable_redirects=disable_redirects,
         interval=interval,
         timeout=timeout,
         deregister_critical_service_after=deregister_after,

@@ -4,7 +4,7 @@
 
 Using default client: 
 
-```python
+``` py linenums="1"
 from discovery import Consul
 
 consul = Consul()
@@ -12,7 +12,7 @@ consul = Consul()
 
 ## custom client
 
-```python
+``` py linenums="1"
 import logging
 
 from discovery import Consul

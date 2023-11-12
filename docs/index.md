@@ -13,7 +13,7 @@ HTTP engine options available:
 - aiohttp `default`;
 - httpx.
 
-## Installing
+## Using
 
 Install and update using pip:
 

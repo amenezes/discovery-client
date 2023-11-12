@@ -34,7 +34,7 @@ def status(leader, peers, verbose):
     try:
         if leader:
             resp = loop.run_until_complete(consul.status.leader())
-        elif peers:
+        else:
             resp = loop.run_until_complete(consul.status.leader())
     except Exception as err:
         console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
@@ -57,11 +57,7 @@ def catalog(services, datacenters, nodes, verbose):
         _show_verbose()
 
     try:
-        if services:
-            resp = loop.run_until_complete(consul.catalog.list_services())
-            for i, svc in enumerate(resp, start=1):
-                table.add_row(f"{i}[yellow]:[/yellow]", svc)
-        elif datacenters:
+        if datacenters:
             resp = loop.run_until_complete(consul.catalog.list_datacenters())
             for i, dc in enumerate(resp, start=1):
                 table.add_row(f"{i}[yellow]:[/yellow]", dc)
@@ -80,6 +76,10 @@ def catalog(services, datacenters, nodes, verbose):
                     table.add_row(
                         f"{i}[yellow]:[/yellow]", node["Node"], node["Address"]
                     )
+        else:
+            resp = loop.run_until_complete(consul.catalog.list_services())
+            for i, svc in enumerate(resp, start=1):
+                table.add_row(f"{i}[yellow]:[/yellow]", svc)
     except Exception as err:
         console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
         raise SystemExit
@@ -93,29 +93,27 @@ def catalog(services, datacenters, nodes, verbose):
 
 
 @cli.command()
-@click.option("-n", "--node", help="Node name.")
-@click.option("-s", "--service", help="Service name.")
-@click.option("--state", help="State name.")
+@click.argument("argument")
+@click.option("-n", "--node", is_flag=True, help="List checks for node.")
+@click.option("-s", "--service", is_flag=True, help="List checks for service.")
+@click.option("--state", is_flag=True, help="List checks for state.")
 @click.option("-v", "--verbose", is_flag=True, help="Extend output info.")
-def health(node, service, state, verbose):
+def health(argument, node, service, state, verbose):
     """Health API."""
     if verbose:
         _show_verbose()
 
     try:
         if node:
-            resp = loop.run_until_complete(consul.health.checks_for_node(node))
+            resp = loop.run_until_complete(consul.health.checks_for_node(argument))
         elif service:
-            resp = loop.run_until_complete(consul.health.checks_for_service(service))
+            resp = loop.run_until_complete(consul.health.checks_for_service(argument))
         elif state:
-            resp = loop.run_until_complete(consul.health.checks_in_state(state))
+            resp = loop.run_until_complete(consul.health.checks_in_state(argument))
     except Exception as err:
         console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
         raise SystemExit
-    console.print(
-        resp
-        # f"{highlight(json.dumps(resp, indent=4, sort_keys=True), JsonLexer(), TerminalFormatter())}"
-    )
+    console.print(resp)
 
 
 @cli.command()
@@ -128,11 +126,11 @@ def raft(read, delete, verbose):
         _show_verbose()
 
     try:
-        if read:
-            resp = loop.run_until_complete(consul.operator.raft.read_configuration())
-            console.print(resp)
-        elif delete:
+        if delete:
             resp = loop.run_until_complete(consul.operator.raft.delete_peer())
+            console.print(resp)
+        else:
+            resp = loop.run_until_complete(consul.operator.raft.read_configuration())
             console.print(resp)
     except Exception as err:
         console.print(f"[red][*][/red] Failed to process request: [details='{err}']")
