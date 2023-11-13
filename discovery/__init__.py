@@ -1,6 +1,6 @@
-from . import checks, utils
-from ._logger import log
-from .api import (
+from discovery import checks, utils
+from discovery._logger import log
+from discovery.api import (
     Behavior,
     CheckStatus,
     HealthState,
@@ -11,7 +11,7 @@ from .api import (
     TokenType,
     kind,
 )
-from .client import Consul
+from discovery.client import Consul
 
 __version__ = "1.0.3"
 __all__ = [

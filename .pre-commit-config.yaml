@@ -1,9 +1,9 @@
 exclude: >
   (?x)(
     ^mkdocs.yml$|
-    ^examples/|
+    ^scripts/|
+    ^examples/
   )
-
 fail_fast: false
 repos:
 -   repo: local
