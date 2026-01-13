@@ -3,14 +3,14 @@ import pytest
 
 @pytest.fixture
 async def httpx_response(consul_httpx):
-    async with consul_httpx.client.get("https://httpbin.org/json") as response:
+    async with consul_httpx.client.get("https://postman-echo.com/get") as response:
         yield response
 
 
 async def test_get(httpx_response):
     response = httpx_response
     assert response.status == 200
-    assert response.content_type == "application/json"
+    assert response.content_type == "application/json; charset=utf-8"
 
 
 async def test_json(httpx_response):
@@ -29,18 +29,18 @@ async def test_content(httpx_response):
 
 
 async def test_put(consul_httpx):
-    async with consul_httpx.client.put("https://httpbin.org/put") as response:
+    async with consul_httpx.client.put("https://postman-echo.com/put") as response:
         assert response.status == 200
         assert response.version == "1.1"
 
 
 async def test_delete(consul_httpx):
-    async with consul_httpx.client.delete("https://httpbin.org/delete") as response:
+    async with consul_httpx.client.delete("https://postman-echo.com/delete") as response:
         assert response.status == 200
 
 
 async def test_post(consul_httpx):
-    async with consul_httpx.client.post("https://httpbin.org/post") as response:
+    async with consul_httpx.client.post("https://postman-echo.com/post") as response:
         assert response.status == 200
 
 
@@ -56,8 +56,8 @@ def test_repr(consul_httpx):
 
 
 async def test_response_repr(consul_httpx):
-    async with consul_httpx.client.get("https://httpbin.org/get") as response:
+    async with consul_httpx.client.get("https://postman-echo.com/get") as response:
         assert (
             str(response)
-            == "Response(status=200, http_version='1.1', url='https://httpbin.org/get')"
+            == "Response(status=200, http_version='1.1', url='https://postman-echo.com/get')"
         )

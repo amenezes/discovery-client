@@ -5,7 +5,7 @@ from discovery.engine.response import Response
 
 @pytest.fixture
 async def response(consul):
-    async with consul.client.get("https://httpbin.org/json") as resp:
+    async with consul.client.get("https://postman-echo.com/get") as resp:
         yield resp
 
 
@@ -18,7 +18,7 @@ def test_status(response):
 
 
 def test_url(response):
-    assert response.url == "https://httpbin.org/json"
+    assert response.url == "https://postman-echo.com/get"
 
 
 def test_content_type(response):
