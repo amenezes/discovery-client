@@ -1,10 +1,7 @@
-from enum import Enum, unique
+from enum import StrEnum, unique
 
 
 @unique
-class IntentionsAction(str, Enum):
-    ALLOW: str = "allow"
-    DENY: str = "deny"
-
-    def __str__(self):
-        return str.__str__(self)
+class IntentionsAction(StrEnum):
+    ALLOW = "allow"
+    DENY = "deny"

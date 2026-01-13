@@ -1,17 +1,14 @@
-from enum import Enum, unique
+from enum import StrEnum, unique
 
 
 @unique
-class TokenType(str, Enum):
-    DEFAULT: str = "default"
-    AGENT: str = "agent"
-    AGENT_RECOVERY: str = "agent_recovery"
-    REPLICATION: str = "replication"
-    AGENT_MASTER: str = "agent_master"
-    ACL_TOKEN: str = "acl_token"
-    ACL_AGENT_TOKEN: str = "acl_agent_token"
-    ACL_AGENT_MASTER_TOKEN: str = "acl_agent_master_token"
-    ACL_REPLICATION_TOKEN: str = "acl_replication_token"
-
-    def __str__(self):
-        return str.__str__(self)
+class TokenType(StrEnum):
+    DEFAULT = "default"
+    AGENT = "agent"
+    AGENT_RECOVERY = "agent_recovery"
+    REPLICATION = "replication"
+    AGENT_MASTER = "agent_master"
+    ACL_TOKEN = "acl_token"
+    ACL_AGENT_TOKEN = "acl_agent_token"
+    ACL_AGENT_MASTER_TOKEN = "acl_agent_master_token"
+    ACL_REPLICATION_TOKEN = "acl_replication_token"

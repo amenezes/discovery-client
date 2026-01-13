@@ -1,10 +1,7 @@
-from enum import Enum, unique
+from enum import StrEnum, unique
 
 
 @unique
-class Behavior(str, Enum):
-    RELEASE: str = "release"
-    DELETE: str = "delete"
-
-    def __str__(self):
-        return str.__str__(self)
+class Behavior(StrEnum):
+    RELEASE = "release"
+    DELETE = "delete"

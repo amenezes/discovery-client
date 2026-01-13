@@ -1,11 +1,8 @@
-from enum import Enum, unique
+from enum import StrEnum, unique
 
 
 @unique
-class CheckStatus(str, Enum):
-    PASSING: str = "passing"
-    WARNING: str = "warning"
-    CRITICAL: str = "critical"
-
-    def __str__(self):
-        return str.__str__(self)
+class CheckStatus(StrEnum):
+    PASSING = "passing"
+    WARNING = "warning"
+    CRITICAL = "critical"

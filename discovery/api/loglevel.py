@@ -1,13 +1,10 @@
-from enum import Enum, unique
+from enum import StrEnum, unique
 
 
 @unique
-class LogLevel(str, Enum):
-    INFO: str = "info"
-    WARNING: str = "warning"
-    ERROR: str = "error"
-    DEBUG: str = "debug"
-    CRITICAL: str = "critical"
-
-    def __str__(self):
-        return str.__str__(self)
+class LogLevel(StrEnum):
+    INFO = "info"
+    WARNING = "warning"
+    ERROR = "error"
+    DEBUG = "debug"
+    CRITICAL = "critical"
