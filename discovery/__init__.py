@@ -13,7 +13,7 @@ from discovery.api import (
 )
 from discovery.client import Consul
 
-__version__ = "1.0.3"
+__version__ = "1.1.0"
 __all__ = [
     "Consul",
     "HealthState",
