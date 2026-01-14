@@ -30,8 +30,3 @@ jobs:
     - name: Run lint & tests
       run: |
         make ci SKIP_STYLE=true
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        fail_ci_if_error: true
