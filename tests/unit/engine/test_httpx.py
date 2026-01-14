@@ -35,7 +35,9 @@ async def test_put(consul_httpx):
 
 
 async def test_delete(consul_httpx):
-    async with consul_httpx.client.delete("https://postman-echo.com/delete") as response:
+    async with consul_httpx.client.delete(
+        "https://postman-echo.com/delete"
+    ) as response:
         assert response.status == 200
 
 
