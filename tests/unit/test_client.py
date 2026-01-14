@@ -1,3 +1,5 @@
+import pytest
+
 SERVICE_RESPONSE = {
     "ID": "154d3a48-e665-a22e-c75a-c093de56a188",
     "Node": "6a4e48904f35",
@@ -97,35 +99,50 @@ async def test_default_timeout(consul):
     assert consul.reconnect_timeout == 30
 
 
-def test_client_props(consul):
-    assert hasattr(consul, "catalog")
-    assert hasattr(consul, "config")
-    assert hasattr(consul, "coordinate")
-    assert hasattr(consul, "events")
-    assert hasattr(consul, "health")
-    assert hasattr(consul, "kv")
-    assert hasattr(consul, "namespace")
-    assert hasattr(consul, "query")
-    assert hasattr(consul, "session")
-    assert hasattr(consul, "snapshot")
-    assert hasattr(consul, "status")
-    assert hasattr(consul, "txn")
-    assert hasattr(consul, "agent")
-    assert hasattr(consul, "connect")
-    assert hasattr(consul, "acl")
-    assert hasattr(consul, "operator")
-    assert hasattr(consul.operator, "area")
-    assert hasattr(consul.operator, "autopilot")
-    assert hasattr(consul.operator, "keyring")
-    assert hasattr(consul.operator, "license")
-    assert hasattr(consul.operator, "raft")
-    assert hasattr(consul.operator, "segment")
-    assert hasattr(consul, "binding_rule")
-    assert hasattr(consul, "policy")
-    assert hasattr(consul, "role")
-    assert hasattr(consul, "token")
-    assert hasattr(consul, "check")
-    assert hasattr(consul, "services")
-    assert hasattr(consul, "ca")
-    assert hasattr(consul, "intentions")
-    assert hasattr(consul, "event")
+@pytest.mark.parametrize(
+    "attr",
+    [
+        "catalog",
+        "config",
+        "coordinate",
+        "events",
+        "health",
+        "kv",
+        "namespace",
+        "query",
+        "session",
+        "snapshot",
+        "status",
+        "txn",
+        "agent",
+        "connect",
+        "acl",
+        "operator",
+        "binding_rule",
+        "policy",
+        "role",
+        "token",
+        "check",
+        "services",
+        "ca",
+        "intentions",
+        "event",
+    ],
+)
+def test_consul_client_attrs(consul, attr):
+    assert hasattr(consul, attr)
+
+
+@pytest.mark.parametrize(
+    "attr",
+    [
+        "area",
+        "autopilot",
+        "keyring",
+        "license",
+        "raft",
+        "segment",
+    ],
+)
+def test_consul_operator_attrs(consul, attr):
+    assert hasattr(consul.operator, attr)

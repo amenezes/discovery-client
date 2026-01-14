@@ -13,3 +13,4 @@ tox
 tox-asdf
 mkdocs-material
 pre-commit
+rich
